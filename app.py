@@ -1,6 +1,26 @@
 import replicate
 from pygments import highlight, lexers, formatters
 import os
+import json
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/")
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+def pretty_print_json(data):
+    formatted_json = json.dumps(data, sort_keys=True, indent=4)
+    colorful_json = highlight(
+        formatted_json, 
+        lexers.JsonLexer(), 
+        formatters.TerminalFormatter()
+    )
+    print(colorful_json)
 
 output = replicate.run(
     "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
@@ -14,4 +34,4 @@ output = replicate.run(
         "transcript_output_format": "both"
     }
 )
-print(output)
+pretty_print_json(output)
