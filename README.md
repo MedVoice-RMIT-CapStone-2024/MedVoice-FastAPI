@@ -13,9 +13,10 @@ To build the project locally, follow the steps below:
     git clone https://github.com/your-username/replicate-whisper.git
     ```
 
-3. Change into the project directory:
+3. Create and activate a Python virtual environment:
     ```shell
-    cd replicate-whisper
+    python -m venv venv
+    source venv/bin/activate
     ```
 
 4. Install the project dependencies using Poetry:
