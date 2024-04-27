@@ -23,7 +23,7 @@ To build the project locally, follow the steps below:
     ```shell
     poetry install
     ```
-    - Or with `Pip`
+- Or with `Pip`
     ```shell
     pip install -r requirements.txt
     ```
