@@ -49,9 +49,12 @@ urllib3 = "2.2.1"
 uvicorn = "0.29.0"
 poethepoet = "^0.25.1"
 python-multipart = "^0.0.9"
+poetry-plugin-export = "^1.7.1"
 
 [tool.poe.tasks]
 run = "uvicorn 'app:app' --host=0.0.0.0 --port=8000"
+export = "poetry export -f requirements.txt --output requirements.txt --without-hashes"
+import = "python3 requirements-to-poetry.py"
 
 [build-system]
 requires = ["poetry-core"]

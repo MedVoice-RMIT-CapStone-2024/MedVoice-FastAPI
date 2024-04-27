@@ -28,6 +28,16 @@ To build the project locally, follow the steps below:
     poe run
     ```
 
+6. [Optional] Between poetry and pip:
+- From `poetry.lock` to `requirements.txt`
+    ```shell
+    poe export
+    ```
+- From `requirements.txt` to `poetry.lock`
+    ```shell
+    poe import
+    ```
+
 ## Obtaining the API Key
 To use the Replicate API, you need to obtain an API key. Follow the steps below to get your API key:
 
