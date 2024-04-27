@@ -19,9 +19,13 @@ To build the project locally, follow the steps below:
     source venv/bin/activate
     ```
 
-4. Install the project dependencies using Poetry:
+4. Install the project dependencies using `Poetry`:
     ```shell
     poetry install
+    ```
+    - Or with `Pip`
+    ```shell
+    pip install -r requirements.txt
     ```
 
 5. Run it locally
