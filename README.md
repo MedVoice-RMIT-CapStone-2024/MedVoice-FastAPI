@@ -28,12 +28,12 @@ To build the project locally, follow the steps below:
     pip install -r requirements.txt
     ```
 
-5. Run it locally
+5. Run the project locally:
     ```shell
     poe run
     ```
 
-6. [Optional] Between poetry and pip:
+6. **[Optional]** Between poetry and pip:
 - From `poetry.lock` to `requirements.txt`
     ```shell
     poe export
