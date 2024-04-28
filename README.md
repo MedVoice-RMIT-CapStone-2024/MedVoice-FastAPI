@@ -39,6 +39,10 @@ To build the project locally, follow the steps below:
     ```shell
     poe import
     ```
+- To remove all the files from `audios/`:
+    ```shell
+    poe flush
+    ```
 
 ## Obtaining the API Key
 To use the Replicate API, you need to obtain an API key. Follow the steps below to get your API key:
