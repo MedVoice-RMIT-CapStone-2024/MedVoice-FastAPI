@@ -45,9 +45,10 @@ async def authenticate_implicit_with_adc(project_id="nifty-saga-417905"):
     buckets = storage_client.list_buckets()
     print("Buckets:")
     for bucket in buckets:
+        bucket_name = bucket.name
         print(bucket.name)
     print("Listed all storage buckets.")
-    return "Buckets are listed in the terminal"
+    return "Bucket: " + bucket_name
 
 def upload_file_helper(project_id, bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
