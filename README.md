@@ -30,7 +30,7 @@ To build the project locally, follow the steps below:
     poe run
     ```
 
-6. **[Optional]** poetry and pip conversion:
+6. **[Optional]** More ultility options:
 - From `poetry.lock` to `requirements.txt`
     ```shell
     poe export
