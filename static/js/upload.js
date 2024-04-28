@@ -8,20 +8,20 @@ document.getElementById("submitBtn").addEventListener("click", function () {
     formData.append("file", file);
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/upload", true);
+    // Get the transcription field
+    var transcriptionField = document.getElementById("transcription");
+    transcriptionField.value = "Transcribing...";
     xhr.onload = function () {
         if (xhr.status == 200) {
             // Display a success notification
             alert('Upload Successful!');
-            // Get the transcription field
-            var transcriptionField = document.getElementById("transcription");
             var data = JSON.parse(xhr.responseText);
             setTimeout(function () {
                 var cleanedData = data.output.replace(/\x1b\[[0-9;]*m/g, "");
-                var jsonData = JSON.parse(cleanedData);
-                transcriptionField.value = "Language: " + jsonData.language + ", Number of speakers: " + jsonData.num_speakers + "\n, Segments: " + jsonData.segments;
-            }, 2000); // Wait for 2 seconds before displaying the protocol data
+                transcriptionField.value = cleanedData;
+            }, 1000); // Wait for 1 seconds before displaying the protocol data
         } else {
-            alert("Upload failed!");
+            transcriptionField.value = "Upload failed!";
         }
     };
     xhr.send(formData);

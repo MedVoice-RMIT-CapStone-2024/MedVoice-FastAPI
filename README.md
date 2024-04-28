@@ -1,7 +1,4 @@
-# Replicate Whisper
-
-## Introduction
-Replicate Whisper is a project that allows you to replicate data using the Replicate API. This README provides instructions on how to build the project locally and obtain the necessary API key and authorization for Google Cloud.
+# FastAPI project with Whisper Diarization and Replicate API
 
 ## Build Instructions
 To build the project locally, follow the steps below:
@@ -10,7 +7,7 @@ To build the project locally, follow the steps below:
 
 2. Clone the repository to your local machine:
     ```shell
-    git clone https://github.com/your-username/replicate-whisper.git
+    git clone https://github.com/MedVoice-RMIT-CapStone-2024/replicate-whisper.git
     ```
 
 3. Create and activate a Python virtual environment:
@@ -33,7 +30,7 @@ To build the project locally, follow the steps below:
     poe run
     ```
 
-6. **[Optional]** Between poetry and pip:
+6. **[Optional]** poetry and pip conversion:
 - From `poetry.lock` to `requirements.txt`
     ```shell
     poe export
