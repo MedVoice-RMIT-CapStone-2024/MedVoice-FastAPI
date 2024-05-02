@@ -101,21 +101,21 @@ async def upload_file(file: UploadFile = File(...), project_id="nifty-saga-41790
     file_url = f"https://storage.googleapis.com/{bucket_name}/{date_string}.mp3"
 
     output = ''
-    # output = replicate.run(
-    #     "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
-    #     # audio file test: "https://storage.googleapis.com/medvoice-sgp-audio-bucket/what-is-this-what-are-these-63645.mp3"
-    #     input={
-    #         "file": file_url,
-    #         "prompt": "Mark and Lex talking about AI.",
-    #         "file_url": "",
-    #         "num_speakers": 2,
-    #         "group_segments": True,
-    #         "offset_seconds": 0,
-    #         "transcript_output_format": "segments_only"
-    #     }
-    # )
-    # # output = pretty_print_json(output)
-    # output = llama_2(output)
+    output = replicate.run(
+        "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
+        # audio file test: "https://storage.googleapis.com/medvoice-sgp-audio-bucket/what-is-this-what-are-these-63645.mp3"
+        input={
+            "file": file_url,
+            "prompt": "Mark and Lex talking about AI.",
+            "file_url": "",
+            "num_speakers": 2,
+            "group_segments": True,
+            "offset_seconds": 0,
+            "transcript_output_format": "segments_only"
+        }
+    )
+    # output = pretty_print_json(output)
+    output = llama_2(output)
 
     return {"file_url": file_url, "output": output if output != '' else "It is working"}
 
