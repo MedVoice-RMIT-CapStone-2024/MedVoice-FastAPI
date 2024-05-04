@@ -1,5 +1,4 @@
 from google.cloud import storage
-import os
 
 def upload_file_helper(project_id, bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
@@ -15,13 +14,5 @@ def upload_file_helper(project_id, bucket_name, source_file_name, destination_bl
     print(
         "File {} uploaded to {} and made publicly accessible.".format(
             source_file_name, destination_blob_name
-        )
-    )
-
-    os.remove(source_file_name)
-
-    print(
-        "File {} has been removed from audios/ directory.".format(
-            source_file_name
         )
     )

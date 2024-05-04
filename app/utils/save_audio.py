@@ -2,7 +2,7 @@ import os
 import tempfile
 import datetime
 
-def save_audio(contents):
+def save_audio(contents, filename: str, user_id: str):
     # Ensure the audios/ directory exists
     os.makedirs('audios', exist_ok=True)
 
@@ -16,11 +16,14 @@ def save_audio(contents):
     # Format the date and time as a string
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Rename the temporary file to include the date and time
-    new_audio_path = os.path.join('audios', f'{date_string}.mp3')
+    # Create the new filename with date, original filename, and user ID
+    new_filename = f'{date_string}_{filename}_{user_id}.mp3'
+
+    # Rename the temporary file
+    new_audio_path = os.path.join('audios', new_filename)
     os.rename(temp_audio_path, new_audio_path)
 
     # The path of the audio file is now 'new_audio_path'
     temp_audio_path = new_audio_path
 
-    return temp_audio_path
+    return {"temp_audio_path": temp_audio_path, "new_filename": new_filename}

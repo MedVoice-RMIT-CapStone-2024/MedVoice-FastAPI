@@ -57,22 +57,57 @@ async def authenticate_implicit_with_adc(project_id="nifty-saga-417905"):
     print("Listed all storage buckets.")
     return "Bucket: " + bucket_name
 
+@app.get("/get_audio/{id}")
+async def get_audio(id: str):
+    try:
+        # Your Google Cloud project ID and bucket name
+        project_id="nifty-saga-417905"
+        # The name for the new bucket
+        bucket_name = "medvoice-sgp-audio-bucket"
+
+        storage_client = storage.Client(project=project_id)
+        bucket = storage_client.bucket(bucket_name)
+
+        # Get the list of blobs in the bucket
+        blobs = bucket.list_blobs()
+
+        # Create a list to store the URLs of the audio files
+        audio_urls = []
+
+        # Iterate over the blobs to find the ones that end with the id
+        for blob in blobs:
+            # Split the blob name by underscore and get the last part before the extension
+            id_in_blob = blob.name.rsplit('.', 1)[0].rsplit('_', 1)[-1]
+            """
+            TODO: Compare the current date with the file date 
+            """
+
+            # Check if the id in the blob name matches the id
+            if id_in_blob == id:
+                # Add the public URL of the blob to the list
+                audio_urls.append(blob.public_url)
+
+        # Return the list of audio URLs
+        return {"urls": audio_urls}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...), project_id="nifty-saga-417905"):
+async def upload_file(id: str, file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        # You can now use the contents of the file
 
         # The path of the audio file is now 'new_audio_path'
-        temp_audio_path = save_audio(contents)
+        temp_audio_path, new_filename = save_audio(contents, id)
 
+        project_id="nifty-saga-417905"
         # The name for the new bucket
         bucket_name = "medvoice-sgp-audio-bucket"
 
         # Call the upload_blob function
-        upload_file_helper(project_id, bucket_name, temp_audio_path, f'{date_string}.mp3')
+        upload_file_helper(project_id, bucket_name, temp_audio_path, new_filename)
 
-        file_url = f"https://storage.googleapis.com/{bucket_name}/{date_string}.mp3"
+        file_url = f"https://storage.googleapis.com/{bucket_name}/{new_filename}"
 
         output = ''
         # output = replicate.run(
@@ -93,7 +128,7 @@ async def upload_file(file: UploadFile = File(...), project_id="nifty-saga-41790
 
         return {"file_url": file_url, "output": output if output != '' else "It is working"}
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 def llama_2(output):
 
@@ -122,16 +157,25 @@ def llama_2(output):
     return result
 
 @app.post("/process_audio")
-async def process_audio(file: UploadFile = File(...), access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
+async def process_audio(file: UploadFile, user_id="1", access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
     try:
         falcon = pvfalcon.create(access_key=access_key)
         leopard = pvleopard.create(access_key=access_key)
 
         contents = await file.read()
-        # You can now use the contents of the file
+        filename = file.filename
 
+        audio_file = {}
         # The path of the audio file is now 'new_audio_path'
-        temp_audio_path = save_audio(contents)
+        audio_file = save_audio(contents, filename, user_id)
+        temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
+
+        project_id="nifty-saga-417905"
+        # The name for the new bucket
+        bucket_name = "medvoice-sgp-audio-bucket"
+
+        # Call the upload_blob function
+        upload_file_helper(project_id, bucket_name, temp_audio_path, new_filename)
 
         segments = falcon.process_file(temp_audio_path)
         transcript, words = leopard.process_file(temp_audio_path)
@@ -153,6 +197,8 @@ async def process_audio(file: UploadFile = File(...), access_key="XqSUBqySs7hFkI
                 sentences[segment.speaker_tag] += " " + " ".join(words_for_segment)
             else:
                 sentences[segment.speaker_tag] = " ".join(words_for_segment)
+        
+        os.remove(temp_audio_path)
 
         return {
             "sentences": sentences,
