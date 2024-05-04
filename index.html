@@ -22,7 +22,23 @@
             class="bg-white shadow-md rounded-lg w-full p-4 mt-4"
             placeholder="Transcription will appear here"
         ></textarea>
+        <hr />
+        <h1 class="text-4xl font-bold text-center mb-8">Picovoice Transcription</h1>
+        <input type="file" id="picovoiceAudioUpload" class="mb-4" />
+        <button
+            id="picovoiceSubmitBtn"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+            Submit
+        </button>
+        <textarea
+            id="picovoiceTranscription"
+            rows="10"
+            class="bg-white shadow-md rounded-lg w-full p-4 mt-4"
+            placeholder="Transcription will appear here"
+        ></textarea>
     </div>
     <script src="./static/js/upload.js"></script>
+    <script src="./static/js/process_audio.js"></script>
 </body>
 </html>

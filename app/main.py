@@ -1,15 +1,22 @@
 import replicate
-from pygments import highlight, lexers, formatters
 import os
-import json
 import tempfile
 import datetime
-from fastapi import FastAPI, Request, UploadFile, File
+import uvicorn
+from typing import List
+import pvfalcon
+import pvleopard
+
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-import uvicorn
+
 from google.cloud import storage
+from .utils.pretty_print_json import pretty_print_json
+from .utils.google_storage import upload_file_helper
+from .utils.save_audio import save_audio
+
 
 app = FastAPI()
 
@@ -50,74 +57,43 @@ async def authenticate_implicit_with_adc(project_id="nifty-saga-417905"):
     print("Listed all storage buckets.")
     return "Bucket: " + bucket_name
 
-def upload_file_helper(project_id, bucket_name, source_file_name, destination_blob_name):
-    """Uploads a file to the bucket."""
-    storage_client = storage.Client(project=project_id)
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_blob_name)
-
-    blob.upload_from_filename(source_file_name)
-
-    # Make the blob publicly accessible.
-    blob.make_public()
-
-    print(
-        "File {} uploaded to {} and made publicly accessible.".format(
-            source_file_name, destination_blob_name
-        )
-    )
-
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...), project_id="nifty-saga-417905"):
-    contents = await file.read()
-    # You can now use the contents of the file
+    try:
+        contents = await file.read()
+        # You can now use the contents of the file
 
-    # Ensure the audios/ directory exists
-    os.makedirs('audios', exist_ok=True)
+        # The path of the audio file is now 'new_audio_path'
+        temp_audio_path = save_audio(contents)
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3', dir='audios') as temp_audio:
-        temp_audio.write(contents)
-        temp_audio_path = temp_audio.name
-        
-    # Get the current date and time
-    now = datetime.datetime.now()
+        # The name for the new bucket
+        bucket_name = "medvoice-sgp-audio-bucket"
 
-    # Format the date and time as a string
-    date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
+        # Call the upload_blob function
+        upload_file_helper(project_id, bucket_name, temp_audio_path, f'{date_string}.mp3')
 
-    # Rename the temporary file to include the date and time
-    new_audio_path = os.path.join('audios', f'{date_string}.mp3')
-    os.rename(temp_audio_path, new_audio_path)
+        file_url = f"https://storage.googleapis.com/{bucket_name}/{date_string}.mp3"
 
-    # The path of the audio file is now 'new_audio_path'
-    temp_audio_path = new_audio_path
+        output = ''
+        # output = replicate.run(
+        #     "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
+        #     # audio file test: "https://storage.googleapis.com/medvoice-sgp-audio-bucket/what-is-this-what-are-these-63645.mp3"
+        #     input={
+        #         "file": file_url,
+        #         "prompt": "Mark and Lex talking about AI.",
+        #         "file_url": "",
+        #         "num_speakers": 2,
+        #         "group_segments": True,
+        #         "offset_seconds": 0,
+        #         "transcript_output_format": "segments_only"
+        #     }
+        # )
+        # # output = pretty_print_json(output)
+        # output = llama_2(output)
 
-    # The name for the new bucket
-    bucket_name = "medvoice-sgp-audio-bucket"
-
-    # Call the upload_blob function
-    upload_file_helper(project_id, bucket_name, temp_audio_path, f'{date_string}.mp3')
-
-    file_url = f"https://storage.googleapis.com/{bucket_name}/{date_string}.mp3"
-
-    output = ''
-    output = replicate.run(
-        "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
-        # audio file test: "https://storage.googleapis.com/medvoice-sgp-audio-bucket/what-is-this-what-are-these-63645.mp3"
-        input={
-            "file": file_url,
-            "prompt": "Mark and Lex talking about AI.",
-            "file_url": "",
-            "num_speakers": 2,
-            "group_segments": True,
-            "offset_seconds": 0,
-            "transcript_output_format": "segments_only"
-        }
-    )
-    # output = pretty_print_json(output)
-    output = llama_2(output)
-
-    return {"file_url": file_url, "output": output if output != '' else "It is working"}
+        return {"file_url": file_url, "output": output if output != '' else "It is working"}
+    except Exception as e:
+        return HTTPException(status_code=500, detail=str(e))
 
 def llama_2(output):
 
@@ -145,15 +121,45 @@ def llama_2(output):
     print("\nLlama 2 Result: " + result)
     return result
 
-def pretty_print_json(data):
-    formatted_json = json.dumps(data, sort_keys=True, indent=4)
-    colorful_json = highlight(
-        formatted_json, 
-        lexers.JsonLexer(), 
-        formatters.TerminalFormatter()
-    )
-    # print(colorful_json)
-    return colorful_json
+@app.post("/process_audio")
+async def process_audio(file: UploadFile = File(...), access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
+    try:
+        falcon = pvfalcon.create(access_key=access_key)
+        leopard = pvleopard.create(access_key=access_key)
+
+        contents = await file.read()
+        # You can now use the contents of the file
+
+        # The path of the audio file is now 'new_audio_path'
+        temp_audio_path = save_audio(contents)
+
+        segments = falcon.process_file(temp_audio_path)
+        transcript, words = leopard.process_file(temp_audio_path)
+
+        sentences = {}
+        sentences_v2 = []
+
+        for segment in segments:
+            words_for_segment = [word.word for word in words if segment.start_sec <= word.start_sec <= segment.end_sec]
+
+            sentences_v2.append({
+                "speaker_tag": segment.speaker_tag,
+                "sentence": " ".join(words_for_segment),
+                "start_sec": segment.start_sec,
+                "end_sec": segment.end_sec
+            })
+
+            if segment.speaker_tag in sentences:
+                sentences[segment.speaker_tag] += " " + " ".join(words_for_segment)
+            else:
+                sentences[segment.speaker_tag] = " ".join(words_for_segment)
+
+        return {
+            "sentences": sentences,
+            "sentences_v2": sentences_v2
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 def main():
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

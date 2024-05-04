@@ -1,9 +1,10 @@
 import pvfalcon
+import pvleopard
 
 ACCESS_KEY="<PICOVOICE_ACCESS_KEY>"
 AUDIO_PATH="../assets/what-is-this.mp3"
 falcon = pvfalcon.create(access_key=ACCESS_KEY)
-
+leopard = pvleopard.create(access_key=ACCESS_KEY)
 
 segments = falcon.process_file(AUDIO_PATH)
 # for segment in segments:
@@ -11,13 +12,6 @@ segments = falcon.process_file(AUDIO_PATH)
 #         "{speaker_tag=%d start_sec=%.2f end_sec=%.2f}"
 #         % (segment.speaker_tag, segment.start_sec, segment.end_sec)
 #     )
-
-
-import pvleopard
-
-
-leopard = pvleopard.create(access_key=ACCESS_KEY)
-
 
 transcript, words = leopard.process_file(AUDIO_PATH)
 # print(transcript)

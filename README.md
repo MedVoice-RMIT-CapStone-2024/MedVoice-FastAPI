@@ -1,4 +1,5 @@
-# FastAPI project with Whisper Diarization and Replicate API
+# FastAPI for MedVoice
+This is the Backend for MedVoice project. This includes the ML pipeline for Whisper-Diarization, Llama and Picovoice models.
 
 ## Build Instructions
 To build the project locally, follow the steps below:
