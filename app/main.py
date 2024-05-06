@@ -61,7 +61,7 @@ if settings.USE_NGROK and os.environ.get("NGROK_AUTHTOKEN"):
     logger.addHandler(handler)
 
     # Define public_url and port
-    public_url = "http://your_public_url"
+    public_url = "https://sweet-enabling-manatee.ngrok-free.app"
     port = 8000
 
     # Your logging statement
