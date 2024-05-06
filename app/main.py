@@ -1,24 +1,76 @@
 import replicate
 import os
-import tempfile
-import datetime
 import uvicorn
-from typing import List
 import pvfalcon
 import pvleopard
+from typing import List
+from google.cloud import storage
+from pydantic import BaseSettings
 
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
-from google.cloud import storage
 from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_helper
 from .utils.save_audio import save_audio
 
+class Settings(BaseSettings):
+    # ... The rest of our FastAPI settings
+
+    BASE_URL = "http://localhost:8000"
+    USE_NGROK = os.environ.get("USE_NGROK", "False") == "True"
+
+
+settings = Settings()
+
+
+def init_webhooks(base_url):
+    # Update inbound traffic via APIs to use the public-facing ngrok URL
+    pass
+
 
 app = FastAPI()
+
+
+if settings.USE_NGROK and os.environ.get("NGROK_AUTHTOKEN"):
+    # pyngrok should only ever be installed or initialized in a dev environment when this flag is set
+    from pyngrok import ngrok
+    import sys
+    import logging
+
+    # Get the dev server port (defaults to 8000 for Uvicorn, can be overridden with `--port`
+    # when starting the server
+    port = sys.argv[sys.argv.index("--port") + 1] if "--port" in sys.argv else "8000"
+
+    # Open a ngrok tunnel to the dev server
+    public_url = ngrok.connect(port).public_url
+    # Create a logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
+    # Create a console handler
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+
+    # Create a formatter and add it to the handler
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(handler)
+
+    # Define public_url and port
+    public_url = "http://your_public_url"
+    port = 8000
+
+    # Your logging statement
+    logger.info(f"ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
+
+    # Update any base URLs or webhooks to use the public ngrok URL
+    settings.BASE_URL = public_url
+    init_webhooks(public_url)
+                    
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -93,12 +145,13 @@ async def get_audio(id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload")
-async def upload_file(id: str, file: UploadFile = File(...)):
+async def upload_file(user_id: str, file: UploadFile):
     try:
         contents = await file.read()
 
         # The path of the audio file is now 'new_audio_path'
-        temp_audio_path, new_filename = save_audio(contents, id)
+        audio_file = save_audio(contents, file.filename, user_id)
+        temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
 
         project_id="nifty-saga-417905"
         # The name for the new bucket
@@ -163,11 +216,10 @@ async def process_audio(file: UploadFile, user_id="1", access_key="XqSUBqySs7hFk
         leopard = pvleopard.create(access_key=access_key)
 
         contents = await file.read()
-        filename = file.filename
 
         audio_file = {}
         # The path of the audio file is now 'new_audio_path'
-        audio_file = save_audio(contents, filename, user_id)
+        audio_file = save_audio(contents, file.filename, user_id)
         temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
 
         project_id="nifty-saga-417905"
