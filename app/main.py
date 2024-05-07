@@ -1,78 +1,41 @@
-import replicate
-import os
-import uvicorn
-import pvfalcon
-import pvleopard
-from typing import List
+import replicate, os, uvicorn, nest_asyncio
+# Picovoice Models
+import pvfalcon, pvleopard
+
+from typing import List, Union, cast
 from google.cloud import storage
-from pydantic import BaseSettings
+from pyngrok import ngrok
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_helper
 from .utils.save_audio import save_audio
 
-class Settings(BaseSettings):
-    # ... The rest of our FastAPI settings
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Code to run on startup
+    print("Starting up...")
+    yield
+    # Code to run on shutdown
+    print("Shutting down...")
 
-    BASE_URL = "http://localhost:8000"
-    USE_NGROK = os.environ.get("USE_NGROK", "False") == "True"
-
-
-settings = Settings()
-
-
-def init_webhooks(base_url):
-    # Update inbound traffic via APIs to use the public-facing ngrok URL
-    pass
-
-
-app = FastAPI()
-
-
-if settings.USE_NGROK and os.environ.get("NGROK_AUTHTOKEN"):
-    # pyngrok should only ever be installed or initialized in a dev environment when this flag is set
-    from pyngrok import ngrok
-    import sys
-    import logging
-
-    # Get the dev server port (defaults to 8000 for Uvicorn, can be overridden with `--port`
-    # when starting the server
-    port = sys.argv[sys.argv.index("--port") + 1] if "--port" in sys.argv else "8000"
-
-    # Open a ngrok tunnel to the dev server
-    public_url = ngrok.connect(port).public_url
-    # Create a logger
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-
-    # Create a console handler
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-
-    # Create a formatter and add it to the handler
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(handler)
-
-    # Define public_url and port
-    public_url = "https://sweet-enabling-manatee.ngrok-free.app"
-    port = 8000
-
-    # Your logging statement
-    logger.info(f"ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{port}\"")
-
-    # Update any base URLs or webhooks to use the public ngrok URL
-    settings.BASE_URL = public_url
-    init_webhooks(public_url)
-                    
+app = FastAPI(lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 templates = Jinja2Templates(directory=".")
 
@@ -259,8 +222,17 @@ async def process_audio(file: UploadFile, user_id="1", access_key="XqSUBqySs7hFk
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-def main():
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
 
-if __name__ == "__main__":
-    main()
+def main():
+    # specify a port
+    port = 8000
+    ngrok_tunnel = ngrok.connect(port)
+
+    # where we can visit our fastAPI app
+    print('Public URL:', ngrok_tunnel.public_url)
+
+
+    nest_asyncio.apply()
+    uvicorn.run(app, port=8000, log_level="info")
+
+main()
