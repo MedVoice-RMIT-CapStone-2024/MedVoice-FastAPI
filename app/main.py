@@ -8,7 +8,7 @@ from pyngrok import ngrok
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 
-from fastapi import FastAPI, Request, UploadFile, File, HTTPException
+from fastapi import FastAPI, Request, UploadFile, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_helper
 from .utils.save_audio import save_audio
+from .utils.replicate_models import llama_2, whisper_diarization
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,8 +31,10 @@ app = FastAPI(lifespan=lifespan)
 class File(BaseModel):
     url: str
 
+# Mounting local directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+app.mount("/audios", StaticFiles(directory="audios"), name="audios")
 
 app.add_middleware(
     CORSMiddleware,
@@ -112,13 +115,18 @@ async def get_audio(id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload")
-async def upload_file(user_id: str, file: UploadFile):
+async def upload_file(url: str, user_id: str, file: UploadFile):
     try:
-        contents = await file.read()
+        if url:
+            file = download_file(url)
+            new_filename = file('file')
+        else:
+            contents = await file.read()
 
-        # The path of the audio file is now 'new_audio_path'
-        audio_file = save_audio(contents, file.filename, user_id)
-        temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
+            audio_file = {}
+            # The path of the audio file is now 'new_audio_path'
+            audio_file = save_audio(contents, file.filename, user_id)
+            temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
 
         project_id="nifty-saga-417905"
         # The name for the new bucket
@@ -130,64 +138,29 @@ async def upload_file(user_id: str, file: UploadFile):
         file_url = f"https://storage.googleapis.com/{bucket_name}/{new_filename}"
 
         output = ''
-        # output = replicate.run(
-        #     "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
-        #     # audio file test: "https://storage.googleapis.com/medvoice-sgp-audio-bucket/what-is-this-what-are-these-63645.mp3"
-        #     input={
-        #         "file": file_url,
-        #         "prompt": "Mark and Lex talking about AI.",
-        #         "file_url": "",
-        #         "num_speakers": 2,
-        #         "group_segments": True,
-        #         "offset_seconds": 0,
-        #         "transcript_output_format": "segments_only"
-        #     }
-        # )
-        # # output = pretty_print_json(output)
-        # output = llama_2(output)
+        # output = pretty_print_json(output)
+        output = await llama_2(whisper_diarization(file_url))
 
         return {"file_url": file_url, "output": output if output != '' else "It is working"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def llama_2(output):
-
-    result = ''
-    # The meta/llama-2-70b-chat model can stream output as it's running.
-    for event in replicate.stream(
-        "meta/llama-2-70b-chat",
-        input={
-            "top_k": 0,
-            "top_p": 1,
-            "prompt": f"""Summarize the transcript organized by key topics.
-                If someone has said something important, mention it as: '<Name of the person> made a significant contribution by stating that <important statement>'
-                At the bottom, list out the follow up actions if discussed
-                ----
-                Transcript: {output}
-            """,
-            "temperature": 0.5,
-            "system_prompt": "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.",
-            "length_penalty": 1,
-            "max_new_tokens": 500,
-            "min_new_tokens": -1,
-        },
-    ):
-        result += str(event)
-    print("\nLlama 2 Result: " + result)
-    return result
-
 @app.post("/process_audio")
-async def process_audio(file: UploadFile, user_id="1", access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
+async def process_audio(url: str, file: UploadFile, user_id, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
     try:
         falcon = pvfalcon.create(access_key=access_key)
         leopard = pvleopard.create(access_key=access_key)
 
-        contents = await file.read()
+        if url:
+            file = download_file(url)
+            new_filename = file('file')
+        else:
+            contents = await file.read()
 
-        audio_file = {}
-        # The path of the audio file is now 'new_audio_path'
-        audio_file = save_audio(contents, file.filename, user_id)
-        temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
+            audio_file = {}
+            # The path of the audio file is now 'new_audio_path'
+            audio_file = save_audio(contents, file.filename, user_id)
+            temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
 
         project_id="nifty-saga-417905"
         # The name for the new bucket
@@ -245,7 +218,7 @@ async def download_file(url: str):
         else:
             print(f"Failed to download file. Status code: {response.status_code}")
 
-        return {"status": "success", "message": f"File downloaded to {filename}"}
+        return {"file": filename}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
