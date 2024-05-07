@@ -1,4 +1,4 @@
-import replicate, os, uvicorn, nest_asyncio
+import replicate, os, uvicorn, nest_asyncio, requests
 # Picovoice Models
 import pvfalcon, pvleopard
 
@@ -6,6 +6,7 @@ from typing import List, Union, cast
 from google.cloud import storage
 from pyngrok import ngrok
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
 
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
 from fastapi.templating import Jinja2Templates
@@ -25,6 +26,9 @@ async def lifespan(app: FastAPI):
     print("Shutting down...")
 
 app = FastAPI(lifespan=lifespan)
+
+class File(BaseModel):
+    url: str
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -222,6 +226,28 @@ async def process_audio(file: UploadFile, user_id="1", access_key="XqSUBqySs7hFk
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.post("/download")
+async def download_file(url: str):
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url, stream=True)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            filename = os.path.join("audios", url.split("/")[-1])
+            # Open the local file in write mode
+            with open(filename, 'wb') as f:
+                # Write the contents of the response to the file
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+            print(f"File downloaded successfully to {filename}")
+        else:
+            print(f"Failed to download file. Status code: {response.status_code}")
+
+        return {"status": "success", "message": f"File downloaded to {filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 def main():
     # specify a port
