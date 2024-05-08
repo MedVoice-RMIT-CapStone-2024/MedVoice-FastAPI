@@ -1,8 +1,6 @@
-import replicate, os, uvicorn, nest_asyncio, requests
-# Picovoice Models
-import pvfalcon, pvleopard
+import os, uvicorn, nest_asyncio, requests
 
-from typing import List, Union, cast
+from typing import List, Union, cast, Optional
 from google.cloud import storage
 from pyngrok import ngrok
 from contextlib import asynccontextmanager
@@ -16,7 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_helper
 from .utils.save_audio import save_audio
-from .utils.replicate_models import llama_2, whisper_diarization
+from .models.replicate_models import llama_2, whisper_diarization
+from .models.picovoice_models import picovoice_models
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -115,10 +114,10 @@ async def get_audio(id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload")
-async def upload_file(url: str, user_id: str, file: UploadFile):
+async def upload_file(file: UploadFile, user_id, url: Optional[str] = None):
     try:
         if url:
-            file = download_file(url)
+            file = await download_file(url)
             new_filename = file('file')
         else:
             contents = await file.read()
@@ -146,13 +145,10 @@ async def upload_file(url: str, user_id: str, file: UploadFile):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process_audio")
-async def process_audio(url: str, file: UploadFile, user_id, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
+async def process_audio(file: UploadFile, user_id, url: Optional[str] = None, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
     try:
-        falcon = pvfalcon.create(access_key=access_key)
-        leopard = pvleopard.create(access_key=access_key)
-
         if url:
-            file = download_file(url)
+            file = await download_file(url)
             new_filename = file('file')
         else:
             contents = await file.read()
@@ -169,32 +165,13 @@ async def process_audio(url: str, file: UploadFile, user_id, access_key="XqSUBqy
         # Call the upload_blob function
         upload_file_helper(project_id, bucket_name, temp_audio_path, new_filename)
 
-        segments = falcon.process_file(temp_audio_path)
-        transcript, words = leopard.process_file(temp_audio_path)
-
-        sentences = {}
-        sentences_v2 = []
-
-        for segment in segments:
-            words_for_segment = [word.word for word in words if segment.start_sec <= word.start_sec <= segment.end_sec]
-
-            sentences_v2.append({
-                "speaker_tag": segment.speaker_tag,
-                "sentence": " ".join(words_for_segment),
-                "start_sec": segment.start_sec,
-                "end_sec": segment.end_sec
-            })
-
-            if segment.speaker_tag in sentences:
-                sentences[segment.speaker_tag] += " " + " ".join(words_for_segment)
-            else:
-                sentences[segment.speaker_tag] = " ".join(words_for_segment)
+        picovoice_outputs = picovoice_models(temp_audio_path, access_key)
         
         os.remove(temp_audio_path)
 
         return {
-            "sentences": sentences,
-            "sentences_v2": sentences_v2
+            "sentences": picovoice_outputs["sentences"],
+            "sentences_v2": picovoice_outputs["sentences_v2"]
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
