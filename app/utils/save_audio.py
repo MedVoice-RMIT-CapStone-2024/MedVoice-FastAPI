@@ -1,5 +1,6 @@
 import os
 import datetime
+import hashlib
 
 def save_audio(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
@@ -21,7 +22,7 @@ def save_audio(file_path: str, user_id: str):
     new_file_name = f'{file_name}_{date_string}_{user_id}{file_extension}'
 
     # Hash this new file_name
-    file_id = hash(new_file_name)
+    file_id = hashlib.sha256(new_file_name.encode('utf-8')).hexdigest()
 
     # Create the new file_name with hash value, date, original file_name, and user ID
     new_file_name = f'{file_name}_{date_string}_{file_id}_{user_id}{file_extension}'
