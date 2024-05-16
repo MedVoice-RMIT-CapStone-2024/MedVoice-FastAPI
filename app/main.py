@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_helper
-from .utils.save_audio import save_audio
+from .utils.save_file import save_audio
+from .utils.save_file import save_output
 from .models.replicate_models import llama_2, whisper_diarization
 from .models.picovoice_models import picovoice_models
 from .config.google_project_config import cloud_details
@@ -132,36 +133,27 @@ async def upload_file(file: UploadFile, user_id, url: Optional[str] = None):
 @app.post("/process_audio")
 async def process_audio(user_id: str, file_name: str, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
     try:
-        audio_file = await download_file(user_id, file_name)
-        audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']
-        
-        picovoice_outputs = picovoice_models(audio_file_path, access_key)
-
-        if not os.path.exists('outputs'):
-            os.makedirs('outputs')
-
-        # Extract 'sentences_v2' from picovoice_outputs
-        sentences_v2 = picovoice_outputs['sentences_v2']
-
-        # Convert each dictionary in 'sentences_v2' to a string
-        sentences_v2_text = '\n'.join(json.dumps(item) for item in sentences_v2)
-
-        # Define the full file path
-        output_file_path = os.path.join('outputs', f'{file_id}_sentences_v2.txt')
-
-        # Write 'sentences_v2' to a file in the 'outputs' directory
-        with open(output_file_path, 'w') as f:
-            f.write(sentences_v2_text)
-
-        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], output_file_path, output_file_path)
-        
         """
         TODO: 
-        - Save the sentences_v2 JSON file to the same cloud bucket as the file_name
         - From sentences_v2 -> llama-3 to reformat to custom fields -> new JSON/Text file
         - Response new JSON/Text file to FE
         """
+        # Download the file specified by 'user_id' and 'file_name' asynchronously
+        audio_file = await download_file(user_id, file_name)
+
+        # Extract the new file name and file id from the downloaded file's details
+        audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']
+
+        # Use the Picovoice models to process the audio file and generate outputs
+        picovoice_outputs = picovoice_models(audio_file_path, access_key)
+
+        # Save the 'sentences_v2' output from Picovoice to a file, and get the path of the saved file
+        output_file_path = save_output(picovoice_outputs["sentences_v2"], file_id)
+
+        # Upload the output file to a cloud storage bucket
+        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], output_file_path, output_file_path)
         
+        # Remove the audio file and output file from the local directory
         os.remove(audio_file_path)
         os.remove(output_file_path)
 

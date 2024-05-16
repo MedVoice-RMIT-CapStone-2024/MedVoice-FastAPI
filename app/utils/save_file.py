@@ -1,6 +1,7 @@
 import os
 import datetime
 import hashlib
+import json
 
 def save_audio(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
@@ -33,9 +34,29 @@ def save_audio(file_path: str, user_id: str):
 
     return {"new_file_name": new_file_name, "file_id": file_id}
 
-# Helper function
+def save_output(json_output, file_id):
+    # Ensure 'outputs' directory exists
+    if not os.path.exists('outputs'):
+        os.makedirs('outputs')
+
+    # Convert each dictionary in 'json_output' to a string
+    json_output_text = '\n'.join(json.dumps(item) for item in json_output)
+
+    # Define the full file path
+    output_file_path = os.path.join('outputs', f'{file_id}_json_output.txt')
+
+    # Write 'json_output' to a file in the 'outputs' directory
+    with open(output_file_path, 'w') as f:
+        f.write(json_output_text)
+
+    print(f"'json_output' saved to {output_file_path}")
+
+    return output_file_path
+
+# Helper function for audio
 def get_file_info(file_path):
     # Use os.path.splitext to split the file path into root and extension
     file_name, file_extension = os.path.splitext(file_path)
     # Return the file extension
     return {"file_name": file_name, "file_extension": file_extension}
+
