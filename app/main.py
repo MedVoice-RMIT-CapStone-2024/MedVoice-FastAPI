@@ -1,4 +1,4 @@
-import os, uvicorn, nest_asyncio, requests
+import os, uvicorn, nest_asyncio, requests, json
 
 from typing import List, Union, cast, Optional
 from google.cloud import storage
@@ -16,6 +16,7 @@ from .utils.google_storage import upload_file_helper
 from .utils.save_audio import save_audio
 from .models.replicate_models import llama_2, whisper_diarization
 from .models.picovoice_models import picovoice_models
+from .config.google_project_config import cloud_details
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -81,13 +82,8 @@ async def authenticate_implicit_with_adc(project_id="nifty-saga-417905"):
 @app.get("/get_audio/{id}")
 async def get_audio(id: str):
     try:
-        # Your Google Cloud project ID and bucket name
-        project_id="nifty-saga-417905"
-        # The name for the new bucket
-        bucket_name = "medvoice-sgp-audio-bucket"
-
-        storage_client = storage.Client(project=project_id)
-        bucket = storage_client.bucket(bucket_name)
+        storage_client = storage.Client(project=cloud_details['project_id'])
+        bucket = storage_client.bucket(cloud_details['bucket_name'])
 
         # Get the list of blobs in the bucket
         blobs = bucket.list_blobs()
@@ -99,9 +95,6 @@ async def get_audio(id: str):
         for blob in blobs:
             # Split the blob name by underscore and get the last part before the extension
             id_in_blob = blob.name.rsplit('.', 1)[0].rsplit('_', 1)[-1]
-            """
-            TODO: Compare the current date with the file date 
-            """
 
             # Check if the id in the blob name matches the id
             if id_in_blob == id:
@@ -118,23 +111,15 @@ async def upload_file(file: UploadFile, user_id, url: Optional[str] = None):
     try:
         if url:
             file = await download_file(url)
-            new_filename = file('file')
+            new_file_name = file('file')
         else:
             contents = await file.read()
 
             audio_file = {}
             # The path of the audio file is now 'new_audio_path'
-            audio_file = save_audio(contents, file.filename, user_id)
-            temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
+            audio_file = save_audio(contents, file.file_name, user_id)
 
-        project_id="nifty-saga-417905"
-        # The name for the new bucket
-        bucket_name = "medvoice-sgp-audio-bucket"
-
-        # Call the upload_blob function
-        upload_file_helper(project_id, bucket_name, temp_audio_path, new_filename)
-
-        file_url = f"https://storage.googleapis.com/{bucket_name}/{new_filename}"
+        file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{new_file_name}"
 
         output = ''
         # output = pretty_print_json(output)
@@ -145,57 +130,78 @@ async def upload_file(file: UploadFile, user_id, url: Optional[str] = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process_audio")
-async def process_audio(file: UploadFile, user_id, url: Optional[str] = None, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
+async def process_audio(user_id: str, file_name: str, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
     try:
-        if url:
-            file = await download_file(url)
-            new_filename = file('file')
-        else:
-            contents = await file.read()
-
-            audio_file = {}
-            # The path of the audio file is now 'new_audio_path'
-            audio_file = save_audio(contents, file.filename, user_id)
-            temp_audio_path, new_filename = audio_file['temp_audio_path'], audio_file['new_filename']
-
-        project_id="nifty-saga-417905"
-        # The name for the new bucket
-        bucket_name = "medvoice-sgp-audio-bucket"
-
-        # Call the upload_blob function
-        upload_file_helper(project_id, bucket_name, temp_audio_path, new_filename)
-
-        picovoice_outputs = picovoice_models(temp_audio_path, access_key)
+        audio_file = await download_file(user_id, file_name)
+        audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']
         
-        os.remove(temp_audio_path)
+        picovoice_outputs = picovoice_models(audio_file_path, access_key)
+
+        if not os.path.exists('outputs'):
+            os.makedirs('outputs')
+
+        # Extract 'sentences_v2' from picovoice_outputs
+        sentences_v2 = picovoice_outputs['sentences_v2']
+
+        # Convert each dictionary in 'sentences_v2' to a string
+        sentences_v2_text = '\n'.join(json.dumps(item) for item in sentences_v2)
+
+        # Define the full file path
+        output_file_path = os.path.join('outputs', f'{file_id}_sentences_v2.txt')
+
+        # Write 'sentences_v2' to a file in the 'outputs' directory
+        with open(output_file_path, 'w') as f:
+            f.write(sentences_v2_text)
+
+        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], output_file_path, output_file_path)
+        
+        """
+        TODO: 
+        - Save the sentences_v2 JSON file to the same cloud bucket as the file_name
+        - From sentences_v2 -> llama-3 to reformat to custom fields -> new JSON/Text file
+        - Response new JSON/Text file to FE
+        """
+        
+        os.remove(audio_file_path)
+        os.remove(output_file_path)
 
         return {
             "sentences": picovoice_outputs["sentences"],
-            "sentences_v2": picovoice_outputs["sentences_v2"]
+            "sentences_v2": picovoice_outputs["sentences_v2"],
+            "file_id": file_id
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/download")
-async def download_file(url: str):
+async def download_file(user_id: str, file_name: str):
     try:
+        # bucket_name = "medvoice_audio_bucket"
+        file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{file_name}"
         # Send a GET request to the URL
-        response = requests.get(url, stream=True)
+        response = requests.get(file_url, stream=True)
 
         # Check if the request was successful
         if response.status_code == 200:
-            filename = os.path.join("audios", url.split("/")[-1])
+            file_path = os.path.join("audios", file_url.split("/")[-1])
             # Open the local file in write mode
-            with open(filename, 'wb') as f:
+            with open(file_path, 'wb') as f:
                 # Write the contents of the response to the file
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-            print(f"File downloaded successfully to {filename}")
+            print(f"File downloaded successfully to {file_path}")
         else:
             print(f"Failed to download file. Status code: {response.status_code}")
 
-        return {"file": filename}
+        audio_file = save_audio(file_path, user_id)
+        print(audio_file)
+        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], audio_file['new_file_name'], audio_file['new_file_name'])
+
+        return {
+            "new_file_name": audio_file['new_file_name'], 
+            "file_id": audio_file['file_id']
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

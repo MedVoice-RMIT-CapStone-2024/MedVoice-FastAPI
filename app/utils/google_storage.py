@@ -12,7 +12,7 @@ def upload_file_helper(project_id, bucket_name, source_file_name, destination_bl
     blob.make_public()
 
     print(
-        "File {} uploaded to {} and made publicly accessible.".format(
-            source_file_name, destination_blob_name
+        "File {} uploaded and made publicly accessible.".format(
+            source_file_name
         )
     )
