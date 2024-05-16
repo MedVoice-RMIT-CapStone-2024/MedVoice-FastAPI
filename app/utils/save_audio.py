@@ -1,14 +1,16 @@
 import os
-import tempfile
 import datetime
+import hashlib
 
-def save_audio(contents, filename: str, user_id: str):
+def save_audio(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
     os.makedirs('audios', exist_ok=True)
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3', dir='audios') as temp_audio:
-        temp_audio.write(contents)
-        temp_audio_path = temp_audio.name
+    temp_audio_path = file_path
+
+    # Get file extension
+    file_info = get_file_info(temp_audio_path)
+    file_name, file_extension = file_info['file_name'], file_info['file_extension']
 
     # Get the current date and time
     now = datetime.datetime.now()
@@ -16,14 +18,24 @@ def save_audio(contents, filename: str, user_id: str):
     # Format the date and time as a string
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Create the new filename with date, original filename, and user ID
-    new_filename = f'{date_string}_{filename}_{user_id}.mp3'
+    # Create the new file_name with date, original file_name, and user ID
+    new_file_name = f'{file_name}_{date_string}_{user_id}{file_extension}'
 
+    # Hash this new file_name
+    file_id = hashlib.sha256(new_file_name.encode('utf-8')).hexdigest()
+
+    # Create the new file_name with hash value, date, original file_name, and user ID
+    new_file_name = f'{file_name}_{date_string}_{file_id}_{user_id}{file_extension}'
+    
     # Rename the temporary file
-    new_audio_path = os.path.join('audios', new_filename)
-    os.rename(temp_audio_path, new_audio_path)
+    # new_audio_path = os.path.join('audios', new_file_name)
+    os.rename(file_path, new_file_name)
 
-    # The path of the audio file is now 'new_audio_path'
-    temp_audio_path = new_audio_path
+    return {"new_file_name": new_file_name, "file_id": file_id}
 
-    return {"temp_audio_path": temp_audio_path, "new_filename": new_filename}
+# Helper function
+def get_file_info(file_path):
+    # Use os.path.splitext to split the file path into root and extension
+    file_name, file_extension = os.path.splitext(file_path)
+    # Return the file extension
+    return {"file_name": file_name, "file_extension": file_extension}
