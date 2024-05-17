@@ -2,9 +2,10 @@ import os, uvicorn, nest_asyncio, requests, json
 
 from typing import List, Union, cast, Optional
 from google.cloud import storage
-from pyngrok import ngrok
+from pyngrok import ngrok, conf
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
 from fastapi import FastAPI, Request, UploadFile, HTTPException
 from fastapi.templating import Jinja2Templates
@@ -52,7 +53,7 @@ def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/buckets")
-async def authenticate_implicit_with_adc(project_id="nifty-saga-417905"):
+async def authenticate_implicit_with_adc():
     """
     When interacting with Google Cloud Client libraries, the library can auto-detect the
     credentials to use.
@@ -71,7 +72,7 @@ async def authenticate_implicit_with_adc(project_id="nifty-saga-417905"):
     # *NOTE*: Replace the client created below with the client required for your application.
     # Note that the credentials are not specified when constructing the client.
     # Hence, the client library will look for credentials using ADC.
-    storage_client = storage.Client(project=project_id)
+    storage_client = storage.Client(project=cloud_details["project_id"])
     buckets = storage_client.list_buckets()
     print("Buckets:")
     for bucket in buckets:
@@ -107,7 +108,7 @@ async def get_audio(id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/upload")
+@app.post("/process_audio_v2")
 async def upload_file(file: UploadFile, user_id, url: Optional[str] = None):
     try:
         if url:
@@ -199,13 +200,19 @@ async def download_file(user_id: str, file_name: str):
 
 def main():
     # specify a port
-    port = 8000
-    ngrok_tunnel = ngrok.connect(port)
+    # port = 8000
+
+    load_dotenv()
+    # Get the API key from the environment variable
+    api_key = os.getenv('NGROK_API_KEY')
+    # Create a PyngrokConfig object with the API key
+    pyngrok_config = conf.PyngrokConfig(api_key=api_key)
+    conf.set_default(pyngrok_config)
+    # Open a ngrok tunnel
+    ngrok_tunnel = ngrok.connect(name="medvoice_backend")
 
     # where we can visit our fastAPI app
     print('Public URL:', ngrok_tunnel.public_url)
-
-
     nest_asyncio.apply()
     uvicorn.run(app, port=8000, log_level="info")
 

@@ -9,7 +9,7 @@ def upload_file_helper(project_id, bucket_name, source_file_name, destination_bl
     blob.upload_from_filename(source_file_name)
 
     # Make the blob publicly accessible.
-    blob.make_public()
+    # blob.make_public()
 
     print(
         "File {} uploaded and made publicly accessible.".format(
