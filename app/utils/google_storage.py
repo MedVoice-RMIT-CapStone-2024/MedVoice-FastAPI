@@ -20,6 +20,10 @@ def upload_file_helper(project_id, bucket_name, source_file_name, destination_bl
         )
     )
 
+    file_url = f"https://storage.googleapis.com/{bucket_name}/{source_file_name}"
+
+    return file_url
+
 def sort_links_by_datetime(links: List[str]) -> List[str]:
     # Regular expression to match the date-time in the link
     pattern = re.compile(r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})date")

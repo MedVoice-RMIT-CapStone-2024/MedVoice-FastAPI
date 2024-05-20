@@ -2,6 +2,7 @@ import os
 import datetime
 import hashlib
 import json
+from typing import List, Dict, Any, Optional
 
 def save_audio(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
@@ -34,7 +35,7 @@ def save_audio(file_path: str, user_id: str):
 
     return {"new_file_name": new_file_name, "file_id": file_id}
 
-def save_output(json_output, file_id):
+def save_json_to_text(json_output: List[Dict[str, Any]], file_id: str, file_name: Optional[str] = None) -> str:
     # Ensure 'outputs' directory exists
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
@@ -43,7 +44,7 @@ def save_output(json_output, file_id):
     json_output_text = '\n'.join(json.dumps(item) for item in json_output)
 
     # Define the full file path
-    output_file_path = os.path.join('outputs', f'{file_id}_json_output.txt')
+    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}json_output.txt')
 
     # Write 'json_output' to a file in the 'outputs' directory
     with open(output_file_path, 'w') as f:
@@ -52,6 +53,26 @@ def save_output(json_output, file_id):
     print(f"'json_output' saved to {output_file_path}")
 
     return output_file_path
+
+def save_strings_to_text(strings_output: List[str], file_id: str, file_name: Optional[str] = None) -> str:
+    # Ensure 'outputs' directory exists
+    if not os.path.exists('outputs'):
+        os.makedirs('outputs')
+
+    # Convert the list of strings to a single string
+    strings_output_text = '\n'.join(strings_output)
+
+    # Define the full file path
+    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}strings_output.txt')
+
+    # Write 'strings_output' to a file in the 'outputs' directory
+    with open(output_file_path, 'w') as f:
+        f.write(strings_output_text)
+
+    print(f"'strings_output' saved to {output_file_path}")
+
+    return output_file_path
+
 
 # Helper function for audio
 def get_file_info(file_path):
