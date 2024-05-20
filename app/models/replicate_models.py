@@ -1,29 +1,34 @@
 import replicate
 
-async def llama_2(output):
+async def llama_3_70b_instruct(output):
 
     result = ''
-    # The meta/llama-2-70b-chat model can stream output as it's running.
+    # The meta/meta-llama-3-70b-instruct model can stream output as it's running.
     for event in replicate.stream(
-        "meta/llama-2-70b-chat",
+        "meta/meta-llama-3-70b-instruct",
         input={
             "top_k": 0,
-            "top_p": 1,
-            "prompt": f"""Summarize the transcript organized by key topics.
-                If someone has said something important, mention it as: '<Name of the person> made a significant contribution by stating that <important statement>'
-                At the bottom, list out the follow up actions if discussed
+            "top_p": 0.9,
+            "prompt": f"""Work through this problem step by step:
+                Q: Summarize the medical transcript organized by key topics.
+                If a healthcare professional has made a significant statement, mention it as: '<Name of the healthcare professional> made a significant contribution by stating that <important statement>'
+                At the end, list out the follow-up actions or medical recommendations if discussed
                 ----
-                Transcript: {output}
+                Medical Transcript: {output}
             """,
-            "temperature": 0.5,
-            "system_prompt": "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.",
+            "max_tokens": 512,
+            "min_tokens": 0,
+            "temperature": 0.6,
+            "system_prompt": "You are a helpful assistant. Only use the information explicitly mentioned in the transcript, and you must not infer or assume any details that are not directly stated.",
             "length_penalty": 1,
-            "max_new_tokens": 500,
-            "min_new_tokens": -1,
+            "stop_sequences": "<|end_of_text|>,<|eot_id|>",
+            "prompt_template": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant. Your role is to summarize medical transcripts and provide accurate information based on the explicit content of the transcript. You must not infer or assume any details that are not directly stated.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+            "presence_penalty": 1.15,
+            "log_performance_metrics": False
         },
     ):
         result += str(event)
-    print("\nLlama 2 Result: " + result)
+    print("\nMedical Summary Result: " + result)
     return result
 
 async def whisper_diarization(file_url: str): 

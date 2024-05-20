@@ -16,7 +16,7 @@ from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_helper, sort_links_by_datetime
 from .utils.save_file import save_audio
 from .utils.save_file import save_output
-from .models.replicate_models import llama_2, whisper_diarization
+from .models.replicate_models import llama_3_70b_instruct, whisper_diarization
 from .models.picovoice_models import picovoice_models
 from .config.google_project_config import cloud_details
 
@@ -109,36 +109,37 @@ async def get_audio(id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process_audio_v2")
-async def upload_file(file: UploadFile, user_id, url: Optional[str] = None):
+async def upload_file(user_id: str, file_name: str):
     try:
-        if url:
-            file = await download_file(url)
-            new_file_name = file('file')
-        else:
-            contents = await file.read()
+        # Download the file specified by 'user_id' and 'file_name' asynchronously
+        audio_file = await download_file(user_id, file_name)
 
-            audio_file = {}
-            # The path of the audio file is now 'new_audio_path'
-            audio_file = save_audio(contents, file.file_name, user_id)
+        # Extract the new file name and file id from the downloaded file's details
+        audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']
 
-        file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{new_file_name}"
+        file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
 
-        output = ''
-        # output = pretty_print_json(output)
-        output = await llama_2(whisper_diarization(file_url))
+        llama3_output = ''
+        # llama3_output = pretty_print_json(llama3_output)
+        diarization_result = await whisper_diarization(file_url)
+        llama3_output = await llama_3_70b_instruct(diarization_result)
 
-        return {"file_url": file_url, "output": output if output != '' else "It is working"}
+        # Save the 'sentences_v2' llama3_output from Picovoice to a file, and get the path of the saved file
+        output_file_path = save_output(llama3_output, file_id)
+
+        # Upload the output file to a cloud storage bucket
+        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], output_file_path, output_file_path)
+
+        os.remove(audio_file_path)
+        os.remove(output_file_path)
+
+        return {"file_url": file_url, "output": llama3_output if llama3_output != '' else "It is working"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process_audio")
 async def process_audio(user_id: str, file_name: str, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
     try:
-        """
-        TODO: 
-        - From sentences_v2 -> llama-3 to reformat to custom fields -> new JSON/Text file
-        - Response new JSON/Text file to FE
-        """
         # Download the file specified by 'user_id' and 'file_name' asynchronously
         audio_file = await download_file(user_id, file_name)
 
@@ -201,8 +202,11 @@ async def download_file(user_id: str, file_name: str):
 def main():
     # specify a port
     # port = 8000
-
     load_dotenv()
+
+    # Get the API token from environment variable
+    REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
+
     # Get the API key from the environment variable
     api_key = os.getenv('NGROK_API_KEY')
     # Create a PyngrokConfig object with the API key

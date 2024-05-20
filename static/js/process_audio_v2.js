@@ -1,30 +1,58 @@
-document.getElementById("submitBtn").addEventListener("click", function () {
+document.getElementById("picovoiceSubmitBtn").addEventListener("click", function () {
     // Change the button color to red   
     this.classList.remove("bg-blue-500", "hover:bg-blue-700");
     this.classList.add("bg-red-500", "hover:bg-red-700");
 
-    var file = document.getElementById("audioUpload").files[0];
+    // Get the user ID and audio file name fields
+    var userIdField = document.getElementById("userId");
+    var audioFileNameField = document.getElementById("picovoiceAudioUpload");
+
+    // Create a new FormData object
     var formData = new FormData();
-    formData.append("file", file);
+
+    // Append the user ID and audio file name to the form data
+    formData.append("user_id", String(userIdField.value));
+    formData.append("file_name", String(audioFileNameField.value));
+
+    // Create a new XMLHttpRequest
     var xhr = new XMLHttpRequest();
 
-    xhr.open("POST", "/upload", true);
+    // Initialize a POST request with query parameters
+    xhr.open("POST", "/process_audio_v2?user_id=" + encodeURIComponent(String(userIdField.value)) + "&file_name=" + encodeURIComponent(String(audioFileNameField.value)));
 
     // Get the transcription field
-    var transcriptionField = document.getElementById("transcription");
+    var transcriptionField = document.getElementById("picovoiceTranscription");
     transcriptionField.value = "Transcribing...";
+
+    // Get the spinner and show it
+    var spinner = document.getElementById("spinner");
+    spinner.style.display = "block";
+
     xhr.onload = function () {
         if (xhr.status == 200) {
-            // Display a success notification
-            alert('Upload Successful!');
+            // Hide the spinner
+            spinner.style.display = "none";
+            // Parse the response data
             var data = JSON.parse(xhr.responseText);
-            setTimeout(function () {
-                var cleanedData = data.output.replace(/\x1b\[[0-9;]*m/g, "");
-                transcriptionField.value = cleanedData;
-            }, 1000); // Wait for 1 seconds before displaying the protocol data
+
+            // Check if the data is as expected
+            if (data && data.output) {
+                var output = data.output;
+                transcriptionField.value = output;
+            } else {
+                transcriptionField.value = "Unexpected response format!";
+            }
         } else {
-            transcriptionField.value = "Upload failed!";
+            // Hide the spinner
+            spinner.style.display = "none";
+            transcriptionField.value = "Upload failed with status: " + xhr.status;
         }
     };
+
+    xhr.onerror = function () {
+        transcriptionField.value = "Request failed!";
+    };
+
+    // Send the form data
     xhr.send(formData);
 });
