@@ -35,6 +35,6 @@ def sort_links_by_datetime(links: List[str]) -> List[str]:
             return None
 
     # Sort the links based on the date-time
-    sorted_links = sorted(links, key=get_datetime_from_link)
+    sorted_links = sorted(links, key=get_datetime_from_link, reverse=True)
 
     return sorted_links
