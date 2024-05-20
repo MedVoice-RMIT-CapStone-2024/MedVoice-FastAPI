@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from .utils.pretty_print_json import pretty_print_json
-from .utils.google_storage import upload_file_helper
+from .utils.google_storage import upload_file_helper, sort_links_by_datetime
 from .utils.save_file import save_audio
 from .utils.save_file import save_output
 from .models.replicate_models import llama_2, whisper_diarization
@@ -104,7 +104,7 @@ async def get_audio(id: str):
                 audio_urls.append(blob.public_url)
 
         # Return the list of audio URLs
-        return {"urls": audio_urls}
+        return {"urls": sort_links_by_datetime(audio_urls)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
