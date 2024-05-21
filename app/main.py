@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_helper, sort_links_by_datetime
 from .utils.save_file import save_audio, save_json_to_text, save_strings_to_text
-from .models.replicate_models import llama_3_70b_instruct, whisper_diarization
+from .models.replicate_models import llama3_generate_medical_summary, llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization
 from .models.picovoice_models import picovoice_models
 from .config.google_project_config import cloud_details
 
@@ -168,7 +168,7 @@ async def process_audio_v2(user_id: str, file_name: str):
 
         diarization_result = await whisper_diarization(file_url)
         llama3_output = ''
-        # llama3_output = await llama_3_70b_instruct(diarization_result)
+        # llama3_output = await llama3_generate_medical_summary(diarization_result)
 
         # Save the 'sentences_v2' llama3_output from Picovoice to a file, and get the path of the saved file
         transcript_file_path = save_json_to_text(llama3_output, file_id)
@@ -250,14 +250,20 @@ async def test_whisper_diarization(file_url: str):
     try:
         output = await whisper_diarization(file_url)
         print(pretty_print_json(output))
-        return output
+        prompt_for_llama3 = convert_prompt_for_llama3(output)
+        input_transcript = prompt_for_llama3["input_transcript"]
+
+        return input_transcript
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/test/llama3")
-async def test_llama_3_70b_instruct(diarization_result: List[Dict[str, Any]]):
+async def test_llama_3_70b_instruct(file_url: str):
     try:
-        output = await llama_3_70b_instruct(diarization_result)
+        output = await whisper_diarization(file_url)
+        print(pretty_print_json(output))
+        prompt_for_llama3 = convert_prompt_for_llama3(output)
+        output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
         return output
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
