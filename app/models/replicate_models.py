@@ -88,16 +88,16 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
     json_schema="""{
     "type": "object",
     "properties": {
-        "name": {
+        "patient_name": {
         "type": "string"
         },
-        "age": {
+        "patient_age": {
         "type": "integer"
         },
-        "gender": {
+        "patient_gender": {
         "type": "string"
         },
-        "diagnosis": {
+        "medical_diagnosis": {
         "type": "array",
         "items": {
             "type": "object",
@@ -109,7 +109,7 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
             "required": ["name"]
         }
         },
-        "treatment": {
+        "medical_treatment": {
         "type": "array",
         "items": {
             "type": "object",
@@ -124,12 +124,12 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
             "required": ["name", "prescription"]
         }
         },
-        "vital": {
+        "health_vital": {
         "type": "array",
         "items": {
             "type": "object",
             "properties": {
-            "name": {
+            "status": {
                 "type": "string"
             },
             "value": {
@@ -139,18 +139,18 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
                 "type": "string"
             }
             },
-            "required": ["name", "value", "units"]
+            "required": ["status"]
         }
         }
     },
-    "required": ["name", "gender", "treatment", "vital"]
+    "required": ["patient_name", "patient_gender", "medical_treatment", "health_vital"]
     }"""
 
-    # Define the system prompt
     system_prompt = f"""You are an AI that summarizes medical conversations into a structured JSON format like this{json_schema}. 
-    Given the medical transcript below, provide a summary by extracting key-value pairs. Only use the information explicitly mentioned 
-    in the transcript, and you must not infer or assume any details that are not directly stated, and strictly follow what the json schema required, 
-    and print the json schema only."""
+    Given the medical transcript below, provide a medical summary by extracting key-value pairs. Only use the information explicitly mentioned 
+    in the transcript, and you must not infer or assume any details that are not directly stated. If the transcript has no medical information, you must still proceed to print out an empty JSON schema. 
+    You must ensure that the 'medical_diagnosis', 'medical_treatment', and 'health_vital' fields contain valid medical terms recognized in medical practice. Strictly follow what the JSON schema required, 
+    and you must print the JSON schema only."""
 
     # Format the prompt for the llama-3 model
     prompt: str = f"""

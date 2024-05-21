@@ -13,8 +13,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from .utils.pretty_print_json import pretty_print_json
-from .utils.google_storage import upload_file_helper, sort_links_by_datetime
-from .utils.save_file import save_audio, save_json_to_text, save_strings_to_text
+from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
+from .utils.save_file import save_audio, save_json_to_text, save_strings_to_text, save_json_output
 from .models.replicate_models import llama3_generate_medical_summary, llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization
 from .models.picovoice_models import picovoice_models
 from .config.google_project_config import cloud_details
@@ -107,8 +107,8 @@ async def get_audio_by_user_id(id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/get_transcript/{file_id}")
-async def get_transcript(file_id: str):
+@app.get("/get_transcript/{file_id}/{file_extension}")
+async def get_transcript(file_id: str, file_extension: str):
     try:
         storage_client = storage.Client(project=cloud_details['project_id'])
         bucket = storage_client.bucket(cloud_details['bucket_name'])
@@ -124,16 +124,15 @@ async def get_transcript(file_id: str):
             # Split the last part by underscore and get the first part
             id_in_blob = last_part.split('_', 1)[0]
 
-            # Check if the id in the blob name matches the 'file_id'
-            if id_in_blob == file_id:
+            # Check if the id in the blob name matches the 'file_id' and the file has the correct extension
+            if id_in_blob == file_id and last_part.endswith(f".{file_extension}"):
                 # Return the public URL of the blob
-                return {"file_id": file_id, "transcript_url": blob.public_url}
+                return {"transcript_url": blob.public_url}
 
         # If no matching blob is found, return a message saying that there is no such file with that ID
-        return {"message": f"No file found with ID {file_id}"}
+        return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
     
 @app.post("/process_transcript")
 async def process_transcript(user_id: str, file_name: str, transcript: List[str]):
@@ -148,7 +147,9 @@ async def process_transcript(user_id: str, file_name: str, transcript: List[str]
         transcript_file_path = save_strings_to_text(transcript, file_id, file_name)
 
         # Upload the output file to a cloud storage bucket
-        transcript_url = upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
+        transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
+
+        os.remove(transcript_file_path)
 
         return {"file_id": file_id, "transcript_url": transcript_url}
     except Exception as e:
@@ -166,20 +167,18 @@ async def process_audio_v2(user_id: str, file_name: str):
 
         file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
 
-        diarization_result = await whisper_diarization(file_url)
-        llama3_output = ''
-        # llama3_output = await llama3_generate_medical_summary(diarization_result)
+        llama3_json_output = await llama_3_70b_instruct_pipeline(file_url)
+        print(llama3_json_output)
 
-        # Save the 'sentences_v2' llama3_output from Picovoice to a file, and get the path of the saved file
-        transcript_file_path = save_json_to_text(llama3_output, file_id)
+        transcript_file_path = save_json_output(llama3_json_output, file_id, file_name)
 
         # Upload the output file to a cloud storage bucket
-        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
+        transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
 
         os.remove(audio_file_path)
         os.remove(transcript_file_path)
 
-        return {"file_url": file_url, "output": llama3_output if llama3_output != '' else "It is working"}
+        return {"transcript_url": transcript_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -199,7 +198,7 @@ async def process_audio(user_id: str, file_name: str, access_key="XqSUBqySs7hFkI
         transcript_file_path = save_json_to_text(picovoice_outputs["sentences_v2"], file_id)
 
         # Upload the output file to a cloud storage bucket
-        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
+        upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
         
         # Remove the audio file and output file from the local directory
         os.remove(audio_file_path)
@@ -236,7 +235,7 @@ async def download_and_upload_audio_file(user_id: str, file_name: str):
 
         audio_file = save_audio(file_path, user_id)
         print(audio_file)
-        upload_file_helper(cloud_details['project_id'], cloud_details['bucket_name'], audio_file['new_file_name'], audio_file['new_file_name'])
+        upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], audio_file['new_file_name'], audio_file['new_file_name'])
 
         return {
             "new_file_name": audio_file['new_file_name'], 
@@ -258,13 +257,14 @@ async def test_whisper_diarization(file_url: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/test/llama3")
-async def test_llama_3_70b_instruct(file_url: str):
+async def llama_3_70b_instruct_pipeline(file_url: str):
     try:
-        output = await whisper_diarization(file_url)
-        print(pretty_print_json(output))
-        prompt_for_llama3 = convert_prompt_for_llama3(output)
+        speaker_diarization_json = await whisper_diarization(file_url)
+        print(pretty_print_json(speaker_diarization_json))
+        prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json)
         output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
-        return output
+        return json.loads(output)
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

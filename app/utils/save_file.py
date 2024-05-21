@@ -73,6 +73,21 @@ def save_strings_to_text(strings_output: List[str], file_id: str, file_name: Opt
 
     return output_file_path
 
+def save_json_output(json_output: List[Dict[str, Any]], file_id: str, file_name: str):
+    # Ensure 'outputs' directory exists
+    if not os.path.exists('outputs'):
+        os.makedirs('outputs')
+
+    # Define the full file path
+    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_json_output.json')
+
+    # Write the json_output to the file
+    with open(output_file_path, 'w') as f:
+        json.dump(json_output, f)
+
+    print(f"JSON output saved to {output_file_path}")
+
+    return output_file_path
 
 # Helper function for audio
 def get_file_info(file_path):

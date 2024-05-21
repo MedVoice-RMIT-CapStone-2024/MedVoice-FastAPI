@@ -3,7 +3,7 @@ from typing import List
 import re
 from datetime import datetime
 
-def upload_file_helper(project_id, bucket_name, source_file_name, destination_blob_name):
+def upload_file_to_bucket(project_id, bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
     storage_client = storage.Client(project=project_id)
     bucket = storage_client.bucket(bucket_name)
