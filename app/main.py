@@ -156,19 +156,19 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/process_transcript")
-async def process_transcript(user_id: str, file_name: str, transcript: List[str]):
+async def process_transcript(file_id: str, transcript: List[str], user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
         # Transcript list of strings test: ["This", "is", "a", "test", "transcript"]
         # Download the file specified by 'user_id' and 'file_name' asynchronously
-        audio_file = await download_and_upload_audio_file(user_id, file_name)
-
-        # Extract the new file name and file id from the downloaded file's details
-        file_id = audio_file['file_id']
+        if user_id and file_name:
+            audio_file = await download_and_upload_audio_file(user_id, file_name)
+            # Extract the new file name and file id from the downloaded file's details
+            file_id = audio_file['file_id']
 
         # Convert the list of strings to a single string
         transcript_text = '\n'.join(transcript)
 
-        transcript_file_path = save_strings_to_text(transcript, file_id, file_name)
+        transcript_file_path = save_strings_to_text(transcript, file_id, file_name if file_name else file_id)
 
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
@@ -178,7 +178,6 @@ async def process_transcript(user_id: str, file_name: str, transcript: List[str]
         return {"transcript": transcript_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/process_audio_v2")
 async def process_audio_v2(user_id: str, file_name: str):
@@ -202,7 +201,7 @@ async def process_audio_v2(user_id: str, file_name: str):
         os.remove(audio_file_path)
         os.remove(transcript_file_path)
 
-        return llama3_json_output
+        return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
