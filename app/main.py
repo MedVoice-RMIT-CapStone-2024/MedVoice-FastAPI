@@ -6,11 +6,14 @@ from pyngrok import ngrok, conf
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from enum import Enum
 
 from fastapi import FastAPI, Request, UploadFile, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
@@ -107,8 +110,19 @@ async def get_audio_by_user_id(id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class FileExtension(str, Enum):
+    txt = "txt"
+    json = "json"
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=400,
+        content={"message": "Invalid file extension. Only 'txt' and 'json' are allowed."},
+    )
+
 @app.get("/get_transcript/{file_id}/{file_extension}")
-async def get_transcript(file_id: str, file_extension: str):
+async def get_transcript(file_id: str, file_extension: FileExtension):
     try:
         storage_client = storage.Client(project=cloud_details['project_id'])
         bucket = storage_client.bucket(cloud_details['bucket_name'])
@@ -130,7 +144,7 @@ async def get_transcript(file_id: str, file_extension: str):
                 return {"transcript_url": blob.public_url}
 
         # If no matching blob is found, return a message saying that there is no such file with that ID
-        return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
+        return {"transcript_url": f"No file found with ID {file_id} and extension .{file_extension}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
