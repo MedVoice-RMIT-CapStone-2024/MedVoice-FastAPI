@@ -140,11 +140,18 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
 
             # Check if the id in the blob name matches the 'file_id' and the file has the correct extension
             if id_in_blob == file_id and last_part.endswith(f".{file_extension}"):
-                # Return the public URL of the blob
-                return {"transcript_url": blob.public_url}
+                # Get the content of the blob
+                response = requests.get(blob.public_url)
+                if file_extension == FileExtension.json:
+                    # Render the blob.public_url to a JSON object and return it
+                    return response.json()
+                elif file_extension == FileExtension.txt:
+                    # Render the blob.public_url to a transcript_text and return it as a object {"transcript": transcript_text}
+                    transcript_text = response.text
+                    return {"transcript": transcript_text}
 
         # If no matching blob is found, return a message saying that there is no such file with that ID
-        return {"transcript_url": f"No file found with ID {file_id} and extension .{file_extension}"}
+        return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
@@ -158,6 +165,9 @@ async def process_transcript(user_id: str, file_name: str, transcript: List[str]
         # Extract the new file name and file id from the downloaded file's details
         file_id = audio_file['file_id']
 
+        # Convert the list of strings to a single string
+        transcript_text = '\n'.join(transcript)
+
         transcript_file_path = save_strings_to_text(transcript, file_id, file_name)
 
         # Upload the output file to a cloud storage bucket
@@ -165,7 +175,7 @@ async def process_transcript(user_id: str, file_name: str, transcript: List[str]
 
         os.remove(transcript_file_path)
 
-        return {"file_id": file_id, "transcript_url": transcript_url}
+        return {"transcript": transcript_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -192,7 +202,7 @@ async def process_audio_v2(user_id: str, file_name: str):
         os.remove(audio_file_path)
         os.remove(transcript_file_path)
 
-        return {"transcript_url": transcript_url}
+        return llama3_json_output
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -272,15 +282,31 @@ async def test_whisper_diarization(file_url: str):
     
 @app.post("/test/llama3")
 async def llama_3_70b_instruct_pipeline(file_url: str):
-    try:
-        speaker_diarization_json = await whisper_diarization(file_url)
-        print(pretty_print_json(speaker_diarization_json))
-        prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json)
-        output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
-        return json.loads(output)
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    num_wrong_output = 0
+    while True:
+        try:
+            speaker_diarization_json = await whisper_diarization(file_url)
+            print(pretty_print_json(speaker_diarization_json))
+            prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json)
+            output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
+            llama3_json_output = json.loads(output)
+
+            # Check if the output is a JSON object
+            if isinstance(llama3_json_output, dict):
+                try:
+                    json.dumps(llama3_json_output)
+                    return llama3_json_output
+                except (TypeError, OverflowError):
+                    num_wrong_output += 1
+                    print(f"Error: Output is not a JSON object. Attempt {num_wrong_output}")
+                    continue
+            else:
+                num_wrong_output += 1
+                print(f"Error: Output is not a JSON object. Attempt {num_wrong_output}")
+                continue
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 def main():
     # specify a port
