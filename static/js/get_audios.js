@@ -1,4 +1,7 @@
 document.getElementById('searchBtn').addEventListener('click', function () {
+    // Change the button color to red   
+    this.classList.remove("bg-blue-500", "hover:bg-blue-700");
+    this.classList.add("bg-red-500", "hover:bg-red-700");
     // Get the user ID from the input field
     var userId = document.getElementById('user_id').value;
 

@@ -1,30 +1,166 @@
-import replicate
+import replicate, json
+from langchain.chains import LLMChain
+from langchain_community.llms import Replicate
+from langchain_core.prompts import PromptTemplate
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from typing import Dict, Any, List
 
-async def llama_2(output):
+def initialize_llm() -> Replicate:
+    # Initialize the Replicate instance
+    llm = Replicate(
+        streaming=True,
+        callbacks=[StreamingStdOutCallbackHandler()],
+        model="meta/meta-llama-3-70b-instruct",
+        model_kwargs= {
+            "top_k": 0,
+            "top_p": 0.9,
+            "max_tokens": 512,
+            "min_tokens": 0,
+            "temperature": 0.6,
+            "length_penalty": 1,
+            "stop_sequences": "<|end_of_text|>,<|eot_id|>",
+            "presence_penalty": 1.15,
+            "log_performance_metrics": False
+        },
+    )
+    return llm
 
+async def llama3_generate_medical_json(prompt: str) -> Dict[str, Any]:
+    # Initialize the Replicate instance
+    llm = initialize_llm()
+
+    # Invoke the model with the prompt
+    result = llm.invoke(prompt)
+
+    return result
+
+async def llama3_generate_medical_summary(output: str) -> str:
+    llm = initialize_llm()
     result = ''
-    # The meta/llama-2-70b-chat model can stream output as it's running.
-    for event in replicate.stream(
-        "meta/llama-2-70b-chat",
+    for event in llm.stream(
         input={
             "top_k": 0,
-            "top_p": 1,
-            "prompt": f"""Summarize the transcript organized by key topics.
-                If someone has said something important, mention it as: '<Name of the person> made a significant contribution by stating that <important statement>'
-                At the bottom, list out the follow up actions if discussed
+            "top_p": 0.9,
+            "prompt": f"""Work through this problem step by step:
+                Q: Summarize the medical transcript organized by key topics.
+                If a healthcare professional has made a significant statement, mention it as: '<Name of the healthcare professional> made a significant contribution by stating that <important statement>'
+                At the end, list out the follow-up actions or medical recommendations if discussed
                 ----
-                Transcript: {output}
+                Medical Transcript: {output}
             """,
-            "temperature": 0.5,
-            "system_prompt": "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.",
+            "max_tokens": 512,
+            "min_tokens": 0,
+            "temperature": 0.6,
+            "system_prompt": "You are a helpful assistant. Only use the information explicitly mentioned in the transcript, and you must not infer or assume any details that are not directly stated.",
             "length_penalty": 1,
-            "max_new_tokens": 500,
-            "min_new_tokens": -1,
+            "stop_sequences": "<|end_of_text|>,<|eot_id|>",
+            "prompt_template": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are a helpful assistant. Your role is to summarize medical transcripts and provide accurate information based on the explicit content of the transcript. You must not infer or assume any details that are not directly stated.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+            "presence_penalty": 1.15,
+            "log_performance_metrics": False
         },
     ):
         result += str(event)
-    print("\nLlama 2 Result: " + result)
+    print("\nMedical Summary Result: " + result)
     return result
+
+def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
+    # Initialize an empty string for the input transcript
+    input_transcript: str = ""
+
+    # Create a dictionary to map speaker IDs to speaker numbers
+    speaker_map: Dict[str, str] = {}
+
+    # Iterate over the segments in the JSON output
+    for segment in json_output["segments"]:
+        # If the speaker ID is not in the map, add it
+        if segment["speaker"] not in speaker_map:
+            # The speaker number is the next number after the current highest number in the map
+            speaker_number: str = str(len(speaker_map) + 1)
+            speaker_map[segment["speaker"]] = speaker_number
+
+        # Get the speaker number from the map
+        speaker_number = speaker_map[segment["speaker"]]
+
+        # Add the speaker number and text to the input transcript
+        input_transcript += f"Speaker {speaker_number}: {segment['text']}\n"
+
+    # Get the prompt from the command line argument
+    json_schema="""{
+    "type": "object",
+    "properties": {
+        "patient_name": {
+        "type": "string"
+        },
+        "patient_age": {
+        "type": "integer"
+        },
+        "patient_gender": {
+        "type": "string"
+        },
+        "medical_diagnosis": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+            "name": {
+                "type": "string"
+            }
+            },
+            "required": ["name"]
+        }
+        },
+        "medical_treatment": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+            "name": {
+                "type": "string"
+            },
+            "prescription": {
+                "type": "string"
+            }
+            },
+            "required": ["name", "prescription"]
+        }
+        },
+        "health_vital": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+            "status": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            },
+            "units": {
+                "type": "string"
+            }
+            },
+            "required": ["status"]
+        }
+        }
+    },
+    "required": ["patient_name", "patient_gender", "medical_treatment", "health_vital"]
+    }"""
+
+    system_prompt = f"""You are an AI that summarizes medical conversations into a structured JSON format like this{json_schema}. 
+    Given the medical transcript below, provide a medical summary by extracting key-value pairs. Only use the information explicitly mentioned 
+    in the transcript, and you must not infer or assume any details that are not directly stated. If the transcript has no medical information, you must still proceed to print out an empty JSON schema. 
+    You must ensure that the 'medical_diagnosis', 'medical_treatment', and 'health_vital' fields contain valid medical terms recognized in medical practice. Strictly follow what the JSON schema required, 
+    and you must print the JSON schema only."""
+
+    # Format the prompt for the llama-3 model
+    prompt: str = f"""
+    System: {system_prompt}
+    User: 
+    {input_transcript}
+    Assistant:
+    """
+
+    return {"prompt": prompt, "input_transcript": input_transcript}
 
 async def whisper_diarization(file_url: str): 
     output = replicate.run(

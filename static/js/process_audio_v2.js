@@ -18,7 +18,7 @@ document.getElementById("picovoiceSubmitBtn").addEventListener("click", function
     var xhr = new XMLHttpRequest();
 
     // Initialize a POST request with query parameters
-    xhr.open("POST", "/process_audio?user_id=" + encodeURIComponent(String(userIdField.value)) + "&file_name=" + encodeURIComponent(String(audioFileNameField.value)));
+    xhr.open("POST", "/process_audio_v2?user_id=" + encodeURIComponent(String(userIdField.value)) + "&file_name=" + encodeURIComponent(String(audioFileNameField.value)));
 
     // Get the transcription field
     var transcriptionField = document.getElementById("picovoiceTranscription");
@@ -36,14 +36,10 @@ document.getElementById("picovoiceSubmitBtn").addEventListener("click", function
             var data = JSON.parse(xhr.responseText);
 
             // Check if the data is as expected
-            if (data && data.sentences_v2) {
-                var sentences_v2 = data.sentences_v2;
-                var sentenceTexts = sentences_v2.map(function (sentence_info) {
-                    return '["start_sec": ' + sentence_info.start_sec + ', "end_sec": ' + sentence_info.end_sec + '] Speaker ' + sentence_info.speaker_tag + ': ' + sentence_info.sentence;
-                }).join("\n");
-                transcriptionField.value = sentenceTexts;
+            if (data && data.output) {
+                var output = data.output;
+                transcriptionField.value = output;
             } else {
-
                 transcriptionField.value = "Unexpected response format!";
             }
         } else {

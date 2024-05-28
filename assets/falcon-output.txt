@@ -2,11 +2,11 @@ Speaker 1: what is this what are these
 Speaker 2: this is a coffee this is a cup this is a chair these are three spoons these are four glasses these are two tables
 
 -------------------
-["start_sec": 0.9919999837875366, "end_sec": 2.240000009536743] Speaker 1: what is this
-["start_sec": 2.496000051498413, "end_sec": 3.6480000019073486] Speaker 2: this is a coffee
-["start_sec": 4.895999908447266, "end_sec": 5.855999946594238] Speaker 2: this is a cup
-["start_sec": 6.656000137329102, "end_sec": 7.808000087738037] Speaker 2: this is a chair
-["start_sec": 8.800000190734863, "end_sec": 9.855999946594238] Speaker 1: what are these
-["start_sec": 11.32800006866455, "end_sec": 12.704000473022461] Speaker 2: these are three spoons
-["start_sec": 13.4399995803833, "end_sec": 14.751999855041504] Speaker 2: these are four glasses
-["start_sec": 15.552000045776367, "end_sec": 16.86400032043457] Speaker 2: these are two tables
+Speaker 1: what is this
+Speaker 2: this is a coffee
+Speaker 2: this is a cup
+Speaker 2: this is a chair
+Speaker 1: what are these
+Speaker 2: these are three spoons
+Speaker 2: these are four glasses
+Speaker 2: these are two tables
