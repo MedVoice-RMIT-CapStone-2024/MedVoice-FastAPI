@@ -260,6 +260,8 @@ async def download_and_upload_audio_file(user_id: str, file_name: str):
         print(audio_file)
         upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], audio_file['new_file_name'], audio_file['new_file_name'])
 
+        os.remove(audio_file["new_file_name"])
+        
         return {
             "new_file_name": audio_file['new_file_name'], 
             "file_id": audio_file['file_id']

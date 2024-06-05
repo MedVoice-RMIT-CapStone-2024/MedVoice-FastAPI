@@ -146,11 +146,11 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
     "required": ["patient_name", "patient_gender", "medical_treatment", "health_vital"]
     }"""
 
-    system_prompt = f"""You are an AI that summarizes medical conversations into a structured JSON format like this{json_schema}. 
-    Given the medical transcript below, provide a medical summary by extracting key-value pairs. Only use the information explicitly mentioned 
-    in the transcript, and you must not infer or assume any details that are not directly stated. If the transcript has no medical information, you must still proceed to print out an empty JSON schema. 
-    You must ensure that the 'medical_diagnosis', 'medical_treatment', and 'health_vital' fields contain valid medical terms recognized in medical practice. Strictly follow what the JSON schema required, 
-    and you must print the JSON schema only."""
+    system_prompt = f"""You are an AI assisstant that summarizes medical transcript into a structured JSON format like this: {json_schema}. 
+    Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details. 
+    Summarize this information into a key-value pairs, adhering to the schema provided. If no patient-related information is present, return an JSON schema with empty values. 
+    Adhere to the schema, ensuring the use of explicit information and recognized medical terminology. Follow the JSON schema strictly without making assumptions about unspecified details. 
+    You must only return the JSON schema."""
 
     # Format the prompt for the llama-3 model
     prompt: str = f"""
