@@ -39,9 +39,9 @@ class File(BaseModel):
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 
 # Mounting local directory
-app.mount("/static", StaticFiles(directory="/code/static" if running_in_docker else "static"), name="static")
-app.mount("/assets", StaticFiles(directory="/code/assets" if running_in_docker else "assets"), name="assets")
-app.mount("/audios", StaticFiles(directory="/code/audios" if running_in_docker else "audios"), name="audios")
+app.mount("/static", StaticFiles(directory="/workspace/code/static" if running_in_docker else "static"), name="static")
+app.mount("/assets", StaticFiles(directory="/workspace/code/assets" if running_in_docker else "assets"), name="assets")
+app.mount("/audios", StaticFiles(directory="/workspace/code/audios" if running_in_docker else "audios"), name="audios")
 
 app.add_middleware(
     CORSMiddleware,
@@ -331,7 +331,7 @@ def main():
 
         # where we can visit our fastAPI app
         print('Public URL:', ngrok_tunnel.public_url)
-        
+
     nest_asyncio.apply()
     uvicorn.run(app, port=8000, log_level="info")
 

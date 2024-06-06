@@ -2,13 +2,13 @@
 FROM python:3.11 as requirements-stage
 
 # Here's where we will generate the file requirements.txt
-WORKDIR /tmp
+WORKDIR /workspace/tmp
 
 # Install poetry
 RUN pip install poetry
 
-# Copy the pyproject.toml and poetry.lock files to the /tmp directory
-COPY ./pyproject.toml ./poetry.lock* /tmp/
+# Copy the pyproject.toml and poetry.lock files to the /workspace/tmp directory
+COPY ./pyproject.toml ./poetry.lock* /workspace/tmp/
 
 # Generate the requirements.txt file
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
@@ -16,22 +16,22 @@ RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 # This is the final stage
 FROM python:3.11 as final-stage
 
-# Set the current working directory to /code
-WORKDIR /code
+# Set the current working directory to /workspace/code
+WORKDIR /workspace/code
 
-# Copy the requirements.txt file from the requirements-stage to the /code directory
-COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
+# Copy the requirements.txt file from the requirements-stage to the /workspace/code directory
+COPY --from=requirements-stage /workspace/tmp/requirements.txt /workspace/code/requirements.txt
 
 # Install the package dependencies in the generated requirements.txt file
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /workspace/code/requirements.txt
 
-# Copy the app directory to the /code directory
-COPY ./app /code/app
+# Copy the app directory to the /workspace/code directory
+COPY ./app /workspace/code/app
 
-# Copy the static, assets, and audios directories to the /code directory
-COPY ./static /code/static
-COPY ./assets /code/assets
-COPY ./audios /code/audios
+# Copy the static, assets, and audios directories to the /workspace/code directory
+COPY ./static /workspace/code/static
+COPY ./assets /workspace/code/assets
+COPY ./audios /workspace/code/audios
 
 # Set the environment variable to indicate that the application is running in Docker
 ENV RUNNING_IN_DOCKER=true
