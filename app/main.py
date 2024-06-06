@@ -35,10 +35,13 @@ app = FastAPI(lifespan=lifespan)
 class File(BaseModel):
     url: str
 
+# Determine if running in Docker
+running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
+
 # Mounting local directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/assets", StaticFiles(directory="assets"), name="assets")
-app.mount("/audios", StaticFiles(directory="audios"), name="audios")
+app.mount("/static", StaticFiles(directory="/code/static" if running_in_docker else "static"), name="static")
+app.mount("/assets", StaticFiles(directory="/code/assets" if running_in_docker else "assets"), name="assets")
+app.mount("/audios", StaticFiles(directory="/code/audios" if running_in_docker else "audios"), name="audios")
 
 app.add_middleware(
     CORSMiddleware,
@@ -317,16 +320,18 @@ def main():
     # Get the API token from environment variable
     REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
-    # Get the API key from the environment variable
-    api_key = os.getenv('NGROK_API_KEY')
-    # Create a PyngrokConfig object with the API key
-    pyngrok_config = conf.PyngrokConfig(api_key=api_key)
-    conf.set_default(pyngrok_config)
-    # Open a ngrok tunnel
-    ngrok_tunnel = ngrok.connect(name="medvoice_backend")
+    if not running_in_docker:  
+        # Get the API key from the environment variable
+        api_key = os.getenv('NGROK_API_KEY')
+        # Create a PyngrokConfig object with the API key
+        pyngrok_config = conf.PyngrokConfig(api_key=api_key)
+        conf.set_default(pyngrok_config)
+        # Open a ngrok tunnel
+        ngrok_tunnel = ngrok.connect(name="medvoice_backend")
 
-    # where we can visit our fastAPI app
-    print('Public URL:', ngrok_tunnel.public_url)
+        # where we can visit our fastAPI app
+        print('Public URL:', ngrok_tunnel.public_url)
+        
     nest_asyncio.apply()
     uvicorn.run(app, port=8000, log_level="info")
 
