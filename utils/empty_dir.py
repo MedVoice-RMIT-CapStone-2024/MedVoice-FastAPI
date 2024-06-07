@@ -12,7 +12,7 @@ def remove_files_in_directories(directories):
             file_path = os.path.join(directory, file_name)
             
             # Check if the path is a file or a directory
-            if os.path.isfile(file_path):
+            if os.path.isfile(file_path) and not file_path.endswith('.txt'):
                 # Remove the file
                 os.remove(file_path)
             elif os.path.isdir(file_path):

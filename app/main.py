@@ -19,7 +19,7 @@ from .utils.pretty_print_json import pretty_print_json
 from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
 from .utils.save_file import save_audio, save_json_to_text, save_strings_to_text, save_json_output
 from .models.replicate_models import llama3_generate_medical_summary, llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization
-from .models.picovoice_models import picovoice_models
+# from .models.picovoice_models import picovoice_models
 from .config.google_project_config import cloud_details
 
 @asynccontextmanager
@@ -208,36 +208,6 @@ async def process_audio_v2(user_id: str, file_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/process_audio")
-async def process_audio(user_id: str, file_name: str, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
-    try:
-        # Download the file specified by 'user_id' and 'file_name' asynchronously
-        audio_file = await download_and_upload_audio_file(user_id, file_name)
-
-        # Extract the new file name and file id from the downloaded file's details
-        audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']
-
-        # Use the Picovoice models to process the audio file and generate outputs
-        picovoice_outputs = picovoice_models(audio_file_path, access_key)
-
-        # Save the 'sentences_v2' output from Picovoice to a file, and get the path of the saved file
-        transcript_file_path = save_json_to_text(picovoice_outputs["sentences_v2"], file_id)
-
-        # Upload the output file to a cloud storage bucket
-        upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
-        
-        # Remove the audio file and output file from the local directory
-        os.remove(audio_file_path)
-        os.remove(transcript_file_path)
-
-        return {
-            "sentences": picovoice_outputs["sentences"],
-            "sentences_v2": picovoice_outputs["sentences_v2"],
-            "file_id": file_id
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
 @app.post("/test/download")
 async def download_and_upload_audio_file(user_id: str, file_name: str):
     try:
@@ -311,6 +281,36 @@ async def llama_3_70b_instruct_pipeline(file_url: str):
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+# @app.post("/process_audio")
+# async def process_audio(user_id: str, file_name: str, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
+#     try:
+#         # Download the file specified by 'user_id' and 'file_name' asynchronously
+#         audio_file = await download_and_upload_audio_file(user_id, file_name)
+
+#         # Extract the new file name and file id from the downloaded file's details
+#         audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']
+
+#         # Use the Picovoice models to process the audio file and generate outputs
+#         picovoice_outputs = picovoice_models(audio_file_path, access_key)
+
+#         # Save the 'sentences_v2' output from Picovoice to a file, and get the path of the saved file
+#         transcript_file_path = save_json_to_text(picovoice_outputs["sentences_v2"], file_id)
+
+#         # Upload the output file to a cloud storage bucket
+#         upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
+        
+#         # Remove the audio file and output file from the local directory
+#         os.remove(audio_file_path)
+#         os.remove(transcript_file_path)
+
+#         return {
+#             "sentences": picovoice_outputs["sentences"],
+#             "sentences_v2": picovoice_outputs["sentences_v2"],
+#             "file_id": file_id
+#         }
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
 
 def main():
     # specify a port
