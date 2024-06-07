@@ -25,16 +25,13 @@ COPY --from=requirements-stage /workspace/tmp/requirements.txt /workspace/code/r
 # Install the package dependencies in the generated requirements.txt file
 RUN pip install --no-cache-dir --upgrade -r /workspace/code/requirements.txt
 
-# Copy the app directory to the /workspace/code directory
-COPY ./app /workspace/code/app
-
-# Copy the static, assets, and audios directories to the /workspace/code directory
-COPY ./static /workspace/code/static
-COPY ./assets /workspace/code/assets
-COPY ./audios /workspace/code/audios
+# Copy all files and directories from the host to the Docker image
+COPY . .
 
 # Set the environment variable to indicate that the application is running in Docker
 ENV RUNNING_IN_DOCKER=true
+ENV NGROK_CONFIG_PATH /workspace/code/ngrok.yml
+ENV GOOGLE_APPLICATION_CREDENTIALS /workspace/code/google-credentials.json
 
 # Set the command to use uvicorn to run the FastAPI application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
