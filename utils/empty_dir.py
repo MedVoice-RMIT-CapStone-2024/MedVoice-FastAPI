@@ -8,11 +8,15 @@ def remove_files_in_directories(directories):
 
         # Loop through the list of files
         for file_name in files:
+            # Skip the placeholder.txt file
+            if file_name == 'placeholder.txt':
+                continue
+
             # Create a full file path
             file_path = os.path.join(directory, file_name)
             
             # Check if the path is a file or a directory
-            if os.path.isfile(file_path) and not file_path.endswith('.txt'):
+            if os.path.isfile(file_path):
                 # Remove the file
                 os.remove(file_path)
             elif os.path.isdir(file_path):
