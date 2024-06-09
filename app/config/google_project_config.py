@@ -1,9 +1,11 @@
-# cloud_details = {
-#     "project_id": "nifty-saga-417905",
-#     "bucket_name": "medvoice-sgp-audio-bucket"
-# }
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
+
+# Access environment variables
 cloud_details = {
-    "project_id": "med-voice-k2d62x",
-    "bucket_name": "medvoice_audio_bucket"
+    "project_id": os.getenv("PROJECT_ID"),
+    "bucket_name": os.getenv("BUCKET_NAME")
 }

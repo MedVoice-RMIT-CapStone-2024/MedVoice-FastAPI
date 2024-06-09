@@ -2,7 +2,9 @@ import os
 import datetime
 import hashlib
 import json
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
+
+from .file_manipulation import get_file_info
 
 def save_audio(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
@@ -40,11 +42,11 @@ def save_json_to_text(json_output: List[Dict[str, Any]], file_id: str, file_name
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
 
-    # Convert each dictionary in 'json_output' to a string
+    # Convert each dictionary in 'json_output' to text
     json_output_text = '\n'.join(json.dumps(item) for item in json_output)
 
     # Define the full file path
-    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}json_output.txt')
+    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_json_output.txt')
 
     # Write 'json_output' to a file in the 'outputs' directory
     with open(output_file_path, 'w') as f:
@@ -54,45 +56,30 @@ def save_json_to_text(json_output: List[Dict[str, Any]], file_id: str, file_name
 
     return output_file_path
 
-def save_strings_to_text(strings_output: List[str], file_id: str, file_name: Optional[str] = None) -> str:
+def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, file_name: Optional[str] = "transcript") -> str:
     # Ensure 'outputs' directory exists
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
 
-    # Convert the list of strings to a single string
-    strings_output_text = '\n'.join(strings_output)
+    # Determine output format based on data type
+    if isinstance(data, list):
+        output_format = 'txt'
+        data_to_write = '\n'.join(data)
+    elif isinstance(data, dict):
+        output_format = 'json'
+        data_to_write = json.dumps(data)
+    else:
+        raise ValueError("Unsupported data type for saving")
 
     # Define the full file path
-    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}strings_output.txt')
+    file_extension = output_format
+    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_output.{file_extension}')
 
-    # Write 'strings_output' to a file in the 'outputs' directory
+    # Write data to the file
     with open(output_file_path, 'w') as f:
-        f.write(strings_output_text)
+        f.write(data_to_write)
 
-    print(f"'strings_output' saved to {output_file_path}")
+    print(f"Output saved to {output_file_path}")
 
     return output_file_path
-
-def save_json_output(json_output: List[Dict[str, Any]], file_id: str, file_name: str):
-    # Ensure 'outputs' directory exists
-    if not os.path.exists('outputs'):
-        os.makedirs('outputs')
-
-    # Define the full file path
-    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_json_output.json')
-
-    # Write the json_output to the file
-    with open(output_file_path, 'w') as f:
-        json.dump(json_output, f)
-
-    print(f"JSON output saved to {output_file_path}")
-
-    return output_file_path
-
-# Helper function for audio
-def get_file_info(file_path):
-    # Use os.path.splitext to split the file path into root and extension
-    file_name, file_extension = os.path.splitext(file_path)
-    # Return the file extension
-    return {"file_name": file_name, "file_extension": file_extension}
 

@@ -1,0 +1,5 @@
+services:
+  medvoice-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile

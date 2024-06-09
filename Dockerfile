@@ -1,29 +1,34 @@
-# This is the first stage, it is named requirements-stage
-FROM python:3.11 as requirements-stage
+# This is the first stage, it is named builder
+FROM python:3.11-slim as builder
 
-# Here's where we will generate the file requirements.txt
+# Install and setup poetry config
+RUN pip install poetry==1.8.2
+
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
 WORKDIR /workspace/tmp
 
-# Install poetry
-RUN pip install poetry
+COPY pyproject.toml poetry.lock ./
+# Poetry complains if there is no README file
+RUN touch README.md
 
-# Copy the pyproject.toml and poetry.lock files to the /workspace/tmp directory
-COPY ./pyproject.toml ./poetry.lock* /workspace/tmp/
-
-# Generate the requirements.txt file
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+# Install all dependencies + remove poetry cache
+RUN poetry install && rm -rf $POETRY_CACHE_DIR
 
 # This is the final stage
-FROM python:3.11 as final-stage
+FROM python:3.11-slim as final-stage
+
+ENV VIRTUAL_ENV=/workspace/tmp/.venv \
+    PATH="/workspace/tmp/.venv/bin:$PATH"
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # Set the current working directory to /workspace/code
 WORKDIR /workspace/code
-
-# Copy the requirements.txt file from the requirements-stage to the /workspace/code directory
-COPY --from=requirements-stage /workspace/tmp/requirements.txt /workspace/code/requirements.txt
-
-# Install the package dependencies in the generated requirements.txt file
-RUN pip install --no-cache-dir --upgrade -r /workspace/code/requirements.txt
 
 # Copy all files and directories from the host to the Docker image
 COPY . .
@@ -35,6 +40,5 @@ ENV GOOGLE_APPLICATION_CREDENTIALS /workspace/code/google-credentials.json
 
 # Expose port 80
 EXPOSE 80
-
-# Set the command to use uvicorn to run the FastAPI application
+# Set the command to use FastAPI to run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

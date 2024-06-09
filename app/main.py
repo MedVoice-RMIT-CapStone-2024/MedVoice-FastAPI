@@ -1,4 +1,4 @@
-import os, uvicorn, nest_asyncio, requests, json
+import os, uvicorn, nest_asyncio, requests, json, re, asyncio
 
 from typing import List, Optional, Dict, Any
 from google.cloud import storage
@@ -15,9 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .utils.pretty_print_json import pretty_print_json
+from .utils.file_manipulation import pretty_print_json, extract_audio_path, remove_file
 from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
-from .utils.save_file import save_audio, save_json_to_text, save_strings_to_text, save_json_output
+from .utils.save_file import save_audio, save_json_to_text, save_output
 from .models.replicate_models import llama3_generate_medical_summary, llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization
 # from .models.picovoice_models import picovoice_models
 from .config.google_project_config import cloud_details
@@ -86,8 +86,8 @@ async def authenticate_implicit_with_adc():
     print("Listed all storage buckets.")
     return "Bucket: " + bucket_name
 
-@app.get("/get_audio/{id}")
-async def get_audio_by_user_id(id: str):
+@app.get("/get_audios_from_user/{id}")
+async def get_audios_from_user_id(id: str):
     try:
         storage_client = storage.Client(project=cloud_details['project_id'])
         bucket = storage_client.bucket(cloud_details['bucket_name'])
@@ -158,8 +158,41 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+class AudioExtension(str, Enum):
+    mp3 = "mp3"
+    wav = "wav"
+    m4a = "m4a"
+
+@app.get("/get_audio/{file_id}/{file_extension}")
+async def get_audio(file_id: str, file_extension: AudioExtension):
+    try:
+        storage_client = storage.Client(project=cloud_details['project_id'])
+        bucket = storage_client.bucket(cloud_details['bucket_name'])
+
+        # Get the list of blobs in the bucket
+        blobs = bucket.list_blobs()
+
+        # Define a regex pattern to extract the fileID from the blob name
+        pattern = r'date_(.*?)fileID_'
+
+        # Iterate over the blobs to find the one that matches the 'file_id' and has the correct audio extension
+        for blob in blobs:
+            # Use regex to extract the fileID from the blob name
+            match = re.search(pattern, blob.name)
+            if match:
+                id_in_blob = match.group(1)
+                # Check if the extracted fileID matches the 'file_id' and the file has the correct audio extension
+                if id_in_blob == file_id and blob.name.endswith(f".{file_extension}"):
+                    # Return the public URL of the blob
+                    return blob.public_url
+
+        # If no matching audio file is found, raise an HTTPException
+        raise HTTPException(status_code=404, detail="Audio file not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @app.post("/process_transcript")
-async def process_transcript(file_id: str, transcript: List[str], user_id: Optional[str] = None, file_name: Optional[str] = None):
+async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
         # Transcript list of strings test: ["This", "is", "a", "test", "transcript"]
         # Download the file specified by 'user_id' and 'file_name' asynchronously
@@ -167,42 +200,77 @@ async def process_transcript(file_id: str, transcript: List[str], user_id: Optio
             audio_file = await download_and_upload_audio_file(user_id, file_name)
             # Extract the new file name and file id from the downloaded file's details
             file_id = audio_file['file_id']
+            audio_file_path = None
+        elif file_id:
+            # Getting the url of the audio file
+            file_url = await get_audio(file_id, file_extension)
+            # Extract the audio file path from the url
+            audio_file_path = extract_audio_path(file_url)
 
+            # Define a regex pattern to extract the patient from the file name
+            pattern = r'(.*?)patient_'
+            
+            match = re.search(pattern, audio_file_path)
+            if match:
+                patient = match.group(1)
+                file_name = patient.replace('patient_', '')
+                print(f"Patient name: {file_name}")
+
+        if not transcript:
+            raise ValueError("transcript must be provided")
+        
         # Convert the list of strings to a single string
         transcript_text = '\n'.join(transcript)
 
-        transcript_file_path = save_strings_to_text(transcript, file_id, file_name if file_name else file_id)
+        transcript_file_path = save_output(transcript, file_id, file_name)
 
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
 
-        os.remove(transcript_file_path)
+        remove_file(audio_file_path)
+        remove_file(transcript_file_path)
 
-        return {"transcript": transcript_text}
+        return {"transcript": transcript_text, "file_id": file_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process_audio_v2")
-async def process_audio_v2(user_id: str, file_name: str):
+async def process_audio_v2(file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
-        # Download the file specified by 'user_id' and 'file_name' asynchronously
-        audio_file = await download_and_upload_audio_file(user_id, file_name)
+        if file_id:
+            # Get the url of the audio file
+            file_url = await get_audio(file_id, file_extension)
+            # Extract the audio file path from the url
+            audio_file_path = extract_audio_path(file_url)
 
-        # Extract the new file name and file id from the downloaded file's details
-        audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']
+            # Define a regex pattern to extract the patient from the file name
+            pattern = r'/(.*?)patient_'
+            
+            match = re.search(pattern, audio_file_path)
+            if match:
+                patient = match.group(1)
+                file_name = patient.replace('patient_', '')
+                print(f"Patient name: {file_name}")
 
-        file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
-
+        if user_id and file_name:
+            # Download the file specified by 'user_id' and 'file_name' asynchronously
+            audio_file = await download_and_upload_audio_file(user_id, file_name)
+            # Extract the new file name and file id from the downloaded file's details
+            file_id, audio_file_path = audio_file['file_id'], audio_file['audio_file_path']
+            # Get the url of the audio file
+            file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
+        
+        # Run the LLM pipeline on the audio file url
         llama3_json_output = await llama_3_70b_instruct_pipeline(file_url)
         print(llama3_json_output)
 
-        transcript_file_path = save_json_output(llama3_json_output, file_id, file_name)
+        transcript_file_path = save_output(llama3_json_output, file_id, file_name)
 
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
 
-        os.remove(audio_file_path)
-        os.remove(transcript_file_path)
+        remove_file(audio_file_path)
+        remove_file(transcript_file_path)
 
         return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:
@@ -233,8 +301,8 @@ async def download_and_upload_audio_file(user_id: str, file_name: str):
         print(audio_file)
         upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], audio_file['new_file_name'], audio_file['new_file_name'])
 
-        os.remove(audio_file["new_file_name"])
-        
+        remove_file(audio_file["new_file_name"])
+
         return {
             "new_file_name": audio_file['new_file_name'], 
             "file_id": audio_file['file_id']
@@ -289,8 +357,6 @@ def main():
 
     # Get the API token from environment variable
     REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
-
-    # if running_in_docker:
       
     # Create a PyngrokConfig object with the API key and config path
     api_key = os.getenv('NGROK_API_KEY')
@@ -305,6 +371,6 @@ def main():
     print('Public URL:', ngrok_tunnel.public_url)
 
     nest_asyncio.apply()
-    uvicorn.run(app, port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
 
 main()
