@@ -40,12 +40,92 @@ To build the project locally, follow the steps below:
     ```shell
     poe import
     ```
-- To remove all the files from `audios/`:
+- To remove all the files from `audios/` and `outputs/`:
     ```shell
     poe flush
     ```
 
-## Obtaining the API Key
+### Build project with Docker
+
+#### Delete all containers
+
+To delete all containers, you can use the following command:
+
+```bash
+docker rm $(docker ps -a -q)
+```
+
+#### Delete an image
+
+To delete a specific image, first get the IMAGE ID by using:
+
+```bash
+docker images
+```
+
+Then you can remove the image using its ID as follows:
+
+```bash
+docker rmi <IMAGE_ID>
+```
+
+#### Delete all images
+
+To delete all images, you can use the following command:
+
+```bash
+docker rmi $(docker images -q)
+```
+
+#### Push a local image to Docker Hub
+
+- First, log in to Docker Hub:
+
+```bash
+docker login
+```
+
+- Then, tag your image with your Docker Hub username and the repository name:
+
+```bash
+docker tag <IMAGE_ID> <DOCKER_HUB_USERNAME>/<REPOSITORY_NAME>:<TAG>
+```
+
+- Then, push the image to Docker Hub:
+
+```bash
+docker push <DOCKER_HUB_USERNAME>/<REPOSITORY_NAME>:<TAG>
+```
+
+#### Pull an Image
+
+To pull an image from a registry such as Docker Hub, use the following command:
+
+```bash
+docker pull <DOCKER_HUB_USERNAME>/<REPOSITORY_NAME>:<TAG>
+```
+
+#### Run an image
+
+To run an image in a new container, use the following command:
+
+```bash
+docker run -d -p <HOST_PORT>:<CONTAINER_PORT> <DOCKER_HUB_USERNAME>/<REPOSITORY_NAME>:<TAG>
+```
+
+#### Docker Compose up
+
+To start all services defined in a `docker-compose.yml` file, navigate to the directory containing the file and use the following command:
+
+```bash
+docker-compose up
+```
+```
+Please replace `<IMAGE_ID>`, `<DOCKER_HUB_USERNAME>`, `<REPOSITORY_NAME>`, `<TAG>`, `<HOST_PORT>`, and `<CONTAINER_PORT>` with your actual values.
+```
+
+## Obtaining the Replicate API Key
+
 To use the Replicate API, you need to obtain an API key. Follow the steps below to get your API key:
 
 1. Visit the Replicate website at [https://www.replicate.ai](https://www.replicate.ai) and sign in to your account.
@@ -87,5 +167,14 @@ Args:
     project_id: The project id of your Google Cloud project.
 ```
 
+## Configuring ngrok
+
+Run the following command to find your ngrok configuration file:
+
+```shell
+ngrok config check
+```
+
+For more information on the ngrok configuration, refer to [Ngrok Configuration]("https://ngrok.com/docs/agent/config/").
 ## License
 This project is licensed under the [MIT License](LICENSE).
