@@ -1,5 +1,5 @@
 # This is the first stage, it is named builder
-FROM python:3.11-slim as builder
+FROM python:3.10-slim as builder
 
 # Install and setup poetry config
 RUN pip install poetry==1.8.2
@@ -19,7 +19,7 @@ RUN touch README.md
 RUN poetry install && rm -rf $POETRY_CACHE_DIR
 
 # This is the final stage
-FROM python:3.11-slim as final-stage
+FROM python:3.10-slim as final-stage
 
 ENV VIRTUAL_ENV=/workspace/tmp/.venv \
     PATH="/workspace/tmp/.venv/bin:$PATH"

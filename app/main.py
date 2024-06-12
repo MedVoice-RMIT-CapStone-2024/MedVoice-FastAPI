@@ -22,6 +22,9 @@ from .models.replicate_models import llama3_generate_medical_summary, llama3_gen
 # from .models.picovoice_models import picovoice_models
 from .config.google_project_config import cloud_details
 
+# Change the value for the local development
+ON_LOCALHOST = 0
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Code to run on startup
@@ -364,6 +367,13 @@ def main():
     pyngrok_config = conf.PyngrokConfig(api_key=api_key, config_path=config_path)
 
     conf.set_default(pyngrok_config)
+
+main()
+
+if ON_LOCALHOST:
+    if __name__ == '__main__':
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
+else:
     # Open a ngrok tunnel
     ngrok_tunnel = ngrok.connect(name="medvoice_backend")
 
@@ -372,5 +382,3 @@ def main():
 
     nest_asyncio.apply()
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
-
-main()
