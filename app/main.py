@@ -23,7 +23,7 @@ from .models.replicate_models import llama3_generate_medical_summary, llama3_gen
 from .config.google_project_config import cloud_details
 
 # Change the value for the local development
-ON_LOCALHOST = 0
+ON_LOCALHOST = 1
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

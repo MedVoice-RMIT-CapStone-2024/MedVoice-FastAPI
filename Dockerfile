@@ -38,7 +38,7 @@ ENV RUNNING_IN_DOCKER=true
 ENV NGROK_CONFIG_PATH /workspace/code/ngrok.yml
 ENV GOOGLE_APPLICATION_CREDENTIALS /workspace/code/google-credentials.json
 
-# Expose port 80
-EXPOSE 80
+# Expose port 8000
+EXPOSE 8000
 # Set the command to use FastAPI to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
