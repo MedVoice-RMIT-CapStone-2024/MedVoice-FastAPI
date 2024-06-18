@@ -26,12 +26,14 @@ To build the project locally, follow the steps below:
     pip install -r requirements.txt
     ```
 
-5. Run the project locally:
+5. Add your credentials to `.env` and remove the placeholder `.txt`
+
+6. Run the project locally:
     ```shell
     poe run
     ```
 
-6. **[Optional]** More ultility options:
+7. **[Optional]** More ultility options:
 - From `poetry.lock` to `requirements.txt`
     ```shell
     poe export
@@ -118,7 +120,8 @@ docker run -d -p <HOST_PORT>:<CONTAINER_PORT> <DOCKER_HUB_USERNAME>/<REPOSITORY_
 To start all services defined in a `docker-compose.yml` file, navigate to the directory containing the file and use the following command:
 
 ```bash
-docker-compose up
+docker-compose build --no-cache
+docker-compose up --build
 ```
 ```
 Please replace `<IMAGE_ID>`, `<DOCKER_HUB_USERNAME>`, `<REPOSITORY_NAME>`, `<TAG>`, `<HOST_PORT>`, and `<CONTAINER_PORT>` with your actual values.

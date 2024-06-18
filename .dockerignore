@@ -27,3 +27,5 @@ __pycache__
 .DS_Store
 ehthumbs.db
 Thumbs.db
+
+docker_init.sh
