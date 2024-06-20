@@ -109,5 +109,17 @@
         });
     </script>
     <script src="./static/js/get_audios.js"></script>
+    <div class="bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold my-4">Interactive RAG System</h1>
+            <div class="mb-4">
+                <input id="question" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" type="text" placeholder="Enter your question here">
+            </div>
+            <button class="px-4 py-2 font-bold text-white bg-blue-500 rounded-full hover:bg-blue-700 focus:outline-none focus:shadow-outline" onclick="askQuestion()">Ask</button>
+            <div class="mt-4">
+                <textarea id="conversation" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" rows="10" readonly></textarea>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

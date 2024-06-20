@@ -15,12 +15,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .utils.file_manipulation import pretty_print_json, extract_audio_path, remove_file
+from .utils.file_manipulation import extract_audio_path, remove_file
 from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
-from .utils.save_file import save_audio, save_json_to_text, save_output
-from .models.replicate_models import llama3_generate_medical_summary, llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization
-# from .models.picovoice_models import picovoice_models
+from .utils.save_file import save_output
+from .models.rag import RAGSystem
 from .config.google_project_config import cloud_details
+from .routes.test import llm_pipeline_audio_to_json, download_and_upload_audio_file, whisper_diarize, llamaguard_evaluate_safety
 
 # Change the value for the local development
 ON_LOCALHOST = 1
@@ -160,7 +160,7 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
         return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 class AudioExtension(str, Enum):
     mp3 = "mp3"
     wav = "wav"
@@ -193,7 +193,30 @@ async def get_audio(file_id: str, file_extension: AudioExtension):
         raise HTTPException(status_code=404, detail="Audio file not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+rag = RAGSystem("update-28-covid-19-what-we-know.pdf")
+conversation_state = {}
+@app.get("/ask")
+async def rag_system(question: str):
+    try:
+        # Check if a similar question has been asked before
+        similar_question = None
+        for prev_question in rag.conversation_state:
+            if rag.similar(prev_question, question) > 0.8:
+                similar_question = prev_question
+                break
+
+        if similar_question:
+            answer = rag.conversation_state[similar_question]
+        else:
+            # Use asyncio.run to run the coroutine and get the result
+            answer = await rag.query_model(question)
+            rag.conversation_state[question] = answer
+
+        return {"answer": answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/process_transcript")
 async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
@@ -264,7 +287,7 @@ async def process_audio_v2(file_id: Optional[str] = None, file_extension: Option
             file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
         
         # Run the LLM pipeline on the audio file url
-        llama3_json_output = await llama_3_70b_instruct_pipeline(file_url)
+        llama3_json_output = await llm_pipeline_audio_to_json(file_url)
         print(llama3_json_output)
 
         transcript_file_path = save_output(llama3_json_output, file_id, file_name)
@@ -278,84 +301,24 @@ async def process_audio_v2(file_id: Optional[str] = None, file_extension: Option
         return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+    
 @app.post("/test/download")
-async def download_and_upload_audio_file(user_id: str, file_name: str):
-    try:
-        # bucket_name = "medvoice_audio_bucket"
-        file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{file_name}"
-        # Send a GET request to the URL
-        response = requests.get(file_url, stream=True)
-
-        # Check if the request was successful
-        if response.status_code == 200:
-            file_path = os.path.join("audios", file_url.split("/")[-1])
-            # Open the local file in write mode
-            with open(file_path, 'wb') as f:
-                # Write the contents of the response to the file
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-
-            print(f"File downloaded successfully to {file_path}")
-        else:
-            print(f"Failed to download file. Status code: {response.status_code}")
-
-        audio_file = save_audio(file_path, user_id)
-        print(audio_file)
-        upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], audio_file['new_file_name'], audio_file['new_file_name'])
-
-        remove_file(audio_file["new_file_name"])
-
-        return {
-            "new_file_name": audio_file['new_file_name'], 
-            "file_id": audio_file['file_id']
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def download_route(user_id: str, file_name: str):
+    return await download_and_upload_audio_file(user_id, file_name)
 
 @app.post("/test/whisper")
-async def test_whisper_diarization(file_url: str):
-    try:
-        output = await whisper_diarization(file_url)
-        print(pretty_print_json(output))
-        prompt_for_llama3 = convert_prompt_for_llama3(output)
-        input_transcript = prompt_for_llama3["input_transcript"]
+async def whisper_route(file_url: str):
+    return await whisper_diarize(file_url)
 
-        return input_transcript
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@app.post("/test/llama3")
-async def llama_3_70b_instruct_pipeline(file_url: str):
-    num_wrong_output = 0
-    while True:
-        try:
-            speaker_diarization_json = await whisper_diarization(file_url)
-            print(pretty_print_json(speaker_diarization_json))
-            prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json)
-            output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
-            llama3_json_output = json.loads(output)
+@app.post("/test/llm")
+async def llm_route(file_url: str):
+    return await llm_pipeline_audio_to_json(file_url)
 
-            # Check if the output is a JSON object
-            if isinstance(llama3_json_output, dict):
-                try:
-                    json.dumps(llama3_json_output)
-                    return llama3_json_output
-                except (TypeError, OverflowError):
-                    num_wrong_output += 1
-                    print(f"Error: Output is not a JSON object. Attempt {num_wrong_output}")
-                    continue
-            else:
-                num_wrong_output += 1
-                print(f"Error: Output is not a JSON object. Attempt {num_wrong_output}")
-                continue
-
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+@app.post("/test/llamaguard")
+async def llamaguard_route(question: str):
+    return await llamaguard_evaluate_safety(question)
 
 def main():
-    # specify a port
-    # port = 8000
     load_dotenv()
 
     # Get the API token from environment variable
@@ -363,9 +326,10 @@ def main():
       
     # Create a PyngrokConfig object with the API key and config path
     api_key = os.getenv('NGROK_API_KEY')
-    config_path = os.getenv('NGROK_CONFIG_PATH')
-    pyngrok_config = conf.PyngrokConfig(api_key=api_key, config_path=config_path)
-
+    pyngrok_config = conf.PyngrokConfig(
+        api_key=api_key, 
+        config_path=os.getenv('NGROK_CONFIG_PATH') if running_in_docker else None
+    )
     conf.set_default(pyngrok_config)
 
 main()
