@@ -15,12 +15,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .utils.file_manipulation import extract_audio_path, remove_file
+from .utils.file_manipulation import extract_audio_path, remove_file, download_and_upload_audio_file
 from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
 from .utils.save_file import save_output
 from .models.rag import RAGSystem
 from .config.google_project_config import cloud_details
-from .routes.test import llm_pipeline_audio_to_json, download_and_upload_audio_file, whisper_diarize, llamaguard_evaluate_safety
+from .routes.models import llm_pipeline_audio_to_json, whisper_diarize, llamaguard_evaluate_safety
 
 # Change the value for the local development
 ON_LOCALHOST = 1
@@ -194,10 +194,15 @@ async def get_audio(file_id: str, file_extension: AudioExtension):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class Question(BaseModel):
+    question: str
+
 rag = RAGSystem("update-28-covid-19-what-we-know.pdf")
 conversation_state = {}
-@app.get("/ask")
-async def rag_system(question: str):
+
+@app.post("/ask")
+async def rag_system(question_body: Question):
+    question = question_body.question
     try:
         # Check if a similar question has been asked before
         similar_question = None

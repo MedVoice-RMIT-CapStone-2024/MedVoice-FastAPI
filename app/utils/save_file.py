@@ -4,8 +4,6 @@ import hashlib
 import json
 from typing import List, Dict, Any, Optional, Union
 
-from .file_manipulation import get_file_info
-
 def save_audio(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
     os.makedirs('audios', exist_ok=True)
@@ -82,4 +80,11 @@ def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, file_name:
     print(f"Output saved to {output_file_path}")
 
     return output_file_path
+
+# Helper function for file information
+def get_file_info(file_path):
+    # Use os.path.splitext to split the file path into root and extension
+    file_name, file_extension = os.path.splitext(file_path)
+    # Return the file extension
+    return {"file_name": file_name, "file_extension": file_extension}
 
