@@ -1,4 +1,4 @@
-import os, uvicorn, nest_asyncio, requests, json, re, asyncio
+import os, uvicorn, nest_asyncio, requests, json, re, asyncio, uvloop
 
 from typing import List, Optional, Dict, Any
 from google.cloud import storage
@@ -23,7 +23,7 @@ from .config.google_project_config import cloud_details
 from .routes.POST.models import llm_pipeline_audio_to_json, whisper_diarize, llamaguard_evaluate_safety
 
 # Change the value for the local development
-ON_LOCALHOST = 0
+ON_LOCALHOST = 1
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -273,8 +273,6 @@ class Question(BaseModel):
     question: str
     source_type: SourceType
 
-app = FastAPI()
-
 # Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
 rag_pdf = RAGSystem_PDF("update-28-covid-19-what-we-know.pdf")
 rag_json = RAGSystem_JSON("prize.json")
@@ -334,5 +332,6 @@ else:
     # where we can visit our fastAPI app
     print('Public URL:', ngrok_tunnel.public_url)
 
+    # Apply nest_asyncio
     nest_asyncio.apply()
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
