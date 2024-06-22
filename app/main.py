@@ -18,12 +18,12 @@ from fastapi.responses import JSONResponse
 from .utils.file_manipulation import extract_audio_path, remove_file, download_and_upload_audio_file
 from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
 from .utils.save_file import save_output
-from .models.rag import RAGSystem
+from .models.rag import RAGSystem_JSON, RAGSystem_PDF
 from .config.google_project_config import cloud_details
-from .routes.models import llm_pipeline_audio_to_json, whisper_diarize, llamaguard_evaluate_safety
+from .routes.POST.models import llm_pipeline_audio_to_json, whisper_diarize, llamaguard_evaluate_safety
 
 # Change the value for the local development
-ON_LOCALHOST = 1
+ON_LOCALHOST = 0
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -62,20 +62,6 @@ def index(request: Request):
 
 @app.get("/buckets")
 async def authenticate_implicit_with_adc():
-    """
-    When interacting with Google Cloud Client libraries, the library can auto-detect the
-    credentials to use.
-
-    // TODO(Developer):
-    //  1. Before running this sample,
-    //  set up ADC as described in https://cloud.google.com/docs/authentication/external/set-up-adc
-    //  2. Replace the project variable.
-    //  3. Make sure that the user account or service account that you are using
-    //  has the required permissions. For this sample, you must have "storage.buckets.list".
-    Args:
-        project_id: The project id of your Google Cloud project.
-    """
-
     # This snippet demonstrates how to list buckets.
     # *NOTE*: Replace the client created below with the client required for your application.
     # Note that the credentials are not specified when constructing the client.
@@ -194,34 +180,6 @@ async def get_audio(file_id: str, file_extension: AudioExtension):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class Question(BaseModel):
-    question: str
-
-rag = RAGSystem("update-28-covid-19-what-we-know.pdf")
-conversation_state = {}
-
-@app.post("/ask")
-async def rag_system(question_body: Question):
-    question = question_body.question
-    try:
-        # Check if a similar question has been asked before
-        similar_question = None
-        for prev_question in rag.conversation_state:
-            if rag.similar(prev_question, question) > 0.8:
-                similar_question = prev_question
-                break
-
-        if similar_question:
-            answer = rag.conversation_state[similar_question]
-        else:
-            # Use asyncio.run to run the coroutine and get the result
-            answer = await rag.query_model(question)
-            rag.conversation_state[question] = answer
-
-        return {"answer": answer}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/process_transcript")
 async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
@@ -304,6 +262,33 @@ async def process_audio_v2(file_id: Optional[str] = None, file_extension: Option
         remove_file(transcript_file_path)
 
         return {"file_id": file_id, "llama3_json_output": llama3_json_output}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+class SourceType(str, Enum):
+    pdf = "pdf"
+    json = "json"
+
+class Question(BaseModel):
+    question: str
+    source_type: SourceType
+
+app = FastAPI()
+
+# Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
+rag_pdf = RAGSystem_PDF("update-28-covid-19-what-we-know.pdf")
+rag_json = RAGSystem_JSON("prize.json")
+
+@app.post("/ask")
+async def rag_system(question_body: Question):
+    question = question_body.question
+    source_type = question_body.source_type
+    try:
+        if source_type == SourceType.pdf:
+            answer = await rag_pdf.handle_question_async(question)
+        elif source_type == SourceType.json:
+            answer = await rag_json.handle_question_async(question)
+        return {"answer": answer}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

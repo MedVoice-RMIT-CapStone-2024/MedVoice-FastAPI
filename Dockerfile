@@ -33,6 +33,8 @@ WORKDIR /workspace/code
 # Copy all files and directories from the host to the Docker image
 COPY . .
 
+RUN python /workspace/code/utils/ollama_init.py
+
 # Set the environment variable to indicate that the application is running in Docker
 ENV RUNNING_IN_DOCKER=true
 ENV NGROK_CONFIG_PATH /workspace/code/ngrok.yml
