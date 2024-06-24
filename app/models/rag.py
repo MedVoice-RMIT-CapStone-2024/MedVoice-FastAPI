@@ -8,16 +8,15 @@ from langchain import hub
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.embeddings import OllamaEmbeddings
-from langchain_community.llms import Ollama
 from difflib import SequenceMatcher
 
 import time, asyncio
 
-from .replicate_models import initialize_llm, llamaguard_evaluate_safety
+from .replicate_models import init_replicate, llamaguard_evaluate_safety
 
 class BaseRAGSystem:
     def __init__(self):
-        self.llm = initialize_llm()
+        self.llm = init_replicate()
         self.rag_chain = None
         self.conversation_state = {}
 
@@ -122,12 +121,9 @@ class RAGSystem_JSON(BaseRAGSystem):
         # Store retriever for later use
         prompt = hub.pull("rlm/rag-prompt")
 
-        def format_docs(docs):
-            return "\n\n".join(doc.page_content for doc in docs)
-
         def create_rag_chain():
             return (
-                {"context": retriever | format_docs, "question": RunnablePassthrough()}
+                {"context": retriever, "question": RunnablePassthrough()}
                 | prompt
                 | self.llm 
                 | StrOutputParser()

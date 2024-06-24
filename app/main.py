@@ -23,7 +23,8 @@ from .config.google_project_config import cloud_details
 from .routes.POST.models import llm_pipeline_audio_to_json, whisper_diarize, llamaguard_evaluate_safety
 
 # Change the value for the local development
-ON_LOCALHOST = 1
+ON_LOCALHOST = 0
+RAG_SYS = 0
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -272,20 +273,26 @@ class SourceType(str, Enum):
 class Question(BaseModel):
     question: str
     source_type: SourceType
-
-# Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
-rag_pdf = RAGSystem_PDF("update-28-covid-19-what-we-know.pdf")
-rag_json = RAGSystem_JSON("prize.json")
-
 @app.post("/ask")
 async def rag_system(question_body: Question):
     question = question_body.question
     source_type = question_body.source_type
-    try:
-        if source_type == SourceType.pdf:
-            answer = await rag_pdf.handle_question_async(question)
-        elif source_type == SourceType.json:
-            answer = await rag_json.handle_question_async(question)
+    try: 
+        if RAG_SYS:
+            # Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
+            rag_pdf = RAGSystem_PDF("update-28-covid-19-what-we-know.pdf")
+            rag_json = RAGSystem_JSON("prize.json")
+        
+            if source_type == SourceType.pdf:
+                answer = await rag_pdf.handle_question_async(question)
+            elif source_type == SourceType.json:
+                answer = await rag_json.handle_question_async(question)
+        else:
+            if source_type == SourceType.pdf:
+                answer = f"This is a pdf answer. It is answering to your question: {question}"
+            elif source_type == SourceType.json:
+                answer = f"This is a json answer. It is answering to your question: {question}"
+            
         return {"answer": answer}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

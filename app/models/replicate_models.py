@@ -1,11 +1,11 @@
 import replicate, json
 from langchain.chains import LLMChain
-from langchain_community.llms import Replicate
+from langchain_community.llms import Replicate, Ollama
 from langchain_core.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from typing import Dict, Any, List
 
-def initialize_llm() -> Replicate:
+def init_replicate() -> Replicate:
     # Initialize the Replicate instance
     llm = Replicate(
         streaming=True,
@@ -25,9 +25,13 @@ def initialize_llm() -> Replicate:
     )
     return llm
 
+def init_ollama():
+    llm = Ollama(model="llama3", temperature=0)
+    return llm
+
 async def llama3_generate_medical_json(prompt: str) -> Dict[str, Any]:
     # Initialize the Replicate instance
-    llm = initialize_llm()
+    llm = init_replicate()
 
     # Invoke the model with the prompt
     result = llm.invoke(prompt)
@@ -35,7 +39,7 @@ async def llama3_generate_medical_json(prompt: str) -> Dict[str, Any]:
     return result
 
 async def llama3_generate_medical_summary(output: str) -> str:
-    llm = initialize_llm()
+    llm = init_replicate()
     result = ''
     for event in llm.stream(
         input={
