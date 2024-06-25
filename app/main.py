@@ -1,4 +1,4 @@
-import os, uvicorn, nest_asyncio, requests, json, re, asyncio, uvloop
+import os, uvicorn, nest_asyncio, requests, re, asyncio, datetime
 
 from typing import List, Optional, Dict, Any
 from google.cloud import storage
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from enum import Enum
 
-from fastapi import FastAPI, Request, UploadFile, HTTPException
+from fastapi import FastAPI, Request, UploadFile, HTTPException, BackgroundTasks, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,8 +23,11 @@ from .config.google_project_config import cloud_details
 from .routes.POST.models import llm_pipeline_audio_to_json, whisper_diarize, llamaguard_evaluate_safety
 
 # Change the value for the local development
-ON_LOCALHOST = 0
+ON_LOCALHOST = 1
+global RAG_SYS 
 RAG_SYS = 0
+# Determine if running in Docker
+running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,17 +39,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-class File(BaseModel):
-    url: str
-
-# Determine if running in Docker
-running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
-
 # Mounting local directory
 app.mount("/static", StaticFiles(directory="/workspace/code/static" if running_in_docker else "static"), name="static")
 app.mount("/assets", StaticFiles(directory="/workspace/code/assets" if running_in_docker else "assets"), name="assets")
 app.mount("/audios", StaticFiles(directory="/workspace/code/audios" if running_in_docker else "audios"), name="audios")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -56,7 +52,6 @@ app.add_middleware(
 )
 
 templates = Jinja2Templates(directory=".")
-
 @app.get("/")
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -224,8 +219,7 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/process_audio_v2")
-async def process_audio_v2(file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+async def process_audio_background(file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
         if file_id:
             # Get the url of the audio file
@@ -265,7 +259,12 @@ async def process_audio_v2(file_id: Optional[str] = None, file_extension: Option
         return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+@app.post("/process_audio_v2")
+async def process_audio_v2(background_tasks: BackgroundTasks, file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+    background_tasks.add_task(process_audio_background, file_id, file_extension, user_id, file_name)
+    return {"message": "Audio processing started in the background"}
+
 class SourceType(str, Enum):
     pdf = "pdf"
     json = "json"
@@ -280,8 +279,8 @@ async def rag_system(question_body: Question):
     try: 
         if RAG_SYS:
             # Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
-            rag_pdf = RAGSystem_PDF("update-28-covid-19-what-we-know.pdf")
-            rag_json = RAGSystem_JSON("prize.json")
+            rag_pdf = RAGSystem_PDF("assets/update-28-covid-19-what-we-know.pdf")
+            rag_json = RAGSystem_JSON("assets/prize.json")
         
             if source_type == SourceType.pdf:
                 answer = await rag_pdf.handle_question_async(question)
