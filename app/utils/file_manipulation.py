@@ -2,7 +2,7 @@ from pygments import highlight, lexers, formatters
 from fastapi import HTTPException
 import json, os, requests
 from ..config.google_project_config import cloud_details
-from ..utils.google_storage import upload_file_to_bucket
+from .bucket_helpers import upload_file_to_bucket
 from ..utils.save_file import save_audio
 
 def pretty_print_json(data):

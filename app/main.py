@@ -4,9 +4,7 @@ from typing import List, Optional, Dict, Any
 from google.cloud import storage
 from pyngrok import ngrok, conf
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
 from dotenv import load_dotenv
-from enum import Enum
 
 from fastapi import FastAPI, Request, UploadFile, HTTPException, BackgroundTasks, Depends
 from fastapi.templating import Jinja2Templates
@@ -15,12 +13,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .utils.file_manipulation import extract_audio_path, remove_file, download_and_upload_audio_file
-from .utils.google_storage import upload_file_to_bucket, sort_links_by_datetime
+from .utils.file_manipulation import *
+from .utils.bucket_helpers import *
 from .utils.save_file import save_output
-from .models.rag import RAGSystem_JSON, RAGSystem_PDF
-from .config.google_project_config import cloud_details
-from .routes.POST.models import llm_pipeline_audio_to_json, whisper_diarize, llamaguard_evaluate_safety
+from .LLMs.rag import RAGSystem_JSON, RAGSystem_PDF
+from .config.google_project_config import *
+from .models.models import *
+from .routes.POST.llm_endpoints import *
 
 # Change the value for the local development
 ON_LOCALHOST = 1
@@ -98,10 +97,6 @@ async def get_audios_from_user_id(id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class FileExtension(str, Enum):
-    txt = "txt"
-    json = "json"
-
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     return JSONResponse(
@@ -142,11 +137,6 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
         return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-class AudioExtension(str, Enum):
-    mp3 = "mp3"
-    wav = "wav"
-    m4a = "m4a"
 
 @app.get("/get_audio/{file_id}/{file_extension}")
 async def get_audio(file_id: str, file_extension: AudioExtension):
@@ -265,13 +255,6 @@ async def process_audio_v2(background_tasks: BackgroundTasks, file_id: Optional[
     background_tasks.add_task(process_audio_background, file_id, file_extension, user_id, file_name)
     return {"message": "Audio processing started in the background"}
 
-class SourceType(str, Enum):
-    pdf = "pdf"
-    json = "json"
-
-class Question(BaseModel):
-    question: str
-    source_type: SourceType
 @app.post("/ask")
 async def rag_system(question_body: Question):
     question = question_body.question
