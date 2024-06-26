@@ -41,7 +41,6 @@ app = FastAPI(lifespan=lifespan)
 # Mounting local directory
 app.mount("/static", StaticFiles(directory="/workspace/code/static" if running_in_docker else "static"), name="static")
 app.mount("/assets", StaticFiles(directory="/workspace/code/assets" if running_in_docker else "assets"), name="assets")
-app.mount("/audios", StaticFiles(directory="/workspace/code/audios" if running_in_docker else "audios"), name="audios")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
