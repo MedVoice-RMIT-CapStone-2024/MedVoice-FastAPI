@@ -166,8 +166,7 @@ async def get_audio(file_id: str, file_extension: AudioExtension):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/process_transcript")
-async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+async def process_transcript_background(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
         # Transcript list of strings test: ["This", "is", "a", "test", "transcript"]
         # Download the file specified by 'user_id' and 'file_name' asynchronously
@@ -249,6 +248,10 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
         return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@app.post("/process_transcript")
+async def process_transcript(background_tasks: BackgroundTasks, transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+    background_tasks.add_task(process_transcript_background, transcript, file_id, file_extension, user_id, file_name)
+    return {"message": "Transcript processing started in the background"}
 
 @app.post("/process_audio_v2")
 async def process_audio_v2(background_tasks: BackgroundTasks, file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
