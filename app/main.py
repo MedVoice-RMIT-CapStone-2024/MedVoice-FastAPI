@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .utils.file_manipulation import *
+from .utils.crud_file import *
 from .utils.bucket_helpers import *
 from .utils.save_file import save_output
 from .LLMs.rag import RAGSystem_JSON, RAGSystem_PDF
@@ -230,7 +230,7 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
             # Download the file specified by 'user_id' and 'file_name' asynchronously
             audio_file = await download_and_upload_audio_file(user_id, file_name)
             # Extract the new file name and file id from the downloaded file's details
-            file_id, audio_file_path = audio_file['file_id'], audio_file['audio_file_path']
+            file_id, audio_file_path = audio_file['file_id'], audio_file['new_file_name']
             # Get the url of the audio file
             file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
         
