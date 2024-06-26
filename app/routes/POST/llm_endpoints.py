@@ -1,7 +1,7 @@
 import json
 
 from fastapi import HTTPException
-from ...utils.file_manipulation import pretty_print_json
+from ...utils.crud_file import pretty_print_json
 from ...LLMs.replicate_models import llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization, llamaguard_evaluate_safety
 
 async def whisper_diarize(file_url: str):

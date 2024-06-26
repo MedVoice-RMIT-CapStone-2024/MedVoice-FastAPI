@@ -3,7 +3,7 @@ from fastapi import HTTPException
 import json, os, requests
 from ..config.google_project_config import cloud_details
 from .bucket_helpers import upload_file_to_bucket
-from ..utils.save_file import save_audio
+from .save_file import save_audio
 
 def pretty_print_json(data):
     formatted_json = json.dumps(data, sort_keys=True, indent=4)
