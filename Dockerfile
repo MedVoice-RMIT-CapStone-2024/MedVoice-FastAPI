@@ -1,6 +1,8 @@
 # This is the first stage, it is named builder
 FROM python:3.10-slim as builder
 
+RUN pip install --upgrade pip setuptools wheel
+
 # Install and setup poetry config
 RUN pip install poetry==1.8.2
 

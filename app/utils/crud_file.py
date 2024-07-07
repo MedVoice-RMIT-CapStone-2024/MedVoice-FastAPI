@@ -1,7 +1,7 @@
 from pygments import highlight, lexers, formatters
 from fastapi import HTTPException
 import json, os, requests
-from ..config.google_project_config import cloud_details
+from ..config.google_project_config import *
 from .bucket_helpers import upload_file_to_bucket
 from .save_file import save_audio
 
@@ -61,3 +61,4 @@ async def download_and_upload_audio_file(user_id: str, file_name: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    

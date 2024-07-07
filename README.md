@@ -30,9 +30,9 @@ To build the project locally, follow the steps below:
 
 6. Run the project locally:
     ```shell
-    poe run
+    poe compose
     ```
-
+- *This is the equivalent of `docker-compose up -d --build`*
 7. **[Optional]** More ultility options:
 - From `poetry.lock` to `requirements.txt`
     ```shell
