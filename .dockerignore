@@ -28,4 +28,4 @@ __pycache__
 ehthumbs.db
 Thumbs.db
 
-docker_init.sh
+utils/

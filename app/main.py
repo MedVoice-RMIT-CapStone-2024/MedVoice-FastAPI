@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from celery.result import AsyncResult
 
 from .utils.crud_file import *
 from .utils.bucket_helpers import *
@@ -20,6 +21,8 @@ from .LLMs.rag import RAGSystem_JSON, RAGSystem_PDF
 from .config.google_project_config import *
 from .models.models import *
 from .routes.POST.llm_endpoints import *
+from .routes.GET.audio_and_transcript import *
+from .worker import *
 
 # Change the value for the local development
 ON_LOCALHOST = 1
@@ -41,7 +44,6 @@ app = FastAPI(lifespan=lifespan)
 # Mounting local directory
 app.mount("/static", StaticFiles(directory="/workspace/code/static" if running_in_docker else "static"), name="static")
 app.mount("/assets", StaticFiles(directory="/workspace/code/assets" if running_in_docker else "assets"), name="assets")
-app.mount("/audios", StaticFiles(directory="/workspace/code/audios" if running_in_docker else "audios"), name="audios")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -72,30 +74,7 @@ async def authenticate_implicit_with_adc():
 
 @app.get("/get_audios_from_user/{id}")
 async def get_audios_from_user_id(id: str):
-    try:
-        storage_client = storage.Client(project=cloud_details['project_id'])
-        bucket = storage_client.bucket(cloud_details['bucket_name'])
-
-        # Get the list of blobs in the bucket
-        blobs = bucket.list_blobs()
-
-        # Create a list to store the URLs of the audio files
-        audio_urls = []
-
-        # Iterate over the blobs to find the ones that end with the id
-        for blob in blobs:
-            # Split the blob name by underscore and get the last part before the extension
-            id_in_blob = blob.name.rsplit('.', 1)[0].rsplit('_', 1)[-1]
-
-            # Check if the id in the blob name matches the id
-            if id_in_blob == id:
-                # Add the public URL of the blob to the list
-                audio_urls.append(blob.public_url)
-
-        # Return the list of audio URLs
-        return {"urls": sort_links_by_datetime(audio_urls)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await get_audios_from_user(id)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
@@ -106,68 +85,13 @@ async def validation_exception_handler(request, exc):
 
 @app.get("/get_transcript/{file_id}/{file_extension}")
 async def get_transcript(file_id: str, file_extension: FileExtension):
-    try:
-        storage_client = storage.Client(project=cloud_details['project_id'])
-        bucket = storage_client.bucket(cloud_details['bucket_name'])
-
-        # Get the list of blobs in the bucket
-        blobs = bucket.list_blobs()
-
-        # Iterate over the blobs to find the one that contains the 'file_id' in its name
-        for blob in blobs:
-            # Split the blob name by slash and get the last part
-            last_part = blob.name.rsplit('/', 1)[-1]
-
-            # Split the last part by underscore and get the first part
-            id_in_blob = last_part.split('_', 1)[0]
-
-            # Check if the id in the blob name matches the 'file_id' and the file has the correct extension
-            if id_in_blob == file_id and last_part.endswith(f".{file_extension}"):
-                # Get the content of the blob
-                response = requests.get(blob.public_url)
-                if file_extension == FileExtension.json:
-                    # Render the blob.public_url to a JSON object and return it
-                    return response.json()
-                elif file_extension == FileExtension.txt:
-                    # Render the blob.public_url to a transcript_text and return it as a object {"transcript": transcript_text}
-                    transcript_text = response.text
-                    return {"transcript": transcript_text}
-
-        # If no matching blob is found, return a message saying that there is no such file with that ID
-        return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await get_transcript(file_id, file_extension)
 
 @app.get("/get_audio/{file_id}/{file_extension}")
 async def get_audio(file_id: str, file_extension: AudioExtension):
-    try:
-        storage_client = storage.Client(project=cloud_details['project_id'])
-        bucket = storage_client.bucket(cloud_details['bucket_name'])
+    return await get_audio(file_id, file_extension)
 
-        # Get the list of blobs in the bucket
-        blobs = bucket.list_blobs()
-
-        # Define a regex pattern to extract the fileID from the blob name
-        pattern = r'date_(.*?)fileID_'
-
-        # Iterate over the blobs to find the one that matches the 'file_id' and has the correct audio extension
-        for blob in blobs:
-            # Use regex to extract the fileID from the blob name
-            match = re.search(pattern, blob.name)
-            if match:
-                id_in_blob = match.group(1)
-                # Check if the extracted fileID matches the 'file_id' and the file has the correct audio extension
-                if id_in_blob == file_id and blob.name.endswith(f".{file_extension}"):
-                    # Return the public URL of the blob
-                    return blob.public_url
-
-        # If no matching audio file is found, raise an HTTPException
-        raise HTTPException(status_code=404, detail="Audio file not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/process_transcript")
-async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+async def process_transcript_background(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
         # Transcript list of strings test: ["This", "is", "a", "test", "transcript"]
         # Download the file specified by 'user_id' and 'file_name' asynchronously
@@ -208,52 +132,46 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
         return {"transcript": transcript_text, "file_id": file_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/process_transcript")
+async def process_transcript(background_tasks: BackgroundTasks, transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+    background_tasks.add_task(process_transcript_background, transcript, file_id, file_extension, user_id, file_name)
+    return {"message": "Transcript processing started in the background"}
 
-async def process_audio_background(file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
-    try:
-        if file_id:
-            # Get the url of the audio file
-            file_url = await get_audio(file_id, file_extension)
-            # Extract the audio file path from the url
-            audio_file_path = extract_audio_path(file_url)
-
-            # Define a regex pattern to extract the patient from the file name
-            pattern = r'/(.*?)patient_'
-            
-            match = re.search(pattern, audio_file_path)
-            if match:
-                patient = match.group(1)
-                file_name = patient.replace('patient_', '')
-                print(f"Patient name: {file_name}")
-
-        if user_id and file_name:
-            # Download the file specified by 'user_id' and 'file_name' asynchronously
-            audio_file = await download_and_upload_audio_file(user_id, file_name)
-            # Extract the new file name and file id from the downloaded file's details
-            file_id, audio_file_path = audio_file['file_id'], audio_file['new_file_name']
-            # Get the url of the audio file
-            file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
-        
-        # Run the LLM pipeline on the audio file url
-        llama3_json_output = await llm_pipeline_audio_to_json(file_url)
-        print(llama3_json_output)
-
-        transcript_file_path = save_output(llama3_json_output, file_id, file_name)
-
-        # Upload the output file to a cloud storage bucket
-        transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
-
-        remove_file(audio_file_path)
-        remove_file(transcript_file_path)
-
-        return {"file_id": file_id, "llama3_json_output": llama3_json_output}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+### Endpoint for process audio with LLM pipeline ###
+    
+# @app.post("/process_audio_v2")
+# async def process_audio_v2(background_tasks: BackgroundTasks, file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+#     background_tasks.add_task(process_audio_background, file_id, file_extension, user_id, file_name)
+#     return {"message": "Audio processing started in the background"}
 
 @app.post("/process_audio_v2")
-async def process_audio_v2(background_tasks: BackgroundTasks, file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
-    background_tasks.add_task(process_audio_background, file_id, file_extension, user_id, file_name)
-    return {"message": "Audio processing started in the background"}
+async def process_audio_v2(file_id: Optional[str] = None, file_extension: AudioExtension = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+    # Dispatch the Celery task
+    task = process_audio_task.delay(file_id, file_extension, user_id, file_name)
+    
+    # Return a response indicating the task was successfully dispatched
+    return {
+        "message": "Audio processing started in the background", 
+        "task_id": task.id
+    }
+
+@app.get("/get_audio_processing_result/{task_id}")
+async def get_audio_processing_result(task_id: str):
+    task_result = AsyncResult(task_id)
+    if task_result.ready():
+        result = task_result.get()
+        if "error" in result:
+            return {"status": task_result.state, "error": result["error"]}
+        return {
+            "status": task_result.state,
+            "file_id": result["file_id"],
+            "llama3_json_output": result["llama3_json_output"]
+        }
+    else:
+        return {"status": task_result.state}
+
+### End of endpoint for process audio with LLM pipeline ###
 
 @app.post("/ask")
 async def rag_system(question_body: Question):
