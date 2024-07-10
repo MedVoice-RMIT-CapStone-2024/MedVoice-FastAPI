@@ -69,7 +69,7 @@ aiofiles = "^24.1.0"
 
 [tool.poe.tasks]
 run = "uvicorn 'app.main:app' --host=0.0.0.0 --port=8000 --loop asyncio"
-compose = "docker-compose up -d --build --scale worker=1"
+compose = "docker-compose up --build --scale worker=1"
 export = "poetry export -f requirements.txt --output requirements.txt --without-hashes"
 import = "python3 utils/requirements_to_poetry.py"
 flush = "python3 utils/empty_dir.py"
