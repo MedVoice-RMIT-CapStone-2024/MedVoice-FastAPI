@@ -32,39 +32,6 @@ async def get_audio(file_id: str, file_extension: AudioExtension):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-async def get_transcript(file_id: str, file_extension: FileExtension):
-    try:
-        storage_client = storage.Client(project=cloud_details['project_id'])
-        bucket = storage_client.bucket(cloud_details['bucket_name'])
-
-        # Get the list of blobs in the bucket
-        blobs = bucket.list_blobs()
-
-        # Iterate over the blobs to find the one that contains the 'file_id' in its name
-        for blob in blobs:
-            # Split the blob name by slash and get the last part
-            last_part = blob.name.rsplit('/', 1)[-1]
-
-            # Split the last part by underscore and get the first part
-            id_in_blob = last_part.split('_', 1)[0]
-
-            # Check if the id in the blob name matches the 'file_id' and the file has the correct extension
-            if id_in_blob == file_id and last_part.endswith(f".{file_extension}"):
-                # Get the content of the blob
-                response = requests.get(blob.public_url)
-                if file_extension == FileExtension.json:
-                    # Render the blob.public_url to a JSON object and return it
-                    return response.json()
-                elif file_extension == FileExtension.txt:
-                    # Render the blob.public_url to a transcript_text and return it as a object {"transcript": transcript_text}
-                    transcript_text = response.text
-                    return {"transcript": transcript_text}
-
-        # If no matching blob is found, return a message saying that there is no such file with that ID
-        return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
 async def get_audios_from_user(id: str):
     try:
         storage_client = storage.Client(project=cloud_details['project_id'])

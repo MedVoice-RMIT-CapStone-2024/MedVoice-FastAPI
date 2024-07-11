@@ -25,7 +25,7 @@ from .routes.GET.audio_and_transcript import *
 from .worker import *
 
 # Change the value for the local development
-ON_LOCALHOST = 1
+ON_LOCALHOST = 0
 global RAG_SYS 
 RAG_SYS = 0
 # Determine if running in Docker
@@ -57,6 +57,14 @@ templates = Jinja2Templates(directory=".")
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/get_audios_from_user/{id}")
+async def get_audios_from_user_id(id: str):
+    return await get_audios_from_user(id)
+
+@app.get("/get_audio/{file_id}/{file_extension}")
+async def get_audio(file_id: str, file_extension: AudioExtension):
+    return await get_audio(file_id, file_extension)
+
 @app.get("/buckets")
 async def authenticate_implicit_with_adc():
     # This snippet demonstrates how to list buckets.
@@ -72,26 +80,42 @@ async def authenticate_implicit_with_adc():
     print("Listed all storage buckets.")
     return "Bucket: " + bucket_name
 
-@app.get("/get_audios_from_user/{id}")
-async def get_audios_from_user_id(id: str):
-    return await get_audios_from_user(id)
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=400,
-        content={"message": "Invalid file extension. Only 'txt' and 'json' are allowed."},
-    )
-
 @app.get("/get_transcript/{file_id}/{file_extension}")
 async def get_transcript(file_id: str, file_extension: FileExtension):
-    return await get_transcript(file_id, file_extension)
+    try:
+        storage_client = storage.Client(project=cloud_details['project_id'])
+        bucket = storage_client.bucket(cloud_details['bucket_name'])
 
-@app.get("/get_audio/{file_id}/{file_extension}")
-async def get_audio(file_id: str, file_extension: AudioExtension):
-    return await get_audio(file_id, file_extension)
+        # Get the list of blobs in the bucket
+        blobs = bucket.list_blobs()
 
-async def process_transcript_background(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
+        # Iterate over the blobs to find the one that contains the 'file_id' in its name
+        for blob in blobs:
+            # Split the blob name by slash and get the last part
+            last_part = blob.name.rsplit('/', 1)[-1]
+
+            # Split the last part by underscore and get the first part
+            id_in_blob = last_part.split('_', 1)[0]
+
+            # Check if the id in the blob name matches the 'file_id' and the file has the correct extension
+            if id_in_blob == file_id and last_part.endswith(f".{file_extension}"):
+                # Get the content of the blob
+                response = requests.get(blob.public_url)
+                if file_extension == FileExtension.json:
+                    # Render the blob.public_url to a JSON object and return it
+                    return response.json()
+                elif file_extension == FileExtension.txt:
+                    # Render the blob.public_url to a transcript_text and return it as a object {"transcript": transcript_text}
+                    transcript_text = response.text
+                    return {"transcript": transcript_text}
+
+        # If no matching blob is found, return a message saying that there is no such file with that ID
+        return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/process_transcript")
+async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
         # Transcript list of strings test: ["This", "is", "a", "test", "transcript"]
         # Download the file specified by 'user_id' and 'file_name' asynchronously
@@ -132,18 +156,9 @@ async def process_transcript_background(transcript: List[str], file_id: Optional
         return {"transcript": transcript_text, "file_id": file_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@app.post("/process_transcript")
-async def process_transcript(background_tasks: BackgroundTasks, transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
-    background_tasks.add_task(process_transcript_background, transcript, file_id, file_extension, user_id, file_name)
-    return {"message": "Transcript processing started in the background"}
 
+#####################################################
 ### Endpoint for process audio with LLM pipeline ###
-    
-# @app.post("/process_audio_v2")
-# async def process_audio_v2(background_tasks: BackgroundTasks, file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
-#     background_tasks.add_task(process_audio_background, file_id, file_extension, user_id, file_name)
-#     return {"message": "Audio processing started in the background"}
 
 @app.post("/process_audio_v2")
 async def process_audio_v2(file_id: Optional[str] = None, file_extension: AudioExtension = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
@@ -172,6 +187,7 @@ async def get_audio_processing_result(task_id: str):
         return {"status": task_result.state}
 
 ### End of endpoint for process audio with LLM pipeline ###
+###########################################################
 
 @app.post("/ask")
 async def rag_system(question_body: Question):
