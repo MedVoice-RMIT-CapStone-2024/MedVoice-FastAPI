@@ -60,5 +60,98 @@
             this.style.display = 'block';
         });
     </script>
+    <div class="container mx-auto pt-8">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold my-4">LLM Pipeline Tasks Status</h2>
+            <form id="audioForm" class="mb-4">
+                <div class="mb-2">
+                    <label for="fileId" class="block">File ID:</label>
+                    <input type="text" id="fileId" class="w-full border border-gray-300 p-2 rounded">
+                </div>
+                <div class="mb-2">
+                    <label for="fileExtension" class="block">File Extension:</label>
+                    <input type="text" id="fileExtension" class="w-full border border-gray-300 p-2 rounded">
+                </div>
+                <div class="mb-2">
+                    <label for="userId" class="block">User ID:</label>
+                    <input type="text" id="userId" class="w-full border border-gray-300 p-2 rounded">
+                </div>
+                <div class="mb-2">
+                    <label for="fileName" class="block">File Name:</label>
+                    <input type="text" id="fileName" class="w-full border border-gray-300 p-2 rounded">
+                </div>
+                <button type="submit" class="bg-blue-500 text-white p-2 rounded">Process Audio</button>
+            </form>
+        
+            <table id="taskTable" class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-4">
+                            <h3>Task ID</h3>
+                        </th>
+                        <th class="px-6 py-4">
+                            <h3>Actions</h3>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Task rows will be appended here -->
+                </tbody>
+            </table>
+        
+            <script>
+                document.getElementById('audioForm').addEventListener('submit', function(event) {
+                    event.preventDefault();
+        
+                    var fileId = document.getElementById('fileId').value;
+                    var fileExtension = document.getElementById('fileExtension').value;
+                    var userId = document.getElementById('userId').value;
+                    var fileName = document.getElementById('fileName').value;
+
+                    const url = new URL("http://localhost:8000/process_audio_v2");
+
+                    if (fileId) {
+                        url.searchParams.append('file_id', fileId);
+                    }
+                    if (fileExtension) {
+                        url.searchParams.append('file_extension', fileExtension);
+                    }
+                    if (userId) {
+                        url.searchParams.append('user_id', userId);
+                    }
+                    if (fileName) {
+                        url.searchParams.append('file_name', fileName);
+                    }
+        
+                    fetch(url, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        var tr = document.createElement('tr');
+                        var td1 = document.createElement('td');
+                        td1.textContent = data.task_id;
+                        td1.className = "border px-6 py-4";
+                        tr.appendChild(td1);
+                        var td2 = document.createElement('td');
+                        td2.className = "border px-6 py-4";
+                        var button = document.createElement('button');
+                        button.textContent = 'Check Status';
+                        button.className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded text-lg";
+                        button.addEventListener('click', function() {
+                            fetch('http://localhost:8000/get_audio_processing_result/' + data.task_id)
+                            .then(response => response.json())
+                            .then(data => {
+                                alert('Task Status: ' + data.status);
+                            });
+                        });
+                        td2.appendChild(button);
+                        tr.appendChild(td2);
+                        document.getElementById('taskTable').getElementsByTagName('tbody')[0].appendChild(tr);
+                    });
+                });
+            </script>
+        </div>
+    </div>
 </body>
 </html>
