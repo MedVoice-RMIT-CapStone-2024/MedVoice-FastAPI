@@ -8,7 +8,7 @@ To build the project locally, follow the steps below:
 
 1. Clone the repository to your local machine:
     ```shell
-    git clone https://github.com/MedVoice-RMIT-CapStone-2024/replicate-whisper.git
+    git clone https://github.com/MedVoice-RMIT-CapStone-2024/MedVoice-FastAPI.git
     ```
 
 2. Install `make` command:
