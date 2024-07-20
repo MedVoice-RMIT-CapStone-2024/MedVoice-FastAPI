@@ -4,36 +4,44 @@ This is the Backend for MedVoice project. This includes the ML pipeline for Whis
 ## Build Instructions
 To build the project locally, follow the steps below:
 
-1. Make sure you have Poetry installed on your system. If not, you can install it by following the instructions [here](https://python-poetry.org/docs/#installation).
+***Note:*** This `README` will assume that your machine is UNIX-based. Please find the equivalent command if you are running on a Windows machine.
 
-2. Clone the repository to your local machine:
+1. Clone the repository to your local machine:
     ```shell
-    git clone https://github.com/MedVoice-RMIT-CapStone-2024/replicate-whisper.git
+    git clone https://github.com/MedVoice-RMIT-CapStone-2024/MedVoice-FastAPI.git
     ```
 
-3. Create and activate a Python virtual environment:
+2. Install `make` command:
+- On Ubuntu or other Debian-based systems, you can use `apt-get`:
     ```shell
-    python -m venv venv
-    source venv/bin/activate
+    sudo apt-get install make
+    ```
+- On CentOS, Fedora, or RHEL, you can use `yum` or `dnf`:
+    ```shell
+    sudo yum install make
+    ```
+- On macOS, you can use `brew`:
+    ```shell
+    brew install make
     ```
 
-4. Install the project dependencies using `Poetry`:
+3. Install the project dependencies using `make`:
     ```shell
-    poetry install
-    ```
-- Or with `Pip`
-    ```shell
-    pip install -r requirements.txt
+    make setup
     ```
 
-5. Add your credentials to `.env` and remove the placeholder `.txt`
+4. Check for missing dependencies and files:
+    ```shell
+    make check
+    ```
+*You should install the missing dependencies and files accordingly*
 
-6. Run the project locally:
+5. Run the project locally:
     ```shell
     poe compose
     ```
-- *This is the equivalent of `docker-compose up -d --build`*
-7. **[Optional]** More ultility options:
+
+6. **[Optional]** More ultility options:
 - From `poetry.lock` to `requirements.txt`
     ```shell
     poe export
