@@ -29,6 +29,7 @@ To build the project locally, follow the steps below:
     ```shell
     make setup
     ```
+- In your local environment, remove the `-placeholder.txt` from `.env` and `ngrok.yml` for the neccessary dependencies
 
 4. Check for missing dependencies and files:
     ```shell
