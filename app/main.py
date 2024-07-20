@@ -80,6 +80,9 @@ async def authenticate_implicit_with_adc():
     print("Listed all storage buckets.")
     return "Bucket: " + bucket_name
 
+############################################
+### Endpoint for working with transcript ### 
+
 @app.get("/get_transcript/{file_id}/{file_extension}")
 async def get_transcript(file_id: str, file_extension: FileExtension):
     try:
@@ -156,6 +159,9 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
         return {"transcript": transcript_text, "file_id": file_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+### Endpoint for working with transcript ### 
+############################################
 
 #####################################################
 ### Endpoint for process audio with LLM pipeline ###
