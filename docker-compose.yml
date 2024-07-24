@@ -15,21 +15,21 @@ services:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
     extra_hosts:
       - host.docker.internal:host-gateway
+    networks:
+      - bridge-driver
     depends_on:
       - redis
       - ollama
-      - ollama-pull
-  ollama-pull:
-    image: docker/genai:ollama-pull
-    env_file:
-      - .env
 
   ollama:
-    image: ollama/ollama:latest
+    build: ollama/Dockerfile
     ports:
       - "11434:11434"
     volumes:
-      - ollama:/root/.ollama
+      - local-vol:./ollama
+    networks:
+      - bridge-driver
+    entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
     pull_policy: always
     tty: true
     restart: unless-stopped
@@ -68,4 +68,9 @@ services:
       - worker
 
 volumes:
-  ollama: {}
+  local-vol:
+    driver: local
+
+networks:
+  bridge-driver:
+    driver: bridge
