@@ -220,7 +220,7 @@ async def rag_system(question_body: Question):
         task = llamaguard_task.delay(answer)
             
         return {
-            "answer": answer,
+            "response": answer,
             "message": "Safety processing started in the background", 
             "task_id": task.id
         }
