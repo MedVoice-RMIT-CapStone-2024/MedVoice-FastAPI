@@ -26,7 +26,7 @@ from .routes.GET.audio_and_transcript import *
 from .worker import *
 
 # Change the value for the local development
-ON_LOCALHOST = 1
+ON_LOCALHOST = 0
 global RAG_SYS 
 RAG_SYS = 1
 # Determine if running in Docker

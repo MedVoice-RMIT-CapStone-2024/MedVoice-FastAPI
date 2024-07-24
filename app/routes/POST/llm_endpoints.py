@@ -56,7 +56,7 @@ async def ask_llam2(question: str):
                             "stream": False,
                             "model": "llama2",
                         })
-    return Response(content=res.json(), media_type="application/json")
+    return Response(content=res.text, media_type="application/json")
 
 
     

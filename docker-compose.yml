@@ -30,6 +30,8 @@ services:
     networks:
       - bridge-driver
     entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
     pull_policy: always
     tty: true
     restart: unless-stopped
