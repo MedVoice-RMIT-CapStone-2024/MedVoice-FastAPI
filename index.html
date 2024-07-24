@@ -43,7 +43,7 @@
             spinner.style.display = 'block';
             this.style.display = 'none';
     
-            const response = await fetch('http://localhost:8000/ask', {
+            const response = await fetch('http://0.0.0.0:8000/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -60,7 +60,7 @@
             this.style.display = 'block';
         });
     </script>
-    <div class="container mx-auto pt-8">
+    <div class="container mx-auto pt-8 pb-8">
         <div class="container mx-auto px-4">
             <h2 class="text-4xl font-bold my-4">LLM Pipeline Tasks Status</h2>
             <form id="audioForm" class="mb-4">
@@ -108,7 +108,7 @@
                     var userId = document.getElementById('userId').value;
                     var fileName = document.getElementById('fileName').value;
 
-                    const url = new URL("http://localhost:8000/process_audio_v2");
+                    const url = new URL("http://0.0.0.0:8000/process_audio_v2");
 
                     if (fileId) {
                         url.searchParams.append('file_id', fileId);
@@ -139,11 +139,16 @@
                         button.textContent = 'Check Status';
                         button.className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded text-lg";
                         button.addEventListener('click', function() {
-                            fetch('http://localhost:8000/get_audio_processing_result/' + data.task_id)
-                            .then(response => response.json())
-                            .then(data => {
-                                alert('Task Status: ' + data.status);
-                            });
+                            fetch('http://0.0.0.0:8000/get_audio_processing_result/' + data.task_id)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'SUCCESS') {
+                                        button.textContent = 'Done';
+                                        button.disabled = true;
+                                    } else {
+                                        alert('Task Status: ' + data.status);
+                                    }
+                                });
                         });
                         td2.appendChild(button);
                         tr.appendChild(td2);

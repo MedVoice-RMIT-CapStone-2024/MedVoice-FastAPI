@@ -1,18 +1,49 @@
 version: '2.4'
 
 services:
-
   web:
     build: .
     ports:
       - 8000:8000
+      - 5678:5678
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --loop asyncio
     volumes:
       - ./app:/workspace/code/app
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - BASE_URL=http://host.docker.internal:11434
+      - LLM_API_KEY=ollama
+      - LLM_BASE_URL=http://host.docker.internal:11434
+      - LLM_OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - host.docker.internal:host-gateway
     depends_on:
       - redis
+      - ollama
+    networks:
+      - ollama-docker
+
+  ollama:
+    volumes:
+      - ./ollama/ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:latest
+    ports:
+      - 7869:11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - ollama-docker
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
 
   worker:
     build: .
@@ -39,3 +70,7 @@ services:
       - web
       - redis
       - worker
+
+networks:
+  ollama-docker:
+    external: false
