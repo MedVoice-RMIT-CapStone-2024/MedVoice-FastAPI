@@ -52,7 +52,7 @@ async def llamaguard_evaluate(question: str):
 async def ask_llam2(question: str):
     res = requests.post("http://ollama:11434/api/generate", 
                         json={
-                            "question": question,
+                            "prompt": question,
                             "stream": False,
                             "model": "llama2",
                         })
