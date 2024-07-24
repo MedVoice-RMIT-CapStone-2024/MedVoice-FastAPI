@@ -18,8 +18,7 @@ services:
     depends_on:
       - redis
       - ollama
-    ollama-pull:
-      condition: service_completed_successfully
+      - ollama-pull
   ollama-pull:
     image: docker/genai:ollama-pull
     env_file:
@@ -30,7 +29,10 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama_volume:/root/.ollama
+      - ollama:/root/.ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
     deploy:
       resources:
         reservations:
@@ -64,3 +66,6 @@ services:
       - web
       - redis
       - worker
+
+volumes:
+  ollama: {}
