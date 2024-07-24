@@ -16,7 +16,7 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
-      - bridge-driver
+      - bridge-net
     depends_on:
       - redis
       - ollama
@@ -28,7 +28,7 @@ services:
     volumes:
       - local-vol:/ollama
     networks:
-      - bridge-driver
+      - bridge-net
     entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
@@ -50,12 +50,16 @@ services:
       - ./app:/workspace/code/app
     environment:
       - REDIS_URL=redis://redis:6379/0
+    networks:
+      - bridge-net
     depends_on:
       - web
       - redis
 
   redis:
     image: redis:7
+    networks:
+      - bridge-net
 
   dashboard:
     build: .
@@ -64,6 +68,8 @@ services:
       - 5557:5555
     environment:
       - REDIS_URL=redis://redis:6379/0
+    networks:
+      - bridge-net
     depends_on:
       - web
       - redis
@@ -74,5 +80,5 @@ volumes:
     driver: local
 
 networks:
-  bridge-driver:
+  bridge-net:
     driver: bridge
