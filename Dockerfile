@@ -20,24 +20,6 @@ RUN touch README.md
 # Install all dependencies + remove poetry cache
 RUN poetry install && rm -rf $POETRY_CACHE_DIR
 
-# This is the Ollama stage
-FROM python:3.10-slim as ollama-stage
-
-RUN apt-get update && apt-get -y install build-essential && apt-get install -y git && apt-get install -y curl
-
-# Install ollama
-RUN curl -fsSL https://ollama.com/install.sh | sh
-
-# Set the current working directory to /workspace/ollama
-WORKDIR /workspace/ollama
-
-# Copy necessary files for Ollama to run, if any
-# COPY ./ollama ./
-
-RUN ollama serve
-
-RUN ollama pull nomic-embed-text
-
 # This is the final stage
 FROM python:3.10-slim as final-stage
 
@@ -59,7 +41,7 @@ ENV NGROK_CONFIG_PATH /workspace/code/ngrok.yml
 ENV GOOGLE_APPLICATION_CREDENTIALS /workspace/code/google-credentials.json
 
 # Expose port 8000 and 11434
-EXPOSE 8000 11434 5678
+EXPOSE 8000 11434
 
 # Set the command to use FastAPI to run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--loop", "asyncio"]

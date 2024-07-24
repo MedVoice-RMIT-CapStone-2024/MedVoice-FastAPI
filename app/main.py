@@ -245,6 +245,10 @@ async def llm_route(file_url: str):
 async def llamaguard_route(question: str):
     return await llamaguard_evaluate_safety(question)
 
+@app.post("/test/ollama")
+async def ask_route(question: str):
+    return await ask_llam2(question)
+
 def main():
     load_dotenv()
 

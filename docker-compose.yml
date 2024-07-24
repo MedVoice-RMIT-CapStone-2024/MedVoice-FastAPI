@@ -22,24 +22,24 @@ services:
       - ollama
 
   ollama:
-    build: ollama/Dockerfile
+    build: ./docker/ollama
     ports:
       - "11434:11434"
     volumes:
-      - local-vol:./ollama
+      - local-vol:/ollama
     networks:
       - bridge-driver
     entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
     pull_policy: always
     tty: true
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [ gpu ]
 
   worker:
     build: .

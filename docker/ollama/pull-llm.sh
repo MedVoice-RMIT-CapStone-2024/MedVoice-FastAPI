@@ -5,6 +5,6 @@ pid=$!
 sleep 5
 
 echo "Pulling LLM"
-ollama pull llama3
+ollama pull llama2
 
 wait $pid
