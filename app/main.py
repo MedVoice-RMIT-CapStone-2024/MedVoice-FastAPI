@@ -14,13 +14,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 
-from .utils.crud_file import *
 from .utils.bucket_helpers import *
-from .utils.save_file import save_output
+from .utils.file_helpers import *
 from .llm.rag import RAGSystem_JSON, RAGSystem_PDF
 from .core.google_project_config import *
 from .models.models import *
 from .worker import *
+from .db.init_db import init_db
 
 # Change the value for the local development
 ON_LOCALHOST = 0
@@ -32,6 +32,7 @@ running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 async def lifespan(app: FastAPI):
     # Code to run on startup
     print("Starting up...")
+    await init_db()
     yield
     # Code to run on shutdown
     print("Shutting down...")

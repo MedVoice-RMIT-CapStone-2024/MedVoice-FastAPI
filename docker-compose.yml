@@ -19,7 +19,19 @@ services:
       - bridge-net
     depends_on:
       - redis
+      - db
   # - ollama
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nurses_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bridge-net
 
   # ollama:
   #   build: ./docker/ollama
@@ -78,6 +90,8 @@ services:
 volumes:
   local-vol:
     driver: local
+  postgres_data:
+
 
 networks:
   bridge-net:
