@@ -10,13 +10,13 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Set your variables
-PROJECT_ID="medvoice-2"
-LOCATION="us"  # Adjusted to just the region
+GCLOUD_PROJECT_ID="medvoice-2"
+GCLOUD_PROJECT_LOCATION="us"  # Adjusted to just the region
 REPOSITORY="gcr.io"
 
 # Authenticate with Google Cloud
 gcloud auth login
-gcloud config set project $PROJECT_ID
+gcloud config set project $GCLOUD_PROJECT_ID
 
 # Configure Docker to use gcloud as a credential helper
 gcloud auth configure-docker us-docker.pkg.dev
@@ -43,10 +43,10 @@ while true; do
     fi
 
     # Corrected REPOSITORY variable usage in tagging
-    docker tag $IMAGE:$TAG us-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$TAG
+    docker tag $IMAGE:$TAG us-docker.pkg.dev/$GCLOUD_PROJECT_ID/$REPOSITORY/$IMAGE:$TAG
 
     # Push the image to Google Artifact Registry
-    docker push us-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$TAG
+    docker push us-docker.pkg.dev/$GCLOUD_PROJECT_ID/$REPOSITORY/$IMAGE:$TAG
 
     echo "$IMAGE:$TAG has been deployed."
 done

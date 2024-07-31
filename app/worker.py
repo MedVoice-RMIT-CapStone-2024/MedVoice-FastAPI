@@ -14,6 +14,7 @@ from .models.models import *
 from .routes.POST.llm_endpoints import *
 from .worker import *
 from .routes.GET.audio_and_transcript import *
+from .LLMs.replicate_models import llamaguard_evaluate_safety
 
 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
@@ -77,4 +78,16 @@ def process_audio_task(file_id: Optional[str] = None, file_extension: str = "m4a
     except Exception as e:
         # Handle exceptions or log errors
         print(f"Error processing audio: {str(e)}")
+        return {"error": str(e)}
+    
+@celery_app.task(name="llamaguard_task")
+def llamaguard_task(question: str):
+    try:
+        # Run the async function in an event loop
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(llamaguard_evaluate_safety(question))
+        return result
+    except Exception as e:
+        # Handle exceptions or log errors
+        print(f"Error processing question: {str(e)}")
         return {"error": str(e)}

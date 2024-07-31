@@ -1,6 +1,6 @@
-import json
+import json, requests
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from ...utils.crud_file import pretty_print_json
 from ...LLMs.replicate_models import llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization, llamaguard_evaluate_safety
 
@@ -49,6 +49,14 @@ async def llamaguard_evaluate(question: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+async def ask_llam2(question: str):
+    res = requests.post("http://ollama:11434/api/generate", 
+                        json={
+                            "prompt": question,
+                            "stream": False,
+                            "model": "llama2",
+                        })
+    return Response(content=res.text, media_type="application/json")
 
 
     

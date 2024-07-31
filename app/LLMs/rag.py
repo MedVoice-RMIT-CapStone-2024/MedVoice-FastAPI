@@ -24,19 +24,19 @@ class BaseRAGSystem:
         if self.rag_chain is None:
             return "No documents have been indexed yet."
 
-        if await llamaguard_evaluate_safety(question) == " unsafe":
-            return "Sorry, I cannot answer this question, please try again"
-        else:
-            start_time = time.perf_counter()
-            answer = self.rag_chain.invoke(question)
-            end_time = time.perf_counter()
-            print(f"\nRaw output runtime: {end_time - start_time} seconds\n")
-            return answer
+        # if await llamaguard_evaluate_safety(question) == " unsafe":
+        #     return "Sorry, I cannot answer this question, please try again"
+        # else:
+        start_time = time.perf_counter()
+        answer = self.rag_chain.invoke(question)
+        end_time = time.perf_counter()
+        print(f"\nRaw output runtime: {end_time - start_time} seconds\n")
+        return answer
 
     def similar(self, a, b):
         return SequenceMatcher(None, a, b).ratio()
 
-    async def handle_question_async(self, question):
+    async def handle_question(self, question):
         # Check for a similar question
         similar_question = None
         for prev_question in self.conversation_state:

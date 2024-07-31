@@ -1,4 +1,5 @@
 import os, uvicorn, nest_asyncio, requests, re, asyncio, datetime
+import debugpy
 
 from typing import List, Optional, Dict, Any
 from google.cloud import storage
@@ -25,9 +26,9 @@ from .routes.GET.audio_and_transcript import *
 from .worker import *
 
 # Change the value for the local development
-ON_LOCALHOST = 1
+ON_LOCALHOST = 0
 global RAG_SYS 
-RAG_SYS = 0
+RAG_SYS = 1
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 
@@ -51,6 +52,7 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+debugpy.listen(("0.0.0.0", 5678))
 
 templates = Jinja2Templates(directory=".")
 @app.get("/")
@@ -206,18 +208,26 @@ async def rag_system(question_body: Question):
             rag_json = RAGSystem_JSON("assets/prize.json")
         
             if source_type == SourceType.pdf:
-                answer = await rag_pdf.handle_question_async(question)
+                answer = await rag_pdf.handle_question(question)
             elif source_type == SourceType.json:
-                answer = await rag_json.handle_question_async(question)
+                answer = await rag_json.handle_question(question)
         else:
             if source_type == SourceType.pdf:
                 answer = f"This is a pdf answer. It is answering to your question: {question}"
             elif source_type == SourceType.json:
                 answer = f"This is a json answer. It is answering to your question: {question}"
+
+        task = llamaguard_task.delay(answer)
             
-        return {"answer": answer}
+        return {
+            "response": answer,
+            "message": "Safety processing started in the background", 
+            "task_id": task.id
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
     
 @app.post("/test/download")
 async def download_route(user_id: str, file_name: str):
@@ -234,6 +244,10 @@ async def llm_route(file_url: str):
 @app.post("/test/llamaguard")
 async def llamaguard_route(question: str):
     return await llamaguard_evaluate_safety(question)
+
+@app.post("/test/ollama")
+async def ask_route(question_body: Question):
+    return await ask_llam2(question_body.question)
 
 def main():
     load_dotenv()

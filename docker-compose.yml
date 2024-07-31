@@ -1,18 +1,47 @@
 version: '2.4'
 
 services:
-
   web:
     build: .
     ports:
       - 8000:8000
+    env_file:
+      - .env
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --loop asyncio
     volumes:
       - ./app:/workspace/code/app
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - bridge-net
     depends_on:
       - redis
+      - ollama
+
+  ollama:
+    build: ./docker/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - local-vol:/ollama
+    networks:
+      - bridge-net
+    entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
 
   worker:
     build: .
@@ -21,12 +50,16 @@ services:
       - ./app:/workspace/code/app
     environment:
       - REDIS_URL=redis://redis:6379/0
+    networks:
+      - bridge-net
     depends_on:
       - web
       - redis
 
   redis:
     image: redis:7
+    networks:
+      - bridge-net
 
   dashboard:
     build: .
@@ -35,7 +68,17 @@ services:
       - 5557:5555
     environment:
       - REDIS_URL=redis://redis:6379/0
+    networks:
+      - bridge-net
     depends_on:
       - web
       - redis
       - worker
+
+volumes:
+  local-vol:
+    driver: local
+
+networks:
+  bridge-net:
+    driver: bridge
