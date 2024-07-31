@@ -1,8 +1,27 @@
 import json, requests
 
-from fastapi import HTTPException, Response
-from ...utils.crud_file import pretty_print_json
-from ...LLMs.replicate_models import llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization, llamaguard_evaluate_safety
+from fastapi import HTTPException, Response, APIRouter
+from .....utils.crud_file import pretty_print_json
+from .....llm.replicate_models import llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization, llamaguard_evaluate_safety
+from .....models.models import Question
+
+router = APIRouter()
+
+@router.post("/whisper-diarize/")
+async def whisper_diarize_endpoint(file_url: str):
+    return await whisper_diarize(file_url)
+
+@router.post("/llm-pipeline/")
+async def llm_pipeline_audio_to_json_endpoint(file_url: str):
+    return await llm_pipeline_audio_to_json(file_url)
+
+@router.post("/llamaguard-evaluate/")
+async def llamaguard_evaluate_endpoint(question: str):
+    return await llamaguard_evaluate(question)
+
+@router.post("/ask-llama2/")
+async def ask_llama2_endpoint(question_body: Question):
+    return await ask_llam2(question_body.question)
 
 async def whisper_diarize(file_url: str):
     try:

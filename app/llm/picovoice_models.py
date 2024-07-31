@@ -35,7 +35,7 @@
 # async def process_audio(user_id: str, file_name: str, access_key="XqSUBqySs7hFkIfYiPZtx27L59XDKnzZzAM7rU5pKmjGGFyDf+6bvQ=="):
 #     try:
 #         # Download the file specified by 'user_id' and 'file_name' asynchronously
-#         audio_file = await download_and_upload_audio_file(user_id, file_name)
+#         audio_file = await encode_audio_filename(user_id, file_name)
 
 #         # Extract the new file name and file id from the downloaded file's details
 #         audio_file_path, file_id = audio_file['new_file_name'], audio_file['file_id']

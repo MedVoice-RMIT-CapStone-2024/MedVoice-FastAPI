@@ -1,7 +1,7 @@
 from pygments import highlight, lexers, formatters
 from fastapi import HTTPException
 import json, os, requests
-from ..config.google_project_config import *
+from ..core.google_project_config import *
 from .bucket_helpers import upload_file_to_bucket
 from .save_file import save_audio
 
@@ -16,13 +16,13 @@ def pretty_print_json(data):
     return colorful_json
 
 # Helper function for getting audio file path
-def extract_audio_path(full_url):
+def get_file_path(full_url):
     base_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/"
     # Remove the base URL
     audio_path = full_url.replace(base_url, "")
     return audio_path
 
-def remove_file(file_path):
+def rm_local_file(file_path):
     if file_path is not None:
         try:
             os.remove(file_path)
@@ -32,7 +32,7 @@ def remove_file(file_path):
     else:
         print("No file path provided, skipping removal.")
 
-async def download_and_upload_audio_file(user_id: str, file_name: str):
+async def encode_audio_filename(user_id: str, file_name: str):
     try:
         file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{file_name}"
         # Initialize file_path before the if statement
@@ -52,7 +52,7 @@ async def download_and_upload_audio_file(user_id: str, file_name: str):
             print(audio_file)
             upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], audio_file['new_file_name'], audio_file['new_file_name'])
 
-            remove_file(audio_file["new_file_name"])
+            rm_local_file(audio_file["new_file_name"])
 
             return {
                 "new_file_name": audio_file['new_file_name'], 
