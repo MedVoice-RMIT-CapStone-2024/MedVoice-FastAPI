@@ -8,7 +8,6 @@ check:
 	@test -f ngrok.yml && (echo "ngrok.yml file exists.") || echo "ngrok.yml file is missing. Please see ngrok.yml-placeholder.txt for reference and add it."
 
 .PHONY: setup
-setup:
+venv:
 	which python3 > /dev/null && python3 -m venv venv || python -m venv venv
 	source venv/bin/activate
-	which poetry > /dev/null && poetry install || pip install -r requirements.txt
