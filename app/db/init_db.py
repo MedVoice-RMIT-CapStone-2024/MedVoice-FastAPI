@@ -30,9 +30,9 @@ async def init_db():
     async with SessionLocal() as session:
         # Register vector type
         async with session.begin():
-            conn = await session.connection()
-            raw_conn = conn.connection.raw_connection()
-            await register_vector(raw_conn)
+            async with session.connection() as conn:
+                raw_conn = await conn.get_raw_connection()
+                await register_vector(raw_conn)
 
         # Create the nurses table
         await session.execute(text("""
