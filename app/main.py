@@ -32,8 +32,15 @@ running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 async def lifespan(app: FastAPI):
     # Code to run on startup
     print("Starting up...")
+    print("Initializing database...")
     await init_db()
+    print("Database initialized")
+
+    print("Initializing RAG system with JSON data...")
     app.state.rag_json = RAGSystem_JSON("assets/patients.json")
+    await app.state.rag_json.index_json("assets/patients.json")
+    print("RAG system initialized")
+
     yield
     # Code to run on shutdown
     print("Shutting down...")

@@ -1,7 +1,7 @@
 from langchain.chains import LLMChain
 from langchain_core.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain_community.document_loaders import PyPDFLoader, JSONLoader
+from langchain_community.document_loaders import JSONLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import PGVector
 from langchain import hub
@@ -10,10 +10,12 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_community.embeddings import OllamaEmbeddings
 from difflib import SequenceMatcher
 import time, asyncio
-
-from .replicate_models import init_replicate 
-# from .replicate_models import llamaguard_evaluate_safety
 from ..core.db_config import settings
+from ..crud import crud_embedding
+from ..schemas.embedding import EmbeddingCreate
+from .replicate_models import init_replicate
+from ..db.session import *
+from uuid import uuid4
 
 async def llamaguard_evaluate_safety(question):
     return "safe"
@@ -72,12 +74,14 @@ class BaseRAGSystem:
 class RAGSystem_JSON(BaseRAGSystem):
     def __init__(self, file_path):
         super().__init__()
-        self.index_json(file_path)
+        asyncio.run(self.index_json(file_path))
 
-    def index_json(self, file_path):
+    async def index_json(self, file_path):
+        print("Loading JSON data")
         loader = JSONLoader(file_path, jq_schema=".patients[]", text_content=False)
         docs = loader.load()
 
+        print("Creating embeddings")
         embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")
 
         CONNECTION_STRING = settings.DATABASE_URL
@@ -90,6 +94,18 @@ class RAGSystem_JSON(BaseRAGSystem):
             connection_string=CONNECTION_STRING,
         )
 
+        print("Inserting mock embeddings")
+        async with SessionLocal() as session:
+            for doc, vec in zip(docs, self.vectorstore.embeddings):
+                embedding_create = EmbeddingCreate(
+                    document_id=uuid4(),
+                    content=doc.page_content,  # Ensure the content is stored as JSON
+                    embedding=vec  # Already a list from PGVector
+                )
+                print(f"Inserting embedding for document ID: {embedding_create.document_id}")
+                await crud_embedding.create_embedding(session, embedding_create)
+
+        print("Creating retriever")
         retriever = self.vectorstore.as_retriever(
             search_type="similarity",
             search_kwargs={"k": 6},
@@ -107,16 +123,18 @@ class RAGSystem_JSON(BaseRAGSystem):
 
         self.rag_chain = create_rag_chain()
 
+        print("JSON File indexed successfully")
         return {"message": "JSON File indexed successfully"}
-    
-# async def main():
-#     chatbot = RAGSystem_JSON("sample-data.json")
-#     print(chatbot.index_json("sample-data.json"))
 
-#     # Mock query
-#     question = "Who won the chemistry prize in 2021?"
-#     answer = await chatbot.handle_question(question)
-#     print(f"Question: {question}\nAnswer: {answer}")
+if __name__ == "__main__":
+    import asyncio
+    async def main():
+        chatbot = RAGSystem_JSON("assets/patients.json")
+        await chatbot.index_json("assets/patients.json")
 
-# if __name__ == "__main__":
-#     asyncio.run(main())
+        # Mock query
+        question = "What is the medical diagnosis for patient Adam?"
+        answer = await chatbot.handle_question(question)
+        print(f"Question: {question}\nAnswer: {answer}")
+
+    asyncio.run(main())
