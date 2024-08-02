@@ -23,7 +23,7 @@ services:
       - ollama
 
   db:
-    image: postgres:13
+    build: ./docker/db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
