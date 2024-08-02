@@ -16,7 +16,7 @@ from celery.result import AsyncResult
 
 from .utils.bucket_helpers import *
 from .utils.file_helpers import *
-from .llm.rag import RAGSystem_JSON, RAGSystem_PDF
+from .llm.rag import RAGSystem_JSON
 from .core.google_project_config import *
 from .models.models import *
 from .worker import *
