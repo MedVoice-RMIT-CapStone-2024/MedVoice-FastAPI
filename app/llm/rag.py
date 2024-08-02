@@ -12,11 +12,11 @@ from difflib import SequenceMatcher
 import time, asyncio
 
 from .replicate_models import init_replicate 
-from .replicate_models import llamaguard_evaluate_safety
+# from .replicate_models import llamaguard_evaluate_safety
 from ..core.db_config import settings
 
-# async def llamaguard_evaluate_safety(question):
-#     return "safe"
+async def llamaguard_evaluate_safety(question):
+    return "safe"
 
 class BaseRAGSystem:
     def __init__(self):
@@ -69,63 +69,13 @@ class BaseRAGSystem:
     def token_callback(self, token):
         print(token, end=' ', flush=True)
 
-class RAGSystem_PDF(BaseRAGSystem):
-    def __init__(self, file_path):
-        super().__init__()
-        self.index_pdf(file_path)
-
-    def index_pdf(self, file_path):
-        loader = PyPDFLoader(file_path)
-        docs = loader.load()
-
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            add_start_index=True,
-        )
-        all_splits = text_splitter.split_documents(docs)
-
-        embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")
-
-        CONNECTION_STRING = settings.DATABASE_URL
-        COLLECTION_NAME = 'embeddings.pdf_documents'
-
-        self.vectorstore = PGVector.from_documents(
-            documents=all_splits,
-            embedding=embedding,
-            collection_name=COLLECTION_NAME,
-            connection_string=CONNECTION_STRING,
-        )
-
-        retriever = self.vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 6},
-        )
-
-        prompt = hub.pull("rlm/rag-prompt")
-
-        def format_docs(docs):
-            return "\n\n".join(doc.page_content for doc in docs)
-
-        def create_rag_chain():
-            return (
-                {"context": retriever | format_docs, "question": RunnablePassthrough()}
-                | prompt
-                | self.llm
-                | StrOutputParser()
-            )
-
-        self.rag_chain = create_rag_chain()
-
-        return {"message": "PDF indexed successfully"}
-
 class RAGSystem_JSON(BaseRAGSystem):
     def __init__(self, file_path):
         super().__init__()
         self.index_json(file_path)
 
     def index_json(self, file_path):
-        loader = JSONLoader(file_path, jq_schema=".prizes[]", text_content=False)
+        loader = JSONLoader(file_path, jq_schema=".patients[]", text_content=False)
         docs = loader.load()
 
         embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")

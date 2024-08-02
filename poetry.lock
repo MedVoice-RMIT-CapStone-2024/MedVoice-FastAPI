@@ -2982,6 +2982,19 @@ files = [
 ptyprocess = ">=0.5"
 
 [[package]]
+name = "pgvector"
+version = "0.3.2"
+description = "pgvector support for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pgvector-0.3.2-py2.py3-none-any.whl", hash = "sha256:a44541c75a7340993b2840015820a910e5d7625d2ddd1235c1ee659732531bf6"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "pkginfo"
 version = "1.10.0"
 description = "Query metadata from sdists / bdists / installed packages."
@@ -4851,4 +4864,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "8ba498654510f0529f5c5496d62ae5c30f1f7452ac4f6577cf67914aefe0c7d6"
+content-hash = "e368a448303a3ce2b0f5cbb520433e00b02e0d2aa5c3b51db37fcd07c7500c47"

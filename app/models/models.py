@@ -1,13 +1,8 @@
 from enum import Enum
 from pydantic import BaseModel
 
-### Enum models ###
 class FileExtension(str, Enum):
     txt = "txt"
-    json = "json"
-
-class SourceType(str, Enum):
-    pdf = "pdf"
     json = "json"
 
 class AudioExtension(str, Enum):
@@ -15,7 +10,8 @@ class AudioExtension(str, Enum):
     wav = "wav"
     m4a = "m4a"
 
-### Base models ###
+class SourceType(str, Enum):
+    json = "json"
 class Question(BaseModel):
     question: str
     source_type: SourceType
