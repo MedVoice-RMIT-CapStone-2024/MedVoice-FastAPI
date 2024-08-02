@@ -14,6 +14,7 @@ from langchain_community.document_loaders import JSONLoader
 from ..core.db_config import settings
 import numpy as np
 import json
+from uuid import uuid4
 
 async def init_db():
     async with engine.begin() as conn:
@@ -91,10 +92,12 @@ async def init_vector_db(session: AsyncSession):
 
     # Insert mock embeddings
     for doc, vec in zip(all_splits, vectorstore.embeddings):
-        await session.execute(
-            text("INSERT INTO embeddings.documents (document_id, content, embedding) VALUES ($1, $2, $3)"),
-            [doc["patient_name"], json.dumps(doc), np.array(vec)]
+        embedding_create = EmbeddingCreate(
+            document_id=uuid4(),
+            content=json.dumps(doc),
+            embedding=np.array(vec).tolist()  # Convert numpy array to list for JSON serialization
         )
+        await crud_embedding.create_embedding(session, embedding_create)
 
     # Print message to confirm vector database initialization
     print("Vector database initialized with sample documents")
