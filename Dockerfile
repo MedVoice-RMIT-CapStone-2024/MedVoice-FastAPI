@@ -32,6 +32,10 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 # Set the current working directory to /workspace/code
 WORKDIR /workspace/code
 
+# Copy wait-for-it.sh
+COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
 # Copy all files and directories from the host to the Docker image
 COPY . .
 
