@@ -19,29 +19,41 @@ services:
       - bridge-net
     depends_on:
       - redis
-      - ollama
+      - db
+  # - ollama
 
-  ollama:
-    build: ./docker/ollama
-    ports:
-      - "11434:11434"
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nurses_db
     volumes:
-      - local-vol:/ollama
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - bridge-net
-    entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-    pull_policy: always
-    tty: true
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
+
+  # ollama:
+  #   build: ./docker/ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - local-vol:/ollama
+  #   networks:
+  #     - bridge-net
+  #   entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0:11434
+  #   pull_policy: always
+  #   tty: true
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [ gpu ]
 
   worker:
     build: .
@@ -78,6 +90,8 @@ services:
 volumes:
   local-vol:
     driver: local
+  postgres_data:
+
 
 networks:
   bridge-net:

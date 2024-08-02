@@ -1,5 +1,4 @@
 import os, uvicorn, nest_asyncio, requests, re, asyncio, datetime
-import debugpy
 
 from typing import List, Optional, Dict, Any
 from google.cloud import storage
@@ -15,19 +14,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 
-from .utils.crud_file import *
 from .utils.bucket_helpers import *
-from .utils.save_file import save_output
-from .LLMs.rag import RAGSystem_JSON, RAGSystem_PDF
-from .config.google_project_config import *
+from .utils.file_helpers import *
+from .llm.rag import RAGSystem_JSON, RAGSystem_PDF
+from .core.google_project_config import *
 from .models.models import *
-from .routes.POST.llm_endpoints import *
-from .routes.GET.audio_and_transcript import *
 from .worker import *
+from .db.init_db import init_db
 
 # Change the value for the local development
 ON_LOCALHOST = 0
-global RAG_SYS 
 RAG_SYS = 1
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
@@ -36,6 +32,7 @@ running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 async def lifespan(app: FastAPI):
     # Code to run on startup
     print("Starting up...")
+    await init_db()
     yield
     # Code to run on shutdown
     print("Shutting down...")
@@ -52,40 +49,21 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
-debugpy.listen(("0.0.0.0", 5678))
 
 templates = Jinja2Templates(directory=".")
+
+# API Router
+from .api.v1.api_v1_router import api_router
+app.include_router(api_router)
+
 @app.get("/")
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/get_audios_from_user/{id}")
-async def get_audios_from_user_id(id: str):
-    return await get_audios_from_user(id)
-
-@app.get("/get_audio/{file_id}/{file_extension}")
-async def get_audio(file_id: str, file_extension: AudioExtension):
-    return await get_audio(file_id, file_extension)
-
-@app.get("/buckets")
-async def authenticate_implicit_with_adc():
-    # This snippet demonstrates how to list buckets.
-    # *NOTE*: Replace the client created below with the client required for your application.
-    # Note that the credentials are not specified when constructing the client.
-    # Hence, the client library will look for credentials using ADC.
-    storage_client = storage.Client(project=cloud_details["project_id"])
-    buckets = storage_client.list_buckets()
-    print("Buckets:")
-    for bucket in buckets:
-        bucket_name = bucket.name
-        print(bucket.name)
-    print("Listed all storage buckets.")
-    return "Bucket: " + bucket_name
-
 ############################################
 ### Endpoint for working with transcript ### 
 
-@app.get("/get_transcript/{file_id}/{file_extension}")
+@app.get("/get_transcript/{file_id}/{file_extension}", tags=["process-transcript"])
 async def get_transcript(file_id: str, file_extension: FileExtension):
     try:
         storage_client = storage.Client(project=cloud_details['project_id'])
@@ -119,13 +97,13 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/process_transcript")
+@app.post("/process_transcript", tags=["process-transcript"])
 async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
         # Transcript list of strings test: ["This", "is", "a", "test", "transcript"]
         # Download the file specified by 'user_id' and 'file_name' asynchronously
         if user_id and file_name:
-            audio_file = await download_and_upload_audio_file(user_id, file_name)
+            audio_file = await encode_audio_filename(user_id, file_name)
             # Extract the new file name and file id from the downloaded file's details
             file_id = audio_file['file_id']
             audio_file_path = None
@@ -133,7 +111,7 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
             # Getting the url of the audio file
             file_url = await get_audio(file_id, file_extension)
             # Extract the audio file path from the url
-            audio_file_path = extract_audio_path(file_url)
+            audio_file_path = get_file_path(file_url)
 
             # Define a regex pattern to extract the patient from the file name
             pattern = r'(.*?)patient_'
@@ -155,8 +133,8 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
 
-        remove_file(audio_file_path)
-        remove_file(transcript_file_path)
+        rm_local_file(audio_file_path)
+        rm_local_file(transcript_file_path)
 
         return {"transcript": transcript_text, "file_id": file_id}
     except Exception as e:
@@ -168,7 +146,7 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
 #####################################################
 ### Endpoint for process audio with LLM pipeline ###
 
-@app.post("/process_audio_v2")
+@app.post("/process_audio_v2", tags=["process-audio"])
 async def process_audio_v2(file_id: Optional[str] = None, file_extension: AudioExtension = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     # Dispatch the Celery task
     task = process_audio_task.delay(file_id, file_extension, user_id, file_name)
@@ -179,7 +157,7 @@ async def process_audio_v2(file_id: Optional[str] = None, file_extension: AudioE
         "task_id": task.id
     }
 
-@app.get("/get_audio_processing_result/{task_id}")
+@app.get("/get_audio_task/{task_id}", tags=["process-audio"])
 async def get_audio_processing_result(task_id: str):
     task_result = AsyncResult(task_id)
     if task_result.ready():
@@ -197,7 +175,7 @@ async def get_audio_processing_result(task_id: str):
 ### End of endpoint for process audio with LLM pipeline ###
 ###########################################################
 
-@app.post("/ask")
+@app.post("/ask", tags=["rag-system"])
 async def rag_system(question_body: Question):
     question = question_body.question
     source_type = question_body.source_type
@@ -227,28 +205,6 @@ async def rag_system(question_body: Question):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-
-    
-@app.post("/test/download")
-async def download_route(user_id: str, file_name: str):
-    return await download_and_upload_audio_file(user_id, file_name)
-
-@app.post("/test/whisper")
-async def whisper_route(file_url: str):
-    return await whisper_diarize(file_url)
-
-@app.post("/test/llm")
-async def llm_route(file_url: str):
-    return await llm_pipeline_audio_to_json(file_url)
-
-@app.post("/test/llamaguard")
-async def llamaguard_route(question: str):
-    return await llamaguard_evaluate_safety(question)
-
-@app.post("/test/ollama")
-async def ask_route(question_body: Question):
-    return await ask_llam2(question_body.question)
-
 def main():
     load_dotenv()
 

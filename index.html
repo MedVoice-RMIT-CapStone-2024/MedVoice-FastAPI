@@ -13,6 +13,189 @@
 </head>
 <body class="container mx-auto pt-8">
     <h1 class="text-4xl font-bold text-center mb-8">MedVoice Backend</h1>
+
+    <!-- Nurse Database Demo -->
+    <div class="container mx-auto p-4">
+        <h2 class="text-4xl font-bold my-4">Nurse Database Management Demo</h2>
+        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4" onclick="openCreateModal()">Create Nurse</button>
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">ID</th>
+                    <th class="py-2 px-4 border-b">Name</th>
+                    <th class="py-2 px-4 border-b">Email</th>
+                    <th class="py-2 px-4 border-b">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="nurse-table-body">
+                <!-- Nurse rows will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Create Modal -->
+    <div id="createModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-4 rounded-lg shadow-lg w-1/3">
+                <h2 class="text-xl font-bold mb-4">Create Nurse</h2>
+                <form id="createForm">
+                    <div class="mb-4">
+                        <label for="createName" class="block text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="createName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="createEmail" class="block text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="createEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="createPassword" class="block text-sm font-bold mb-2">Password</label>
+                        <input type="password" id="createPassword" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="createNurse()">Create</button>
+                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeCreateModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-4 rounded-lg shadow-lg w-1/3">
+                <h2 class="text-xl font-bold mb-4">Edit Nurse</h2>
+                <form id="editForm">
+                    <input type="hidden" id="editNurseId">
+                    <div class="mb-4">
+                        <label for="editName" class="block text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="editName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="editEmail" class="block text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="editEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="updateNurse()">Save</button>
+                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeEditModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'https://medvoice-fastapi.ngrok.dev/nurses/';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNurses();
+        });
+
+        async function fetchNurses() {
+            try {
+                const response = await fetch(apiUrl);
+                const nurses = await response.json();
+                populateNurseTable(nurses);
+            } catch (error) {
+                console.error('Error fetching nurses:', error);
+            }
+        }
+
+        function populateNurseTable(nurses) {
+            const tableBody = document.getElementById('nurse-table-body');
+            tableBody.innerHTML = '';
+
+            nurses.forEach(nurse => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${nurse.id}</td>
+                    <td class="py-2 px-4 border-b">${nurse.name}</td>
+                    <td class="py-2 px-4 border-b">${nurse.email}</td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-2" onclick="editNurse(${nurse.id}, '${nurse.name}', '${nurse.email}')">Edit</button>
+                        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" onclick="deleteNurse(${nurse.id})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        function openCreateModal() {
+            document.getElementById('createModal').classList.remove('hidden');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.add('hidden');
+        }
+
+        async function createNurse() {
+            const name = document.getElementById('createName').value;
+            const email = document.getElementById('createEmail').value;
+            const password = document.getElementById('createPassword').value;
+
+            const nurse = { name, email, password };
+
+            try {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nurse)
+                });
+                fetchNurses();
+                closeCreateModal();
+            } catch (error) {
+                console.error('Error creating nurse:', error);
+            }
+        }
+
+        function editNurse(id, name, email) {
+            document.getElementById('editNurseId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            openEditModal();
+        }
+
+        async function deleteNurse(id) {
+            if (!confirm('Are you sure you want to delete this nurse?')) return;
+
+            try {
+                await fetch(`${apiUrl}${id}`, { method: 'DELETE' });
+                fetchNurses();
+            } catch (error) {
+                console.error('Error deleting nurse:', error);
+            }
+        }
+
+        function openEditModal() {
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        async function updateNurse() {
+            const id = document.getElementById('editNurseId').value;
+            const name = document.getElementById('editName').value;
+            const email = document.getElementById('editEmail').value;
+
+            const nurse = { name, email };
+
+            try {
+                await fetch(`${apiUrl}${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nurse)
+                });
+                fetchNurses();
+                closeEditModal();
+            } catch (error) {
+                console.error('Error updating nurse:', error);
+            }
+        }
+
+    </script>
+
+    <!-- Interactive RAG System Demo -->
     <div class="container mx-auto pt-8">
         <div class="container mx-auto px-4">
             <h2 class="text-4xl font-bold my-4">Interactive RAG System</h2>
@@ -63,6 +246,8 @@
             this.style.display = 'block';
         });
     </script>
+
+    <!-- LLM Pipeline and Status Demo -->
     <div class="container mx-auto pt-8 pb-8">
         <div class="container mx-auto px-4">
             <h2 class="text-4xl font-bold my-4">LLM Pipeline Tasks Status</h2>
@@ -161,5 +346,7 @@
             </script>
         </div>
     </div>
+
+    
 </body>
 </html>
