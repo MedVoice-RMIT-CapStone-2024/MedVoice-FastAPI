@@ -1,12 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text, Index
+from sqlalchemy import text
 from .session import engine, SessionLocal
 from ..models.nurse import Nurse
 from ..models.embedding import Embedding
 from ..crud import crud_nurse, crud_embedding
 from ..schemas.nurse import NurseCreate
 from ..schemas.embedding import EmbeddingCreate
-from pgvector.sqlalchemy import Vector
+from pgvector.asyncpg import register_vector
 from langchain_community.vectorstores import PGVector
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -28,6 +28,9 @@ async def init_db():
         await conn.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
 
     async with SessionLocal() as session:
+        # Register vector type
+        await register_vector(await session.connection().raw_connection())
+
         # Create the nurses table
         await session.execute(text("""
         CREATE TABLE IF NOT EXISTS nurses.nurses (
@@ -44,14 +47,15 @@ async def init_db():
             id SERIAL PRIMARY KEY,
             document_id UUID,
             content TEXT,
-            embedding VECTOR(1536) -- Change size according to your embedding size
+            embedding vector(1536) -- Change size according to your embedding size
         )
         """))
 
         # Create vector index
         await session.execute(text("""
         CREATE INDEX IF NOT EXISTS idx_embeddings_embedding
-        ON embeddings.documents USING hnsw (embedding vector_l2_ops)
+        ON embeddings.documents USING ivfflat (embedding vector_l2_ops)
+        WITH (lists = 100)
         """))
 
         # Initialize nurses table with mock data
