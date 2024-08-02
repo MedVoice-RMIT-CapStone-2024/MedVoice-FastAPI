@@ -52,7 +52,7 @@ services:
           "CMD",
           "curl",
           "--fail",
-          "http://localhost:11434/api/models/nomic-embed-text"
+          "http://ollama:11434/api/models/nomic-embed-text"
         ]
       interval: 30s
       timeout: 10s
