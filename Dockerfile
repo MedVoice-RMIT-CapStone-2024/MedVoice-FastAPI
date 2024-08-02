@@ -29,6 +29,9 @@ ENV VIRTUAL_ENV=/workspace/tmp/.venv \
 # Copy the virtual environment from the builder stage
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
+# Install netcat
+RUN apt-get update && apt-get install -y netcat
+
 # Set the current working directory to /workspace/code
 WORKDIR /workspace/code
 

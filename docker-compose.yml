@@ -11,7 +11,7 @@ services:
       [
         "/bin/bash",
         "-c",
-        "wait-for-it.sh ollama:11434 -- wait-for-it.sh redis:6379 -- uvicorn app.main:app --host 0.0.0.0 --port 8000 --loop asyncio"
+        "wait-for-it.sh ollama:11434 -- uvicorn app.main:app --host 0.0.0.0 --port 8000 --loop asyncio"
       ]
     volumes:
       - ./app:/workspace/code/app
@@ -28,7 +28,7 @@ services:
       - redis
 
   db:
-    image: postgres:13
+    build: ./docker/db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password

@@ -3,9 +3,7 @@
 # wait-for-it.sh script
 # Use this script to wait for another service to become available
 
-# This is the original wait-for-it.sh script from the GitHub repository
-
-TIMEOUT=15
+TIMEOUT=10
 WAIT_HOST=$1
 WAIT_PORT=$2
 
@@ -18,14 +16,23 @@ shift 2
 
 cmd="$@"
 
-while ! nc -z $WAIT_HOST $WAIT_PORT; do
+start_ts=$(date +%s)
+while :
+do
+  if nc -z $WAIT_HOST $WAIT_PORT; then
+    break
+  fi
+
+  curr_ts=$(date +%s)
+  elapsed_time=$((curr_ts - start_ts))
+
+  if [ $elapsed_time -ge $TIMEOUT ]; then
+    echo "Timeout of $TIMEOUT seconds reached. Moving on..."
+    break
+  fi
+
   echo "Waiting for $WAIT_HOST:$WAIT_PORT..."
   sleep 1
-  TIMEOUT=$(($TIMEOUT - 1))
-  if [[ $TIMEOUT == 0 ]]; then
-    echo "Timeout waiting for $WAIT_HOST:$WAIT_PORT"
-    exit 1
-  fi
 done
 
 >&2 echo "$WAIT_HOST:$WAIT_PORT is available"
