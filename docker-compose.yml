@@ -4,7 +4,7 @@ services:
   web:
     build: .
     ports:
-      - 8000:8000
+      - "8000:8000"
     env_file:
       - .env
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --loop asyncio
@@ -18,9 +18,11 @@ services:
     networks:
       - bridge-net
     depends_on:
-      - redis
-      - db
-      - ollama
+      ollama:
+        condition: service_healthy
+      redis:
+      db:
+
 
   db:
     build: ./docker/db
@@ -44,7 +46,17 @@ services:
     entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
-    pull_policy: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "http://localhost:11434/api/models/nomic-embed-text"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     tty: true
     restart: unless-stopped
     deploy:
@@ -77,7 +89,7 @@ services:
     build: .
     command: celery --broker=redis://redis:6379/0 flower --port=5555
     ports:
-      - 5557:5555
+      - "5557:5555"
     environment:
       - REDIS_URL=redis://redis:6379/0
     networks:
