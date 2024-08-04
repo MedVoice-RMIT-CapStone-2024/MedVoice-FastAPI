@@ -125,7 +125,7 @@ class RAGSystem_JSON(BaseRAGSystem):
         self.index_json(file_path)
 
     def index_json(self, file_path):
-        loader = JSONLoader(file_path, jq_schema=".prizes[]", text_content=False)
+        loader = JSONLoader(file_path, jq_schema=".patients[]", text_content=False)
         docs = loader.load()
 
         embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")

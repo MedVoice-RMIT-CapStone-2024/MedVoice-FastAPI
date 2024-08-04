@@ -18,13 +18,13 @@ from .utils.bucket_helpers import *
 from .utils.file_helpers import *
 from .llm.rag import RAGSystem_JSON, RAGSystem_PDF
 from .core.google_project_config import *
-from .models.models import *
+from .models.req_body import *
 from .worker import *
 from .db.init_db import init_db
 
 # Change the value for the local development
 ON_LOCALHOST = 0
-RAG_SYS = 1
+RAG_SYS = 0
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 
@@ -183,7 +183,7 @@ async def rag_system(question_body: Question):
         if RAG_SYS:
             # Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
             rag_pdf = RAGSystem_PDF("assets/update-28-covid-19-what-we-know.pdf")
-            rag_json = RAGSystem_JSON("assets/prize.json")
+            rag_json = RAGSystem_JSON("assets/patients.json")
         
             if source_type == SourceType.pdf:
                 answer = await rag_pdf.handle_question(question)

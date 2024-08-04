@@ -20,7 +20,7 @@ services:
     depends_on:
       - redis
       - db
-      - ollama
+      # - ollama
 
   db:
     image: postgres:13
@@ -33,27 +33,27 @@ services:
     networks:
       - bridge-net
 
-  ollama:
-    build: ./docker/ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - local-vol:/ollama
-    networks:
-      - bridge-net
-    entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-    pull_policy: always
-    tty: true
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
+  # ollama:
+  #   build: ./docker/ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - local-vol:/ollama
+  #   networks:
+  #     - bridge-net
+  #   entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0:11434
+  #   pull_policy: always
+  #   tty: true
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [ gpu ]
 
   worker:
     build: .
