@@ -29,8 +29,15 @@ ENV VIRTUAL_ENV=/workspace/tmp/.venv \
 # Copy the virtual environment from the builder stage
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
+# Install netcat
+RUN apt-get update && apt-get install -y netcat-traditional
+
 # Set the current working directory to /workspace/code
 WORKDIR /workspace/code
+
+# Copy wait-for-it.sh
+COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
 
 # Copy all files and directories from the host to the Docker image
 COPY . .
