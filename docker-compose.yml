@@ -10,7 +10,7 @@ services:
     command:
       [
         "./wait-for-it.sh",
-        "host.docker.internal",
+        "11434",
         "11434",
         "--",
         "uvicorn",

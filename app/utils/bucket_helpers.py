@@ -38,7 +38,12 @@ def sort_links_by_datetime(links: List[str]) -> List[str]:
         else:
             return None
 
-    # Sort the links based on the date-time
-    sorted_links = sorted(links, key=get_datetime_from_link, reverse=True)
+    # Extract dates and filter out None values
+    date_links = [(link, get_datetime_from_link(link)) for link in links]
+    date_links = [(link, date_time) for link, date_time in date_links if date_time is not None]
 
-    return sorted_links
+    # Sort the links based on the date-time
+    sorted_links = sorted(date_links, key=lambda x: x[1], reverse=True)
+
+    # Return only the links, sorted
+    return [link for link, _ in sorted_links]
