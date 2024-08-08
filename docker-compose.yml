@@ -9,10 +9,6 @@ services:
       - .env
     command:
       [
-        "./wait-for-it.sh",
-        "11434",
-        "11434",
-        "--",
         "uvicorn",
         "app.main:app",
         "--host",
