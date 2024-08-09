@@ -1,8 +1,0 @@
-version: 2
-authtoken: 
-api_key: 
-tunnels:
-  medvoice_backend:
-    labels:
-      - edge=
-    addr: http://0.0.0.0:8000
