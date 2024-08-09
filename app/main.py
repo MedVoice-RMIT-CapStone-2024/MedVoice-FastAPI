@@ -32,7 +32,7 @@ running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 async def lifespan(app: FastAPI):
     # Code to run on startup
     print("Starting up...")
-    asyncio.run(initialize_all_databases())
+    await initialize_all_databases()
     yield
     # Code to run on shutdown
     print("Shutting down...")

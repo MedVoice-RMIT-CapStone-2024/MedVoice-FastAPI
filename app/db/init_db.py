@@ -31,10 +31,8 @@ def init_vector_db():
 
     cursor = conn.cursor()
 
-    # Create the vector extension
     cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
-    # Create a table with a vector column
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS items (
             id BIGSERIAL PRIMARY KEY,
@@ -42,7 +40,6 @@ def init_vector_db():
         );
     """)
 
-    # Insert mock data
     cursor.execute("""
         INSERT INTO items (embedding) VALUES
         ('[0.1, 0.2, 0.3]'),
@@ -54,18 +51,14 @@ def init_vector_db():
     conn.close()
 
 
-# Asynchronous function for initializing the main database
 async def init_db():
     async with engine.begin() as conn:
-        # Drop all tables
         await conn.run_sync(Nurse.metadata.drop_all)
         await conn.run_sync(Patient.metadata.drop_all)
-        # Create all tables
         await conn.run_sync(Nurse.metadata.create_all)
         await conn.run_sync(Patient.metadata.create_all)
 
     async with SessionLocal() as session:
-        # Initialize Nurses
         nurses = await crud_nurse.get_nurses(session)
         if not nurses:
             mock_nurses = [
@@ -76,26 +69,19 @@ async def init_db():
             for nurse in mock_nurses:
                 await crud_nurse.create_nurse(session, nurse)
 
-        # Fetch the created nurses to use their IDs
         nurses = await crud_nurse.get_nurses(session)
         nurse_ids = [nurse.id for nurse in nurses]
 
-        # Initialize Patients from JSON file
         patients_file_path = os.path.join(os.path.dirname(__file__), '../../assets/patients.json')
         with open(patients_file_path, 'r') as file:
             patients_data = json.load(file)
 
-        # Assign nurse_id to each patient
         for i, patient in enumerate(patients_data["patients"]):
             patient['nurse_id'] = nurse_ids[i % len(nurse_ids)]
             patient_json = json.dumps(patient)
             await json_to_sql(session, patient_json)
 
 
-# Function to initialize both databases
 async def initialize_all_databases():
-    # Initialize the main database asynchronously
     await init_db()
-
-    # Initialize the vector database synchronously
     init_vector_db()
