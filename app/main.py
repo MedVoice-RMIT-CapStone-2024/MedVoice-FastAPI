@@ -23,7 +23,7 @@ from .worker import *
 from .db.init_db import initialize_all_databases
 
 # Change the value for the local development
-ON_LOCALHOST = 1
+ON_LOCALHOST = 0
 RAG_SYS = 1
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
