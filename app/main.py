@@ -195,13 +195,11 @@ async def rag_system(question_body: Question):
             elif source_type == SourceType.json:
                 answer = f"This is a json answer. It is answering to your question: {question}"
 
-        task = {id: 1}
         # task = llamaguard_task.delay(answer)
             
         return {
             "response": answer,
-            "message": "Safety processing started in the background", 
-            "task_id": task.id
+            "message": "Question answered successfully", 
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
