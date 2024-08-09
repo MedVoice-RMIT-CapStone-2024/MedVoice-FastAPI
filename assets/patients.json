@@ -87,7 +87,7 @@
             ]
         },
         {
-            "patient_name": "Dave",
+            "patient_name": "Tony",
             "patient_age": 32,
             "patient_gender": "male",
             "medical_diagnosis": [
@@ -136,6 +136,32 @@
                     "status": "blood pressure",
                     "value": "80/120",
                     "units": ""
+                }
+            ]
+        },
+        {
+            "patient_name": "Dave",
+            "patient_age": 22,
+            "patient_gender": "",
+            "medical_diagnosis": [
+                {
+                    "name": "dizziness"
+                },
+                {
+                    "name": "headache"
+                }
+            ],
+            "medical_treatment": [
+                {
+                    "name": "paracetamol",
+                    "prescription": "100 milligram"
+                }
+            ],
+            "health_vital": [
+                {
+                    "status": "temperature",
+                    "value": "37",
+                    "units": "degrees Celsius"
                 }
             ]
         }

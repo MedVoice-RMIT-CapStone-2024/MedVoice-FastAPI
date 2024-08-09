@@ -195,7 +195,8 @@ async def rag_system(question_body: Question):
             elif source_type == SourceType.json:
                 answer = f"This is a json answer. It is answering to your question: {question}"
 
-        task = llamaguard_task.delay(answer)
+        task = {id: 1}
+        # task = llamaguard_task.delay(answer)
             
         return {
             "response": answer,
