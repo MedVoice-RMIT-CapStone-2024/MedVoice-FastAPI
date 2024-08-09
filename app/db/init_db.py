@@ -27,29 +27,53 @@ def init_vector_db():
         host=host,
         port=port
     )
-    conn.autocommit = True
+    
+    try:
+        cursor = conn.cursor()
 
-    cursor = conn.cursor()
+        # Log start of transaction
+        print("Starting transaction for vector_db")
 
-    cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        # Begin a transaction explicitly
+        cursor.execute("BEGIN;")
+        print("Transaction started")
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS items (
-            id BIGSERIAL PRIMARY KEY,
-            embedding vector(3)
-        );
-    """)
+        # Create the vector extension
+        cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        print("Vector extension creation command executed")
 
-    cursor.execute("""
-        INSERT INTO items (embedding) VALUES
-        ('[0.1, 0.2, 0.3]'),
-        ('[0.4, 0.5, 0.6]'),
-        ('[0.7, 0.8, 0.9]');
-    """)
+        # Create a table with a vector column
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                id BIGSERIAL PRIMARY KEY,
+                embedding vector(3)
+            );
+        """)
+        print("Table creation command executed")
 
-    cursor.close()
-    conn.close()
+        # Insert mock data
+        cursor.execute("""
+            INSERT INTO items (embedding) VALUES
+            ('[0.1, 0.2, 0.3]'),
+            ('[0.4, 0.5, 0.6]'),
+            ('[0.7, 0.8, 0.9]');
+        """)
+        print("Mock data insertion command executed")
 
+        # Commit the transaction
+        conn.commit()
+        print("Transaction committed successfully")
+
+    except Exception as e:
+        # Rollback if there is any error
+        print(f"Error occurred: {e}, rolling back transaction")
+        conn.rollback()
+        raise e
+
+    finally:
+        cursor.close()
+        conn.close()
+        print("Connection closed")
 
 async def init_db():
     async with engine.begin() as conn:
