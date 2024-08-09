@@ -50,7 +50,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: vector_db
+      POSTGRES_DB: vectors_db
     volumes:
       - pgvector_data:/var/lib/postgresql/data
     networks:
