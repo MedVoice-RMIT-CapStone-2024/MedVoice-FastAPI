@@ -14,7 +14,7 @@ from ..utils.json_to_sql import json_to_sql
 
 # Synchronous function for initializing the vector database
 def init_vector_db():
-    db_name = "vectors_db"
+    db_name = "vector_db"
     user = "postgres"
     password = "password"
     host = "pgvector-db"

@@ -7,6 +7,6 @@ class Settings(BaseSettings):
 settings = Settings()
 
 class VectorSettings(BaseSettings):
-    DATABASE_URL: str = os.getenv("VECTOR_DATABASE_URL", "postgresql+psycopg2://postgres:password@pgvector-db/vectors_db")
+    DATABASE_URL: str = os.getenv("VECTOR_DATABASE_URL", "postgresql+psycopg2://postgres:password@pgvector-db/vector_db")
 
 vector_settings = VectorSettings()
