@@ -70,11 +70,6 @@ def init_vector_db():
         conn.rollback()
         raise e
 
-    finally:
-        cursor.close()
-        conn.close()
-        print("Connection closed")
-
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Nurse.metadata.drop_all)

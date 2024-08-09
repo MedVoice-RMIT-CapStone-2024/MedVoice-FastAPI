@@ -3,7 +3,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_community.document_loaders import PyPDFLoader, JSONLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import PGVector
+from langchain.vectorstores.pgvector import PGVector
 from langchain import hub
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -83,19 +83,23 @@ class RAGSystem_PDF(BaseRAGSystem):
             chunk_overlap=200,
             add_start_index=True,
         )
-        all_splits = text_splitter.split_documents(docs)
+        texts = text_splitter.split_documents(docs)
 
         embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")
 
         CONNECTION_STRING = vector_settings.DATABASE_URL
         COLLECTION_NAME = 'embeddings.pdf_documents'
 
-        self.vectorstore = PGVector.from_documents(
-            documents=all_splits,
-            embedding=embedding,
-            collection_name=COLLECTION_NAME,
-            connection_string=CONNECTION_STRING,
-        )
+        try:
+            self.vectorstore = PGVector.from_documents(
+                embedding=embedding,
+                documents=texts,
+                collection_name=COLLECTION_NAME,
+                connection_string=CONNECTION_STRING,
+            )
+        finally:
+            # Close the connection to the vector database if PGVector uses a direct connection
+            self.vectorstore._connection_pool.closeall()
 
         retriever = self.vectorstore.as_retriever(
             search_type="similarity",
@@ -128,17 +132,28 @@ class RAGSystem_JSON(BaseRAGSystem):
         loader = JSONLoader(file_path, jq_schema=".patients[]", text_content=False)
         docs = loader.load()
 
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+            add_start_index=True,
+        )
+        texts = text_splitter.split_documents(docs)
+
         embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")
 
         CONNECTION_STRING = vector_settings.DATABASE_URL
         COLLECTION_NAME = 'embeddings.json_documents'
 
-        self.vectorstore = PGVector.from_documents(
-            documents=docs,
-            embedding=embedding,
-            collection_name=COLLECTION_NAME,
-            connection_string=CONNECTION_STRING,
-        )
+        try:
+            self.vectorstore = PGVector.from_documents(
+                embedding=embedding,
+                documents=texts,
+                collection_name=COLLECTION_NAME,
+                connection_string=CONNECTION_STRING,
+            )
+        finally:
+            # Close the connection to the vector database if PGVector uses a direct connection
+            self.vectorstore._connection_pool.closeall()
 
         retriever = self.vectorstore.as_retriever(
             search_type="similarity",
