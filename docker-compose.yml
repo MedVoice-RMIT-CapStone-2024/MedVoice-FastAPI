@@ -31,6 +31,7 @@ services:
     depends_on:
       - redis
       - db
+      - pgvector-db
       - ollama
 
   db:
@@ -41,6 +42,17 @@ services:
       POSTGRES_DB: nurses_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bridge-net
+
+  pgvector-db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vector_db
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
     networks:
       - bridge-net
 
@@ -102,6 +114,7 @@ volumes:
   local-vol:
     driver: local
   postgres_data:
+  pgvector_data:
 
 
 networks:

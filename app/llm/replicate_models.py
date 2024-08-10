@@ -16,7 +16,7 @@ def init_replicate() -> Replicate:
             "top_p": 0.9,
             "max_tokens": 512,
             "min_tokens": 0,
-            "temperature": 0.6,
+            "temperature": 0,
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",
             "presence_penalty": 1.15,
@@ -88,15 +88,17 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
         # Add the speaker number and text to the input transcript
         input_transcript += f"Speaker {speaker_number}: {segment['text']}\n"
 
-    # Get the prompt from the command line argument
-    json_schema="""{
+        # Get the prompt from the command line argument
+    json_schema = """
+    {
     "type": "object",
     "properties": {
         "patient_name": {
         "type": "string"
         },
-        "patient_age": {
-        "type": "integer"
+        "patient_dob": {
+        "type": "string",
+        "pattern": "^\\\\d{2}/\\\\d{2}/\\\\d{2}$"
         },
         "patient_gender": {
         "type": "string"
@@ -145,15 +147,21 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
             },
             "required": ["status"]
         }
+        },
+        "note": {
+        "type": "string"
         }
     },
-    "required": ["patient_name", "patient_gender", "medical_treatment", "health_vital"]
-    }"""
+    "required": ["patient_name", "patient_gender", "medical_treatment", "health_vital", "note"]
+    }
+    """
 
     system_prompt = f"""You are an AI assisstant that summarizes medical transcript into a structured JSON format like this: {json_schema}. 
     Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details. 
     Summarize this information into a key-value pairs, adhering to the schema provided. If no patient-related information is present, return an JSON schema with empty values. 
-    Adhere to the schema, ensuring the use of explicit information and recognized medical terminology. Follow the JSON schema strictly without making assumptions about unspecified details. 
+    Adhere to the schema, ensuring the use of explicit information and recognized medical terminology. If a healthcare professional has made a significant statement, mention it as: 
+    '<Name of the healthcare professional> made a significant contribution by stating that <important statement> and list out the follow-up actions or medical recommendations if discussed Follow the JSON schema strictly without 
+    making assumptions about unspecified details all inside the field 'note' of the json schema.
     You must only return the JSON schema."""
 
     # Format the prompt for the llama-3 model
