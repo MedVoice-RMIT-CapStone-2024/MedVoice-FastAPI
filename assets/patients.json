@@ -141,7 +141,7 @@
         },
         {
             "patient_name": "Dave",
-            "patient_dob": "04/18/2002",
+            "patient_age": 22,
             "patient_gender": "",
             "medical_diagnosis": [
                 {
@@ -163,8 +163,7 @@
                     "value": "37",
                     "units": "degrees Celsius"
                 }
-            ],
-            "note": "Speaker 1 made a significant contribution by stating that the patient's symptoms include severe dizziness and headache, and recommended paracetamol to relieve symptoms, with a follow-up appointment scheduled in two weeks."
+            ]
         }
     ]
 }
