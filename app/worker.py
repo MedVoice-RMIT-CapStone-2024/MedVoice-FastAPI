@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from .utils.bucket_helpers import *
 from .utils.file_helpers import *
 from .core.google_project_config import *
-from .models.models import *
+from .models.req_body import *
 from .worker import *
 from .llm.replicate_models import llamaguard_evaluate_safety
 

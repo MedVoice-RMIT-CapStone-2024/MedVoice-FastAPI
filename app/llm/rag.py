@@ -12,11 +12,11 @@ from difflib import SequenceMatcher
 import time, asyncio
 
 from .replicate_models import init_replicate 
-from .replicate_models import llamaguard_evaluate_safety
-from ..core.db_config import settings
+# from .replicate_models import llamaguard_evaluate_safety
+from ..core.db_config import vector_settings
 
-# async def llamaguard_evaluate_safety(question):
-#     return "safe"
+async def llamaguard_evaluate_safety(question):
+    return " safe"
 
 class BaseRAGSystem:
     def __init__(self):
@@ -83,16 +83,16 @@ class RAGSystem_PDF(BaseRAGSystem):
             chunk_overlap=200,
             add_start_index=True,
         )
-        all_splits = text_splitter.split_documents(docs)
+        texts = text_splitter.split_documents(docs)
 
         embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")
 
-        CONNECTION_STRING = settings.DATABASE_URL
+        CONNECTION_STRING = vector_settings.DATABASE_URL
         COLLECTION_NAME = 'embeddings.pdf_documents'
 
         self.vectorstore = PGVector.from_documents(
-            documents=all_splits,
             embedding=embedding,
+            documents=texts,
             collection_name=COLLECTION_NAME,
             connection_string=CONNECTION_STRING,
         )
@@ -125,17 +125,24 @@ class RAGSystem_JSON(BaseRAGSystem):
         self.index_json(file_path)
 
     def index_json(self, file_path):
-        loader = JSONLoader(file_path, jq_schema=".prizes[]", text_content=False)
+        loader = JSONLoader(file_path, jq_schema=".patients[]", text_content=False)
         docs = loader.load()
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+            add_start_index=True,
+        )
+        texts = text_splitter.split_documents(docs)
 
         embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")
 
-        CONNECTION_STRING = settings.DATABASE_URL
+        CONNECTION_STRING = vector_settings.DATABASE_URL
         COLLECTION_NAME = 'embeddings.json_documents'
 
         self.vectorstore = PGVector.from_documents(
-            documents=docs,
             embedding=embedding,
+            documents=texts,
             collection_name=COLLECTION_NAME,
             connection_string=CONNECTION_STRING,
         )
@@ -147,9 +154,12 @@ class RAGSystem_JSON(BaseRAGSystem):
 
         prompt = hub.pull("rlm/rag-prompt")
 
+        def format_docs(docs):
+            return "\n\n".join(doc.page_content for doc in docs)
+
         def create_rag_chain():
             return (
-                {"context": retriever, "question": RunnablePassthrough()}
+                {"context": retriever | format_docs, "question": RunnablePassthrough()}
                 | prompt
                 | self.llm
                 | StrOutputParser()

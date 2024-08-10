@@ -14,10 +14,10 @@
 <body class="container mx-auto pt-8">
     <h1 class="text-4xl font-bold text-center mb-8">MedVoice Backend</h1>
 
-    <!-- Nurse Database Demo -->
-    <div class="container mx-auto p-4">
-        <h2 class="text-4xl font-bold my-4">Nurse Database Management Demo</h2>
-        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4" onclick="openCreateModal()">Create Nurse</button>
+    <!-- Nurses Section -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold mb-4">Nurses</h2>
+        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4" onclick="openCreateNurseModal()">Add Nurse</button>
         <table class="min-w-full bg-white">
             <thead>
                 <tr>
@@ -27,57 +27,141 @@
                     <th class="py-2 px-4 border-b">Actions</th>
                 </tr>
             </thead>
-            <tbody id="nurse-table-body">
-                <!-- Nurse rows will be populated here -->
-            </tbody>
+            <tbody id="nurse-table-body"></tbody>
         </table>
     </div>
 
-    <!-- Create Modal -->
-    <div id="createModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+    <!-- Patients Section -->
+    <div>
+        <h2 class="text-2xl font-bold mb-4">Patients</h2>
+        <div class="mb-4">
+            <input type="number" id="nurseIdFilter" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter Nurse ID">
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="fetchPatientsByNurse()">Fetch Patients</button>
+        </div>
+        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4" onclick="openCreatePatientModal()">Add Patient</button>
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">ID</th>
+                    <th class="py-2 px-4 border-b">Name</th>
+                    <th class="py-2 px-4 border-b">Age</th>
+                    <th class="py-2 px-4 border-b">Gender</th>
+                    <th class="py-2 px-4 border-b">Nurse ID</th>
+                    <th class="py-2 px-4 border-b">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="patient-table-body"></tbody>
+        </table>
+    </div>
+
+    <!-- Create Nurse Modal -->
+    <div id="createNurseModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen">
             <div class="bg-white p-4 rounded-lg shadow-lg w-1/3">
-                <h2 class="text-xl font-bold mb-4">Create Nurse</h2>
-                <form id="createForm">
+                <h2 class="text-xl font-bold mb-4">Add Nurse</h2>
+                <form id="createNurseForm">
                     <div class="mb-4">
-                        <label for="createName" class="block text-sm font-bold mb-2">Name</label>
-                        <input type="text" id="createName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <label for="createNurseName" class="block text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="createNurseName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
                     <div class="mb-4">
-                        <label for="createEmail" class="block text-sm font-bold mb-2">Email</label>
-                        <input type="email" id="createEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <label for="createNurseEmail" class="block text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="createNurseEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
                     <div class="mb-4">
-                        <label for="createPassword" class="block text-sm font-bold mb-2">Password</label>
-                        <input type="password" id="createPassword" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <label for="createNursePassword" class="block text-sm font-bold mb-2">Password</label>
+                        <input type="password" id="createNursePassword" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
                     <div class="flex items-center justify-between">
-                        <button type="button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="createNurse()">Create</button>
-                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeCreateModal()">Cancel</button>
+                        <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="createNurse()">Save</button>
+                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeCreateNurseModal()">Cancel</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+    <!-- Edit Nurse Modal -->
+    <div id="editNurseModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen">
             <div class="bg-white p-4 rounded-lg shadow-lg w-1/3">
                 <h2 class="text-xl font-bold mb-4">Edit Nurse</h2>
-                <form id="editForm">
+                <form id="editNurseForm">
                     <input type="hidden" id="editNurseId">
                     <div class="mb-4">
-                        <label for="editName" class="block text-sm font-bold mb-2">Name</label>
-                        <input type="text" id="editName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <label for="editNurseName" class="block text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="editNurseName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
                     <div class="mb-4">
-                        <label for="editEmail" class="block text-sm font-bold mb-2">Email</label>
-                        <input type="email" id="editEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <label for="editNurseEmail" class="block text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="editNurseEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
                     <div class="flex items-center justify-between">
                         <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="updateNurse()">Save</button>
-                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeEditModal()">Cancel</button>
+                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeEditNurseModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Patient Modal -->
+    <div id="createPatientModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-4 rounded-lg shadow-lg w-1/3">
+                <h2 class="text-xl font-bold mb-4">Add Patient</h2>
+                <form id="createPatientForm">
+                    <div class="mb-4">
+                        <label for="createPatientName" class="block text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="createPatientName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="createPatientAge" class="block text-sm font-bold mb-2">Age</label>
+                        <input type="number" id="createPatientAge" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="createPatientGender" class="block text-sm font-bold mb-2">Gender</label>
+                        <input type="text" id="createPatientGender" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="createPatientNurseId" class="block text-sm font-bold mb-2">Nurse ID</label>
+                        <input type="number" id="createPatientNurseId" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="createPatient()">Save</button>
+                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeCreatePatientModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Patient Modal -->
+    <div id="editPatientModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-4 rounded-lg shadow-lg w-1/3">
+                <h2 class="text-xl font-bold mb-4">Edit Patient</h2>
+                <form id="editPatientForm">
+                    <input type="hidden" id="editPatientId">
+                    <div class="mb-4">
+                        <label for="editPatientName" class="block text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="editPatientName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="editPatientAge" class="block text-sm font-bold mb-2">Age</label>
+                        <input type="number" id="editPatientAge" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="editPatientGender" class="block text-sm font-bold mb-2">Gender</label>
+                        <input type="text" id="editPatientGender" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label for="editPatientNurseId" class="block text-sm font-bold mb-2">Nurse ID</label>
+                        <input type="number" id="editPatientNurseId" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="updatePatient()">Save</button>
+                        <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="closeEditPatientModal()">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -85,19 +169,30 @@
     </div>
 
     <script>
-        const apiUrl = 'https://medvoice-fastapi.ngrok.dev/nurses/';
+        const apiUrl = 'https://medvoice-fastapi.ngrok.dev/';
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchNurses();
+            fetchPatients();
         });
 
         async function fetchNurses() {
             try {
-                const response = await fetch(apiUrl);
+                const response = await fetch(`${apiUrl}nurses/`);
                 const nurses = await response.json();
                 populateNurseTable(nurses);
             } catch (error) {
                 console.error('Error fetching nurses:', error);
+            }
+        }
+
+        async function fetchPatients() {
+            try {
+                const response = await fetch(`${apiUrl}patients/`);
+                const patients = await response.json();
+                populatePatientTable(patients);
+            } catch (error) {
+                console.error('Error fetching patients:', error);
             }
         }
 
@@ -119,29 +214,51 @@
                 tableBody.appendChild(row);
             });
         }
-        function openCreateModal() {
-            document.getElementById('createModal').classList.remove('hidden');
+
+        function populatePatientTable(patients) {
+            const tableBody = document.getElementById('patient-table-body');
+            tableBody.innerHTML = '';
+
+            patients.forEach(patient => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${patient.id}</td>
+                    <td class="py-2 px-4 border-b">${patient.patient_name}</td>
+                    <td class="py-2 px-4 border-b">${patient.patient_age}</td>
+                    <td class="py-2 px-4 border-b">${patient.patient_gender}</td>
+                    <td class="py-2 px-4 border-b">${patient.nurse_id}</td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-2" onclick="editPatient(${patient.id}, '${patient.patient_name}', ${patient.patient_age}, '${patient.patient_gender}', ${patient.nurse_id})">Edit</button>
+                        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" onclick="deletePatient(${patient.id})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
         }
 
-        function closeCreateModal() {
-            document.getElementById('createModal').classList.add('hidden');
+        function openCreateNurseModal() {
+            document.getElementById('createNurseModal').classList.remove('hidden');
+        }
+
+        function closeCreateNurseModal() {
+            document.getElementById('createNurseModal').classList.add('hidden');
         }
 
         async function createNurse() {
-            const name = document.getElementById('createName').value;
-            const email = document.getElementById('createEmail').value;
-            const password = document.getElementById('createPassword').value;
+            const name = document.getElementById('createNurseName').value;
+            const email = document.getElementById('createNurseEmail').value;
+            const password = document.getElementById('createNursePassword').value;
 
             const nurse = { name, email, password };
 
             try {
-                await fetch(apiUrl, {
+                await fetch(`${apiUrl}nurses/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(nurse)
                 });
                 fetchNurses();
-                closeCreateModal();
+                closeCreateNurseModal();
             } catch (error) {
                 console.error('Error creating nurse:', error);
             }
@@ -149,50 +266,145 @@
 
         function editNurse(id, name, email) {
             document.getElementById('editNurseId').value = id;
-            document.getElementById('editName').value = name;
-            document.getElementById('editEmail').value = email;
-            openEditModal();
+            document.getElementById('editNurseName').value = name;
+            document.getElementById('editNurseEmail').value = email;
+            openEditNurseModal();
+        }
+
+        async function updateNurse() {
+            const id = document.getElementById('editNurseId').value;
+            const name = document.getElementById('editNurseName').value;
+            const email = document.getElementById('editNurseEmail').value;
+
+            const nurse = { name, email };
+
+            try {
+                await fetch(`${apiUrl}nurses/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nurse)
+                });
+                fetchNurses();
+                closeEditNurseModal();
+            } catch (error) {
+                console.error('Error updating nurse:', error);
+            }
         }
 
         async function deleteNurse(id) {
             if (!confirm('Are you sure you want to delete this nurse?')) return;
 
             try {
-                await fetch(`${apiUrl}${id}`, { method: 'DELETE' });
+                await fetch(`${apiUrl}nurses/${id}`, { method: 'DELETE' });
                 fetchNurses();
             } catch (error) {
                 console.error('Error deleting nurse:', error);
             }
         }
 
-        function openEditModal() {
-            document.getElementById('editModal').classList.remove('hidden');
+        function openEditNurseModal() {
+            document.getElementById('editNurseModal').classList.remove('hidden');
         }
 
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
+        function closeEditNurseModal() {
+            document.getElementById('editNurseModal').classList.add('hidden');
         }
 
-        async function updateNurse() {
-            const id = document.getElementById('editNurseId').value;
-            const name = document.getElementById('editName').value;
-            const email = document.getElementById('editEmail').value;
+        function openCreatePatientModal() {
+            document.getElementById('createPatientModal').classList.remove('hidden');
+        }
 
-            const nurse = { name, email };
+        function closeCreatePatientModal() {
+            document.getElementById('createPatientModal').classList.add('hidden');
+        }
+
+        async function createPatient() {
+            const name = document.getElementById('createPatientName').value;
+            const age = document.getElementById('createPatientAge').value;
+            const gender = document.getElementById('createPatientGender').value;
+            const nurseId = document.getElementById('createPatientNurseId').value;
+
+            const patient = { patient_name: name, patient_age: age, patient_gender: gender, nurse_id: nurseId };
 
             try {
-                await fetch(`${apiUrl}${id}`, {
-                    method: 'PUT',
+                await fetch(`${apiUrl}patients/`, {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(nurse)
+                    body: JSON.stringify(patient)
                 });
-                fetchNurses();
-                closeEditModal();
+                fetchPatients();
+                closeCreatePatientModal();
             } catch (error) {
-                console.error('Error updating nurse:', error);
+                console.error('Error creating patient:', error);
             }
         }
 
+        function editPatient(id, name, age, gender, nurseId) {
+            document.getElementById('editPatientId').value = id;
+            document.getElementById('editPatientName').value = name;
+            document.getElementById('editPatientAge').value = age;
+            document.getElementById('editPatientGender').value = gender;
+            document.getElementById('editPatientNurseId').value = nurseId;
+            openEditPatientModal();
+        }
+
+        async function updatePatient() {
+            const id = document.getElementById('editPatientId').value;
+            const name = document.getElementById('editPatientName').value;
+            const age = document.getElementById('editPatientAge').value;
+            const gender = document.getElementById('editPatientGender').value;
+            const nurseId = document.getElementById('editPatientNurseId').value;
+
+            const patient = { patient_name: name, patient_age: age, patient_gender: gender, nurse_id: nurseId };
+
+            try {
+                await fetch(`${apiUrl}patients/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(patient)
+                });
+                fetchPatients();
+                closeEditPatientModal();
+            } catch (error) {
+                console.error('Error updating patient:', error);
+            }
+        }
+
+        async function deletePatient(id) {
+            if (!confirm('Are you sure you want to delete this patient?')) return;
+
+            try {
+                await fetch(`${apiUrl}patients/${id}`, { method: 'DELETE' });
+                fetchPatients();
+            } catch (error) {
+                console.error('Error deleting patient:', error);
+            }
+        }
+
+        function openEditPatientModal() {
+            document.getElementById('editPatientModal').classList.remove('hidden');
+        }
+
+        function closeEditPatientModal() {
+            document.getElementById('editPatientModal').classList.add('hidden');
+        }
+
+        async function fetchPatientsByNurse() {
+            const nurseId = document.getElementById('nurseIdFilter').value;
+
+            if (!nurseId) {
+                alert('Please enter a Nurse ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}patients/nurse/${nurseId}`);
+                const patients = await response.json();
+                populatePatientTable(patients);
+            } catch (error) {
+                console.error('Error fetching patients by nurse:', error);
+            }
+        }
     </script>
 
     <!-- Interactive RAG System Demo -->
@@ -227,7 +439,7 @@
             this.style.display = 'none';
 
             // endpoint = "ask"
-            endpoint = "test/ollama"
+            endpoint = "ask"
     
             const response = await fetch(`https://medvoice-fastapi.ngrok.dev/${endpoint}`, {
                 method: 'POST',

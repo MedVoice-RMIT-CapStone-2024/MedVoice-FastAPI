@@ -1,0 +1,169 @@
+{
+    "patients": [
+        {
+            "patient_name": "Adam",
+            "patient_age": 16,
+            "patient_gender": "male",
+            "medical_diagnosis": [
+                {
+                    "name": "fever"
+                },
+                {
+                    "name": "dizziness"
+                }
+            ],
+            "medical_treatment": [
+                {
+                    "name": "medicines",
+                    "prescription": ""
+                },
+                {
+                    "name": "orange juices",
+                    "prescription": ""
+                }
+            ],
+            "health_vital": [
+                {
+                    "status": "normal",
+                    "value": "",
+                    "units": ""
+                }
+            ]
+        },
+        {
+            "patient_name": "Bob",
+            "patient_age": 16,
+            "patient_gender": "male",
+            "medical_diagnosis": [
+                {
+                    "name": "fever"
+                },
+                {
+                    "name": "dizziness"
+                }
+            ],
+            "medical_treatment": [
+                {
+                    "name": "medicine",
+                    "prescription": ""
+                }
+            ],
+            "health_vital": [
+                {
+                    "status": "normal",
+                    "value": "",
+                    "units": ""
+                }
+            ]
+        },
+        {
+            "patient_name": "Craig",
+            "patient_age": 16,
+            "patient_gender": "",
+            "medical_diagnosis": [
+                {
+                    "name": "fever"
+                },
+                {
+                    "name": "headache"
+                }
+            ],
+            "medical_treatment": [
+                {
+                    "name": "medicine",
+                    "prescription": ""
+                },
+                {
+                    "name": "full meal per day",
+                    "prescription": ""
+                }
+            ],
+            "health_vital": [
+                {
+                    "status": "normal",
+                    "value": "",
+                    "units": ""
+                }
+            ]
+        },
+        {
+            "patient_name": "Tony",
+            "patient_age": 32,
+            "patient_gender": "male",
+            "medical_diagnosis": [
+                {
+                    "name": "fever"
+                },
+                {
+                    "name": "headache"
+                }
+            ],
+            "medical_treatment": [
+                {
+                    "name": "medicines",
+                    "prescription": ""
+                },
+                {
+                    "name": "extra meals per day",
+                    "prescription": ""
+                },
+                {
+                    "name": "nice sleep schedule",
+                    "prescription": ""
+                }
+            ],
+            "health_vital": [
+                {
+                    "status": "normal",
+                    "value": "",
+                    "units": ""
+                }
+            ]
+        },
+        {
+            "patient_name": "Homelander",
+            "patient_age": 45,
+            "patient_gender": "",
+            "medical_diagnosis": [],
+            "medical_treatment": [],
+            "health_vital": [
+                {
+                    "status": "heartbeat rate",
+                    "value": "60",
+                    "units": ""
+                },
+                {
+                    "status": "blood pressure",
+                    "value": "80/120",
+                    "units": ""
+                }
+            ]
+        },
+        {
+            "patient_name": "Dave",
+            "patient_age": 22,
+            "patient_gender": "",
+            "medical_diagnosis": [
+                {
+                    "name": "dizziness"
+                },
+                {
+                    "name": "headache"
+                }
+            ],
+            "medical_treatment": [
+                {
+                    "name": "paracetamol",
+                    "prescription": "100 milligram"
+                }
+            ],
+            "health_vital": [
+                {
+                    "status": "temperature",
+                    "value": "37",
+                    "units": "degrees Celsius"
+                }
+            ]
+        }
+    ]
+}

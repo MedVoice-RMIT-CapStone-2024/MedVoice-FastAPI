@@ -7,8 +7,9 @@ check:
 	@test -f google-credentials.json && (echo "google-credentials.json file exists.") || echo "google-credentials.json file is missing. Please add it."
 	@test -f ngrok.yml && (echo "ngrok.yml file exists.") || echo "ngrok.yml file is missing. Please see ngrok.yml-placeholder.txt for reference and add it."
 
+SHELL := /bin/bash
 .PHONY: setup
 setup:
 	which python3 > /dev/null && python3 -m venv venv || python -m venv venv
-	source venv/bin/activate
-	which poetry > /dev/null && poetry install || pip install -r requirements.txt
+	bash -c "source venv/bin/activate"
+	pip install -r requirements.txt

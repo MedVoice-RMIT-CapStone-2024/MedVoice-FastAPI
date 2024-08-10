@@ -1,4 +1,13 @@
 from pydantic import BaseModel
+from typing import List, Optional
+
+class NurseBase(BaseModel):
+    id: int
+    name: str
+    email: str
+
+    class Config:
+        orm_mode = True
 
 class NurseCreate(BaseModel):
     name: str
@@ -6,14 +15,12 @@ class NurseCreate(BaseModel):
     password: str
 
 class NurseUpdate(BaseModel):
-    name: str
-    email: str
-    password: str
+    name: Optional[str]
+    email: Optional[str]
+    password: Optional[str]
 
-class Nurse(BaseModel):
-    id: int
-    name: str
-    email: str
+class Nurse(NurseBase):
+    patients: List["Patient"] = []
 
-    class Config:
-        from_attributes = True
+from .patient import Patient  # Avoid circular import issues
+Nurse.update_forward_refs()
