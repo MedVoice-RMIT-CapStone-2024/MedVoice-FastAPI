@@ -85,7 +85,7 @@ class RAGSystem_PDF(BaseRAGSystem):
         )
         texts = text_splitter.split_documents(docs)
 
-        embedding = OllamaEmbeddings(model="nomic-embed-text")
+        embedding = OllamaEmbeddings(base_url="http://ollama:11434", model="nomic-embed-text")
 
         CONNECTION_STRING = vector_settings.DATABASE_URL
         COLLECTION_NAME = 'embeddings.pdf_documents'
