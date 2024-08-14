@@ -36,23 +36,26 @@ async def whisper_diarize(file_url: str):
     
 async def llm_pipeline_audio_to_json(file_url: str):
     num_wrong_output = 0
+    speaker_diarization_json = await whisper_diarization(file_url)
+    prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json)
     while True:
         try:
-            speaker_diarization_json = await whisper_diarization(file_url)
             print(pretty_print_json(speaker_diarization_json))
-            prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json)
             output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
+
+            raw_output = fr"""{output}"""
             
-            llama3_json_output = json.loads(output)
-            # Check if the output is a JSON object
+            # Attempt to parse the output as JSON
+            try:
+                llama3_json_output = json.loads(raw_output)
+            except json.JSONDecodeError as e:
+                num_wrong_output += 1
+                print(f"Error: Failed to decode JSON. Attempt {num_wrong_output}. Details: {str(e)}")
+                continue
+
+            # Check if the parsed output is a dictionary (JSON object)
             if isinstance(llama3_json_output, dict):
-                try:
-                    json.dumps(llama3_json_output)
-                    return llama3_json_output
-                except (TypeError, OverflowError):
-                    num_wrong_output += 1
-                    print(f"Error: Output is not a JSON object. Attempt {num_wrong_output}")
-                    continue
+                return llama3_json_output
             else:
                 num_wrong_output += 1
                 print(f"Error: Output is not a JSON object. Attempt {num_wrong_output}")
@@ -60,6 +63,7 @@ async def llm_pipeline_audio_to_json(file_url: str):
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
         
 async def llamaguard_evaluate(question: str):
     try:
