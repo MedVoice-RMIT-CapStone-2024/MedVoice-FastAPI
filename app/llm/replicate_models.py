@@ -54,7 +54,7 @@ async def llama3_generate_medical_summary(output: str) -> str:
             """,
             "max_tokens": 512,
             "min_tokens": 0,
-            "temperature": 0.6,
+            "temperature": 0,
             "system_prompt": "You are a helpful assistant. Only use the information explicitly mentioned in the transcript, and you must not infer or assume any details that are not directly stated.",
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",
@@ -93,76 +93,228 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
     {
     "type": "object",
     "properties": {
-        "patient_name": {
-        "type": "string"
-        },
-        "patient_dob": {
-        "type": "string",
-        "pattern": "^\\\\d{2}/\\\\d{2}/\\\\d{2}$"
-        },
-        "patient_gender": {
-        "type": "string"
-        },
-        "medical_diagnosis": {
-        "type": "array",
-        "items": {
-            "type": "object",
-            "properties": {
-            "name": {
-                "type": "string"
-            }
-            },
-            "required": ["name"]
+        "Unit": { "type": "string" },
+        "Ward": { "type": "string" },
+        "Bed": { "type": "string" },
+        "Assessor": {
+        "type": "object",
+        "properties": {
+            "Name": { "type": "string" },
+            "MCR_No": { "type": "string" },
+            "Signature": { "type": "string" },
+            "Date_and_Time": { "type": "string", "format": "date-time" }
         }
         },
-        "medical_treatment": {
-        "type": "array",
-        "items": {
-            "type": "object",
-            "properties": {
-            "name": {
-                "type": "string"
-            },
-            "prescription": {
-                "type": "string"
-            }
-            },
-            "required": ["name", "prescription"]
+        "Demographics_of_patient": {
+        "type": "object",
+        "properties": {
+            "Age": { "type": "integer" },
+            "Marital_status": { "type": "string" },
+            "Ethnicity": { "type": "string" },
+            "Occupation": { "type": "string" }
         }
         },
-        "health_vital": {
+        "Presenting_complaints": {
         "type": "array",
-        "items": {
-            "type": "object",
-            "properties": {
-            "status": {
-                "type": "string"
-            },
-            "value": {
-                "type": "string"
-            },
-            "units": {
-                "type": "string"
-            }
-            },
-            "required": ["status"]
-        }
+        "items": { "type": "string" }
         },
-        "note": {
+        "History_of_presenting_complaints": {
         "type": "string"
+        },
+        "Past_psychiatric_history": {
+        "type": "object",
+        "properties": {
+            "Established_diagnosis": { "type": "string" },
+            "Previous_treatments": { "type": "string" },
+            "History_of_admissions": { "type": "string" },
+            "History_of_mania": { "type": "string" },
+            "Timeline_of_illness": { "type": "string" }
+        }
+        },
+        "Family_history": {
+        "type": "object",
+        "properties": {
+            "Parents_ages": { "type": "string" },
+            "Parents_occupation": { "type": "string" },
+            "Cause_of_death_if_deceased": { "type": "string" },
+            "Quality_of_relationship_with_parents": { "type": "string" },
+            "Siblings_details": { "type": "string" },
+            "Family_history_of_mental_illness": { "type": "string" },
+            "Family_history_of_suicide_or_substance_misuse": { "type": "string" },
+            "Three_generation_family_tree": { "type": "string" }
+        }
+        },
+        "Personal_history_childhood": {
+        "type": "object",
+        "properties": {
+            "Place_of_birth": { "type": "string" },
+            "Complications_in_childbirth": { "type": "string" },
+            "Developmental_milestones": { "type": "string" },
+            "Prolonged_separation_from_parents": { "type": "string" },
+            "Serious_illnesses": { "type": "string" },
+            "Happy_childhood": { "type": "string" }
+        }
+        },
+        "Personal_history_educational_history": {
+        "type": "object",
+        "properties": {
+            "School_performance": { "type": "string" },
+            "Relationship_with_teachers_and_peers": { "type": "string" },
+            "History_of_truanting": { "type": "string" },
+            "Age_of_leaving_school": { "type": "string" },
+            "Qualifications_obtained": { "type": "string" },
+            "Higher_education_and_vocational_qualifications": { "type": "string" }
+        }
+        },
+        "Personal_history_occupational_history": {
+        "type": "object",
+        "properties": {
+            "Employment_history_summary": { "type": "string" },
+            "Job_termination_history": { "type": "string" }
+        }
+        },
+        "Personal_history_psychosexual_history": {
+        "type": "object",
+        "properties": {
+            "Current_relationship_status": { "type": "string" },
+            "Last_relationship": { "type": "string" },
+            "Age_of_first_sexual_experience": { "type": "string" },
+            "Age_of_menarche": { "type": "string" },
+            "Last_menstrual_period": { "type": "string" },
+            "Pregnancy_history": { "type": "string" },
+            "Children_details": { "type": "string" },
+            "Age_of_menopause": { "type": "string" },
+            "History_of_sexual_abuse": { "type": "string" }
+        }
+        },
+        "Social_history": {
+        "type": "object",
+        "properties": {
+            "Current_housing_situation": { "type": "string" },
+            "Financial_situation": { "type": "string" },
+            "Sources_of_stress": { "type": "string" },
+            "Social_support": { "type": "string" }
+        }
+        },
+        "Past_medical_history": {
+        "type": "object",
+        "properties": {
+            "Medical_history": { "type": "string" },
+            "Surgical_history": { "type": "string" }
+        }
+        },
+        "Current_medications_and_drug_allergies": {
+        "type": "object",
+        "properties": {
+            "Drug_allergy": { "type": "string" },
+            "Prescribed_medications": { "type": "string" },
+            "Recently_prescribed_medications": { "type": "string" }
+        }
+        },
+        "Substance_misuse_history": {
+        "type": "object",
+        "properties": {
+            "Current_smoking": { "type": "string" },
+            "Current_drinking": { "type": "string" },
+            "Current_illicit_drug_use": { "type": "string" },
+            "Past_smoking_history": { "type": "string" },
+            "Past_drinking_history": { "type": "string" },
+            "Past_illicit_drug_use_history": { "type": "string" },
+            "Dependence_features": { "type": "string" }
+        }
+        },
+        "Forensic_history": {
+        "type": "object",
+        "properties": {
+            "Trouble_with_authority": { "type": "string" },
+            "Outstanding_convictions": { "type": "string" },
+            "Outstanding_charges": { "type": "string" }
+        }
+        },
+        "Premorbid_personality": {
+        "type": "object",
+        "properties": {
+            "Personality_description": { "type": "string" },
+            "Relationships_with_others": { "type": "string" },
+            "Attitude_to_self_and_others": { "type": "string" },
+            "Religious_beliefs": { "type": "string" },
+            "Hobbies": { "type": "string" }
+        }
+        },
+        "Mental_state_examination": {
+        "type": "object",
+        "properties": {
+            "Appearance_and_behavior": { "type": "string" },
+            "Speech_and_thoughts": { "type": "string" },
+            "Mood": { "type": "string" },
+            "Thoughts": { "type": "string" },
+            "Suicidal_ideations": { "type": "string" },
+            "Perceptual_abnormalities": { "type": "string" },
+            "Cognitive_state_MMSE": { "type": "string" },
+            "Insight": { "type": "string" }
+        }
+        },
+        "Physical_examination": {
+        "type": "object",
+        "properties": {
+            "Blood_pressure": { "type": "string" },
+            "Pulse_rate": { "type": "string" },
+            "Temperature": { "type": "string" },
+            "General_examination": { "type": "string" },
+            "Cardiovascular_examination": { "type": "string" },
+            "Respiratory_examination": { "type": "string" },
+            "Abdominal_examination": { "type": "string" },
+            "Neurological_examination": { "type": "string" },
+            "Musculoskeletal_and_skin_examination": { "type": "string" }
+        }
+        },
+        "Diagnosis_and_management": {
+        "type": "object",
+        "properties": {
+            "Diagnosis_or_differential_diagnosis": { "type": "string" },
+            "Management_instructions": { "type": "string" },
+            "Consultant": { "type": "string" },
+            "Risk_assessment_and_management_plan": { "type": "string" },
+            "Estimated_duration_of_stay": { "type": "string" }
+        }
         }
     },
-    "required": ["patient_name", "patient_gender", "medical_treatment", "health_vital", "note"]
+    "required": [
+        "Unit", 
+        "Ward", 
+        "Bed", 
+        "Assessor", 
+        "Demographics_of_patient", 
+        "Presenting_complaints", 
+        "History_of_presenting_complaints", 
+        "Past_psychiatric_history", 
+        "Family_history", 
+        "Personal_history_childhood", 
+        "Personal_history_educational_history", 
+        "Personal_history_occupational_history", 
+        "Personal_history_psychosexual_history", 
+        "Social_history", 
+        "Past_medical_history", 
+        "Current_medications_and_drug_allergies", 
+        "Substance_misuse_history", 
+        "Forensic_history", 
+        "Premorbid_personality", 
+        "Mental_state_examination", 
+        "Physical_examination", 
+        "Diagnosis_and_management"
+    ]
     }
     """
 
     system_prompt = f"""You are an AI assisstant that summarizes medical transcript into a structured JSON format like this: {json_schema}. 
     Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details. 
     Summarize this information into a key-value pairs, adhering to the schema provided. If no patient-related information is present, return an JSON schema with empty values. 
-    Adhere to the schema, ensuring the use of explicit information and recognized medical terminology. If a healthcare professional has made a significant statement, mention it as: 
-    '<Name of the healthcare professional> made a significant contribution by stating that <important statement> and list out the follow-up actions or medical recommendations if discussed Follow the JSON schema strictly without 
-    making assumptions about unspecified details all inside the field 'note' of the json schema.
+    Adhere to the schema, ensuring the use of explicit information and recognized medical terminology. 
     You must only return the JSON schema."""
+
+# If a healthcare professional has made a significant statement, mention it as: 
+#     '<Name of the healthcare professional> made a significant contribution by stating that <important statement> and list out the follow-up actions or medical recommendations if discussed Follow the JSON schema strictly without 
+#     making assumptions about unspecified details all inside the field 'note' of the json schema.
 
     # Format the prompt for the llama-3 model
     prompt: str = f"""
