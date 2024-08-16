@@ -9,8 +9,12 @@ class NurseBase(BaseModel):
     class Config:
         orm_mode = True
 
-class NurseCreate(BaseModel):
+class NurseRegister(BaseModel):
     name: str
+    email: str
+    password: str
+
+class NurseLogin(BaseModel):
     email: str
     password: str
 
