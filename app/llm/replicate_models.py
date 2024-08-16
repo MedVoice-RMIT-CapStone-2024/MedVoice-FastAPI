@@ -14,9 +14,9 @@ def init_replicate() -> Replicate:
         model_kwargs= {
             "top_k": 0,
             "top_p": 0.9,
-            "max_tokens": 512,
+            "max_tokens": 1500,
             "min_tokens": 0,
-            "temperature": 0,
+            "temperature": 0.2,
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",
             "presence_penalty": 1.15,
@@ -54,7 +54,7 @@ async def llama3_generate_medical_summary(output: str) -> str:
             """,
             "max_tokens": 512,
             "min_tokens": 0,
-            "temperature": 0.6,
+            "temperature": 0.4,
             "system_prompt": "You are a helpful assistant. Only use the information explicitly mentioned in the transcript, and you must not infer or assume any details that are not directly stated.",
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",
@@ -88,7 +88,6 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
         # Add the speaker number and text to the input transcript
         input_transcript += f"Speaker {speaker_number}: {segment['text']}\n"
 
-        # Get the prompt from the command line argument
     json_schema = """
     {
     "type": "object",
@@ -103,56 +102,81 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
         "patient_gender": {
         "type": "string"
         },
-        "medical_diagnosis": {
-        "type": "array",
-        "items": {
+        "Demographics_of_patient": {
             "type": "object",
             "properties": {
-            "name": {
+            "Marital_status": {
+                "type": "string"
+            },
+            "Ethnicity": {
+                "type": "string"
+            },
+            "Occupation": {
                 "type": "string"
             }
-            },
-            "required": ["name"]
-        }
+            }
         },
-        "medical_treatment": {
-        "type": "array",
-        "items": {
+        "Past_medical_history": {
             "type": "object",
             "properties": {
-            "name": {
+            "Medical_history": {
                 "type": "string"
             },
-            "prescription": {
+            "Surgical_history": {
                 "type": "string"
             }
-            },
-            "required": ["name", "prescription"]
-        }
+            }
         },
-        "health_vital": {
-        "type": "array",
-        "items": {
+        "Current_medications_and_drug_allergies": {
             "type": "object",
             "properties": {
-            "status": {
+            "Drug_allergy": {
                 "type": "string"
             },
-            "value": {
+            "Prescribed_medications": {
                 "type": "string"
             },
-            "units": {
+            "Recently_prescribed_medications": {
                 "type": "string"
             }
+            }
+        },
+        "Mental_state_examination": {
+            "type": "object",
+            "properties": {
+            "Appearance_and_behavior": {
+                "type": "string"
             },
-            "required": ["status"]
-        }
+            "Speech_and_thoughts": {
+                "type": "string"
+            },
+            "Mood": {
+                "type": "string"
+            },
+            "Thoughts": {
+                "type": "string"
+            }
+            }
+        },
+        "Physical_examination": {
+            "type": "object",
+            "properties": {
+            "Blood_pressure": {
+                "type": "string"
+            },
+            "Pulse_rate": {
+                "type": "string"
+            },
+            "Temperature": {
+                "type": "string"
+            }
+            }
         },
         "note": {
         "type": "string"
         }
     },
-    "required": ["patient_name", "patient_gender", "medical_treatment", "health_vital", "note"]
+    "required": [ "patient_name", "patient_gender", "Demographics_of_patient", "Past_medical_history", "Current_medications_and_drug_allergies", "Mental_state_examination", "Physical_examination", "note" ]
     }
     """
 
