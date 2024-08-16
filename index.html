@@ -81,7 +81,7 @@
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
 
-            fetch('https://medvoice-fastapi.ngrok.dev/register', {
+            fetch('https://medvoice-fastapi.ngrok.dev/nurses/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -107,7 +107,7 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
-            fetch('https://medvoice-fastapi.ngrok.dev/login', {
+            fetch('https://medvoice-fastapi.ngrok.dev/nurses/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -605,8 +605,11 @@
                                     if (data.status === 'SUCCESS') {
                                         button.textContent = 'Done';
 
-                                        // Show the full JSON response in an alert
-                                        alert(JSON.stringify(data, null, 2));
+                                        // Format and pretty-print the JSON object according to the given schema
+                                        const formattedJson = formatJson(data.llama3_json_output);
+                                        
+                                        // Show the full formatted JSON response in an alert
+                                        alert(formattedJson);
 
                                         // Leave the button enabled for subsequent clicks
                                     } else {
@@ -619,6 +622,44 @@
                                     alert('An error occurred. Please try again.');
                                 });
                         });
+
+                        function formatJson(jsonObject, indent = 2) {
+                            // Helper function to format JSON according to the schema
+                            function format(obj, currentIndent) {
+                                let formattedString = '';
+                                const indentSpace = ' '.repeat(currentIndent);
+                                const nextIndent = currentIndent + indent;
+
+                                for (let key in obj) {
+                                    if (obj.hasOwnProperty(key)) {
+                                        if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                                            formattedString += `${indentSpace}${key}: {\n`;
+                                            formattedString += format(obj[key], nextIndent);
+                                            formattedString += `${indentSpace}},\n`;
+                                        } else if (Array.isArray(obj[key])) {
+                                            formattedString += `${indentSpace}${key}: [\n`;
+                                            obj[key].forEach(item => {
+                                                if (typeof item === 'object' && item !== null) {
+                                                    formattedString += `${' '.repeat(nextIndent)}{\n`;
+                                                    formattedString += format(item, nextIndent + indent);
+                                                    formattedString += `${' '.repeat(nextIndent)}}\n`;
+                                                } else {
+                                                    formattedString += `${' '.repeat(nextIndent)}${JSON.stringify(item)}\n`;
+                                                }
+                                            });
+                                            formattedString += `${indentSpace}],\n`;
+                                        } else {
+                                            formattedString += `${indentSpace}${key}: ${JSON.stringify(obj[key])},\n`;
+                                        }
+                                    }
+                                }
+                                return formattedString;
+                            }
+
+                            // Remove the last comma and newline, and add closing curly brace
+                            return `{\n${format(jsonObject, indent).trimEnd().slice(0, -1)}\n}`;
+                        }
+
                         td2.appendChild(button);
                         tr.appendChild(td2);
                         document.getElementById('taskTable').getElementsByTagName('tbody')[0].appendChild(tr);
