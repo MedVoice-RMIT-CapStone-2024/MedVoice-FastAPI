@@ -23,7 +23,7 @@ from .worker import *
 from .db.init_db import initialize_all_databases
 
 # Change the value for the local development
-ON_LOCALHOST = 1
+ON_LOCALHOST = 0
 RAG_SYS = 1
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
@@ -195,12 +195,11 @@ async def rag_system(question_body: Question):
             elif source_type == SourceType.json:
                 answer = f"This is a json answer. It is answering to your question: {question}"
 
-        task = llamaguard_task.delay(answer)
+        # task = llamaguard_task.delay(answer)
             
         return {
             "response": answer,
-            "message": "Safety processing started in the background", 
-            "task_id": task.id
+            "message": "Question answered successfully", 
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -223,7 +222,7 @@ main()
 
 if ON_LOCALHOST:
     if __name__ == '__main__':
-        uvicorn.run(app, host="localhost", port=8000, log_level="info", reload=True)
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
 else:
     # Open a ngrok tunnel
     ngrok_tunnel = ngrok.connect(name="medvoice_backend")
