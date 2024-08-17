@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
+from passlib.exc import UnknownHashError
 from typing import List, Union, Dict
 
 from ....db.session import get_db
@@ -55,7 +56,13 @@ async def register_nurse(nurse: NurseRegister, db: AsyncSession = Depends(get_db
 @router.post("/login", response_model=Dict[str, Union[str, int]])
 async def login_nurse(nurse: NurseLogin, db: AsyncSession = Depends(get_db)) -> Dict[str, Union[str, int]]:
     db_nurse = await crud_nurse.get_nurse_by_email(db, nurse.email)
-    if not db_nurse or not pwd_context.verify(nurse.password, db_nurse.password):
-        return {"detail": "Invalid email or password"}  # Return detail message if email or password is incorrect
+    if not db_nurse:
+        return {"detail": "Invalid email or password"}  # Return detail message if email is incorrect
+    
+    try:
+        if not pwd_context.verify(nurse.password, db_nurse.password):
+            return {"detail": "Invalid email or password"}  # Return detail message if password is incorrect
+    except UnknownHashError:
+        return {"detail": "Invalid email or password"}  # Catch and return message for unknown hash errors
 
     return {"message": "Login successful", "nurse_id": db_nurse.id}

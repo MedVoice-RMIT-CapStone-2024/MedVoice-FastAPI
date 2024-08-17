@@ -21,7 +21,6 @@ class NurseLogin(BaseModel):
 class NurseUpdate(BaseModel):
     name: Optional[str]
     email: Optional[str]
-    password: Optional[str]
 
 class Nurse(NurseBase):
     patients: List["Patient"] = []
