@@ -1,169 +1,622 @@
 {
     "patients": [
         {
-            "patient_name": "Adam",
-            "patient_age": 16,
-            "patient_gender": "male",
-            "medical_diagnosis": [
-                {
-                    "name": "fever"
-                },
-                {
-                    "name": "dizziness"
+            "patient_name": {
+                "type": "string",
+                "value": "Adam"
+            },
+            "patient_dob": {
+                "type": "string",
+                "value": ""
+            },
+            "patient_gender": {
+                "type": "string",
+                "value": "male"
+            },
+            "Demographics_of_patient": {
+                "type": "object",
+                "properties": {
+                    "Marital_status": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Ethnicity": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Occupation": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "medical_treatment": [
-                {
-                    "name": "medicines",
-                    "prescription": ""
-                },
-                {
-                    "name": "orange juices",
-                    "prescription": ""
+            },
+            "Past_medical_history": {
+                "type": "object",
+                "properties": {
+                    "Medical_history": {
+                        "type": "string",
+                        "value": "fever, dizziness"
+                    },
+                    "Surgical_history": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "health_vital": [
-                {
-                    "status": "normal",
-                    "value": "",
-                    "units": ""
+            },
+            "Current_medications_and_drug_allergies": {
+                "type": "object",
+                "properties": {
+                    "Drug_allergy": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Prescribed_medications": {
+                        "type": "string",
+                        "value": "medicines, orange juices"
+                    },
+                    "Recently_prescribed_medications": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ]
+            },
+            "Mental_state_examination": {
+                "type": "object",
+                "properties": {
+                    "Appearance_and_behavior": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Speech_and_thoughts": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Mood": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Thoughts": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Physical_examination": {
+                "type": "object",
+                "properties": {
+                    "Blood_pressure": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Pulse_rate": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Temperature": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "note": {
+                "type": "string",
+                "value": ""
+            }
         },
         {
-            "patient_name": "Bob",
-            "patient_age": 16,
-            "patient_gender": "male",
-            "medical_diagnosis": [
-                {
-                    "name": "fever"
-                },
-                {
-                    "name": "dizziness"
+            "patient_name": {
+                "type": "string",
+                "value": "Bob"
+            },
+            "patient_dob": {
+                "type": "string",
+                "value": ""
+            },
+            "patient_gender": {
+                "type": "string",
+                "value": "male"
+            },
+            "Demographics_of_patient": {
+                "type": "object",
+                "properties": {
+                    "Marital_status": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Ethnicity": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Occupation": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "medical_treatment": [
-                {
-                    "name": "medicine",
-                    "prescription": ""
+            },
+            "Past_medical_history": {
+                "type": "object",
+                "properties": {
+                    "Medical_history": {
+                        "type": "string",
+                        "value": "fever, dizziness"
+                    },
+                    "Surgical_history": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "health_vital": [
-                {
-                    "status": "normal",
-                    "value": "",
-                    "units": ""
+            },
+            "Current_medications_and_drug_allergies": {
+                "type": "object",
+                "properties": {
+                    "Drug_allergy": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Prescribed_medications": {
+                        "type": "string",
+                        "value": "medicine"
+                    },
+                    "Recently_prescribed_medications": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ]
+            },
+            "Mental_state_examination": {
+                "type": "object",
+                "properties": {
+                    "Appearance_and_behavior": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Speech_and_thoughts": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Mood": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Thoughts": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Physical_examination": {
+                "type": "object",
+                "properties": {
+                    "Blood_pressure": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Pulse_rate": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Temperature": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "note": {
+                "type": "string",
+                "value": ""
+            }
         },
         {
-            "patient_name": "Craig",
-            "patient_age": 16,
-            "patient_gender": "",
-            "medical_diagnosis": [
-                {
-                    "name": "fever"
-                },
-                {
-                    "name": "headache"
+            "patient_name": {
+                "type": "string",
+                "value": "Craig"
+            },
+            "patient_dob": {
+                "type": "string",
+                "value": ""
+            },
+            "patient_gender": {
+                "type": "string",
+                "value": ""
+            },
+            "Demographics_of_patient": {
+                "type": "object",
+                "properties": {
+                    "Marital_status": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Ethnicity": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Occupation": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "medical_treatment": [
-                {
-                    "name": "medicine",
-                    "prescription": ""
-                },
-                {
-                    "name": "full meal per day",
-                    "prescription": ""
+            },
+            "Past_medical_history": {
+                "type": "object",
+                "properties": {
+                    "Medical_history": {
+                        "type": "string",
+                        "value": "fever, headache"
+                    },
+                    "Surgical_history": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "health_vital": [
-                {
-                    "status": "normal",
-                    "value": "",
-                    "units": ""
+            },
+            "Current_medications_and_drug_allergies": {
+                "type": "object",
+                "properties": {
+                    "Drug_allergy": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Prescribed_medications": {
+                        "type": "string",
+                        "value": "medicine, full meal per day"
+                    },
+                    "Recently_prescribed_medications": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ]
+            },
+            "Mental_state_examination": {
+                "type": "object",
+                "properties": {
+                    "Appearance_and_behavior": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Speech_and_thoughts": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Mood": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Thoughts": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Physical_examination": {
+                "type": "object",
+                "properties": {
+                    "Blood_pressure": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Pulse_rate": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Temperature": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "note": {
+                "type": "string",
+                "value": ""
+            }
         },
         {
-            "patient_name": "Tony",
-            "patient_age": 32,
-            "patient_gender": "male",
-            "medical_diagnosis": [
-                {
-                    "name": "fever"
-                },
-                {
-                    "name": "headache"
+            "patient_name": {
+                "type": "string",
+                "value": "Tony"
+            },
+            "patient_dob": {
+                "type": "string",
+                "value": ""
+            },
+            "patient_gender": {
+                "type": "string",
+                "value": "male"
+            },
+            "Demographics_of_patient": {
+                "type": "object",
+                "properties": {
+                    "Marital_status": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Ethnicity": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Occupation": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "medical_treatment": [
-                {
-                    "name": "medicines",
-                    "prescription": ""
-                },
-                {
-                    "name": "extra meals per day",
-                    "prescription": ""
-                },
-                {
-                    "name": "nice sleep schedule",
-                    "prescription": ""
+            },
+            "Past_medical_history": {
+                "type": "object",
+                "properties": {
+                    "Medical_history": {
+                        "type": "string",
+                        "value": "fever, headache"
+                    },
+                    "Surgical_history": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "health_vital": [
-                {
-                    "status": "normal",
-                    "value": "",
-                    "units": ""
+            },
+            "Current_medications_and_drug_allergies": {
+                "type": "object",
+                "properties": {
+                    "Drug_allergy": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Prescribed_medications": {
+                        "type": "string",
+                        "value": "medicines, extra meals per day, nice sleep schedule"
+                    },
+                    "Recently_prescribed_medications": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ]
+            },
+            "Mental_state_examination": {
+                "type": "object",
+                "properties": {
+                    "Appearance_and_behavior": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Speech_and_thoughts": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Mood": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Thoughts": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Physical_examination": {
+                "type": "object",
+                "properties": {
+                    "Blood_pressure": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Pulse_rate": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Temperature": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "note": {
+                "type": "string",
+                "value": ""
+            }
         },
         {
-            "patient_name": "Homelander",
-            "patient_age": 45,
-            "patient_gender": "",
-            "medical_diagnosis": [],
-            "medical_treatment": [],
-            "health_vital": [
-                {
-                    "status": "heartbeat rate",
-                    "value": "60",
-                    "units": ""
-                },
-                {
-                    "status": "blood pressure",
-                    "value": "80/120",
-                    "units": ""
+            "patient_name": {
+                "type": "string",
+                "value": "Homelander"
+            },
+            "patient_dob": {
+                "type": "string",
+                "value": ""
+            },
+            "patient_gender": {
+                "type": "string",
+                "value": ""
+            },
+            "Demographics_of_patient": {
+                "type": "object",
+                "properties": {
+                    "Marital_status": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Ethnicity": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Occupation": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ]
+            },
+            "Past_medical_history": {
+                "type": "object",
+                "properties": {
+                    "Medical_history": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Surgical_history": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Current_medications_and_drug_allergies": {
+                "type": "object",
+                "properties": {
+                    "Drug_allergy": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Prescribed_medications": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Recently_prescribed_medications": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Mental_state_examination": {
+                "type": "object",
+                "properties": {
+                    "Appearance_and_behavior": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Speech_and_thoughts": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Mood": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Thoughts": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Physical_examination": {
+                "type": "object",
+                "properties": {
+                    "Blood_pressure": {
+                        "type": "string",
+                        "value": "80/120"
+                    },
+                    "Pulse_rate": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Temperature": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "note": {
+                "type": "string",
+                "value": ""
+            }
         },
         {
-            "patient_name": "Dave",
-            "patient_age": 22,
-            "patient_gender": "",
-            "medical_diagnosis": [
-                {
-                    "name": "dizziness"
-                },
-                {
-                    "name": "headache"
+            "patient_name": {
+                "type": "string",
+                "value": "Dave"
+            },
+            "patient_dob": {
+                "type": "string",
+                "value": ""
+            },
+            "patient_gender": {
+                "type": "string",
+                "value": ""
+            },
+            "Demographics_of_patient": {
+                "type": "object",
+                "properties": {
+                    "Marital_status": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Ethnicity": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Occupation": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "medical_treatment": [
-                {
-                    "name": "paracetamol",
-                    "prescription": "100 milligram"
+            },
+            "Past_medical_history": {
+                "type": "object",
+                "properties": {
+                    "Medical_history": {
+                        "type": "string",
+                        "value": "dizziness, headache"
+                    },
+                    "Surgical_history": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ],
-            "health_vital": [
-                {
-                    "status": "temperature",
-                    "value": "37",
-                    "units": "degrees Celsius"
+            },
+            "Current_medications_and_drug_allergies": {
+                "type": "object",
+                "properties": {
+                    "Drug_allergy": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Prescribed_medications": {
+                        "type": "string",
+                        "value": "paracetamol, 100 milligram"
+                    },
+                    "Recently_prescribed_medications": {
+                        "type": "string",
+                        "value": ""
+                    }
                 }
-            ]
+            },
+            "Mental_state_examination": {
+                "type": "object",
+                "properties": {
+                    "Appearance_and_behavior": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Speech_and_thoughts": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Mood": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Thoughts": {
+                        "type": "string",
+                        "value": ""
+                    }
+                }
+            },
+            "Physical_examination": {
+                "type": "object",
+                "properties": {
+                    "Blood_pressure": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Pulse_rate": {
+                        "type": "string",
+                        "value": ""
+                    },
+                    "Temperature": {
+                        "type": "string",
+                        "value": "37 degrees Celsius"
+                    }
+                }
+            },
+            "note": {
+                "type": "string",
+                "value": "Speaker 1 made a significant contribution by stating that the patient's symptoms include severe dizziness and headache, and recommended paracetamol, 100 milligram, to relieve symptoms, with a follow-up appointment scheduled in two weeks."
+            }
         }
     ]
 }
