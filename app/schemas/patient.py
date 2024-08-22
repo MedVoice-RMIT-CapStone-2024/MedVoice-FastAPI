@@ -1,9 +1,22 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
 
 class StringField(BaseModel):
     type: str = Field(default="string")
     value: str
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        if isinstance(value, dict) and "value" in value:
+            return value["value"]
+        raise ValueError("Invalid format for StringField")
 
 class DemographicsOfPatient(BaseModel):
     Marital_status: Optional[StringField] = None
@@ -45,6 +58,12 @@ class PatientCreate(BaseModel):
     class Config:
         orm_mode = True
 
+    @validator('patient_name', 'patient_dob', 'patient_gender', 'note', pre=True, each_item=True)
+    def extract_value(cls, v):
+        if isinstance(v, dict) and "value" in v:
+            return v["value"]
+        return v
+
 class PatientUpdate(PatientCreate):
     pass
 
@@ -58,15 +77,15 @@ class NurseBase(BaseModel):
 
 class Patient(BaseModel):
     id: int
-    patient_name: StringField
-    patient_dob: Optional[StringField] = None
-    patient_gender: StringField
+    patient_name: str
+    patient_dob: Optional[str] = None
+    patient_gender: str
     demographics_of_patient: Optional[DemographicsOfPatient] = None
     past_medical_history: Optional[PastMedicalHistory] = None
     current_medications_and_drug_allergies: Optional[CurrentMedicationsAndDrugAllergies] = None
     mental_state_examination: Optional[MentalStateExamination] = None
     physical_examination: Optional[PhysicalExamination] = None
-    note: Optional[StringField] = None
+    note: Optional[str] = None
     nurse_id: int
     nurse: Optional[NurseBase] = None
 
