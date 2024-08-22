@@ -2,12 +2,12 @@
     "patients": [
         {
             "patient_name": "Adam",
-            "patient_dob": "",
+            "patient_dob": "1990-04-15",
             "patient_gender": "male",
             "Demographics_of_patient": {
-                "Marital_status": "",
-                "Ethnicity": "",
-                "Occupation": ""
+                "Marital_status": "Single",
+                "Ethnicity": "Caucasian",
+                "Occupation": "Student"
             },
             "Past_medical_history": {
                 "Medical_history": "fever, dizziness",
@@ -19,17 +19,172 @@
                 "Recently_prescribed_medications": ""
             },
             "Mental_state_examination": {
-                "Appearance_and_behavior": "",
-                "Speech_and_thoughts": "",
-                "Mood": "",
-                "Thoughts": ""
+                "Appearance_and_behavior": "Calm",
+                "Speech_and_thoughts": "Coherent",
+                "Mood": "Neutral",
+                "Thoughts": "Clear"
             },
             "Physical_examination": {
-                "Blood_pressure": "",
-                "Pulse_rate": "",
-                "Temperature": ""
+                "Blood_pressure": "120/80",
+                "Pulse_rate": "72",
+                "Temperature": "37.0"
             },
-            "note": ""
+            "note": "Patient reported feeling better after medication."
+        },
+        {
+            "patient_name": "Eve",
+            "patient_dob": "1985-07-22",
+            "patient_gender": "female",
+            "Demographics_of_patient": {
+                "Marital_status": "Married",
+                "Ethnicity": "Asian",
+                "Occupation": "Software Engineer"
+            },
+            "Past_medical_history": {
+                "Medical_history": "migraines",
+                "Surgical_history": "Appendectomy"
+            },
+            "Current_medications_and_drug_allergies": {
+                "Drug_allergy": "Penicillin",
+                "Prescribed_medications": "migraine medication",
+                "Recently_prescribed_medications": ""
+            },
+            "Mental_state_examination": {
+                "Appearance_and_behavior": "Anxious",
+                "Speech_and_thoughts": "Fast-paced speech",
+                "Mood": "Stressed",
+                "Thoughts": "Focused"
+            },
+            "Physical_examination": {
+                "Blood_pressure": "130/85",
+                "Pulse_rate": "80",
+                "Temperature": "36.8"
+            },
+            "note": "Patient advised to reduce stress levels."
+        },
+        {
+            "patient_name": "John",
+            "patient_dob": "1978-02-13",
+            "patient_gender": "male",
+            "Demographics_of_patient": {
+                "Marital_status": "Divorced",
+                "Ethnicity": "African American",
+                "Occupation": "Teacher"
+            },
+            "Past_medical_history": {
+                "Medical_history": "hypertension",
+                "Surgical_history": ""
+            },
+            "Current_medications_and_drug_allergies": {
+                "Drug_allergy": "",
+                "Prescribed_medications": "blood pressure medication",
+                "Recently_prescribed_medications": ""
+            },
+            "Mental_state_examination": {
+                "Appearance_and_behavior": "Tired",
+                "Speech_and_thoughts": "Slow speech",
+                "Mood": "Depressed",
+                "Thoughts": "Negative"
+            },
+            "Physical_examination": {
+                "Blood_pressure": "140/90",
+                "Pulse_rate": "78",
+                "Temperature": "36.9"
+            },
+            "note": "Patient needs follow-up for blood pressure management."
+        },
+        {
+            "patient_name": "Alice",
+            "patient_dob": "1992-11-30",
+            "patient_gender": "female",
+            "Demographics_of_patient": {
+                "Marital_status": "Single",
+                "Ethnicity": "Hispanic",
+                "Occupation": "Artist"
+            },
+            "Past_medical_history": {
+                "Medical_history": "asthma",
+                "Surgical_history": ""
+            },
+            "Current_medications_and_drug_allergies": {
+                "Drug_allergy": "",
+                "Prescribed_medications": "inhaler",
+                "Recently_prescribed_medications": "allergy medication"
+            },
+            "Mental_state_examination": {
+                "Appearance_and_behavior": "Energetic",
+                "Speech_and_thoughts": "Creative thoughts",
+                "Mood": "Happy",
+                "Thoughts": "Positive"
+            },
+            "Physical_examination": {
+                "Blood_pressure": "115/75",
+                "Pulse_rate": "68",
+                "Temperature": "36.7"
+            },
+            "note": "Patient is managing asthma well with current medications."
+        },
+        {
+            "patient_name": "Robert",
+            "patient_dob": "1965-09-10",
+            "patient_gender": "male",
+            "Demographics_of_patient": {
+                "Marital_status": "Widowed",
+                "Ethnicity": "Caucasian",
+                "Occupation": "Retired"
+            },
+            "Past_medical_history": {
+                "Medical_history": "diabetes",
+                "Surgical_history": "Knee replacement"
+            },
+            "Current_medications_and_drug_allergies": {
+                "Drug_allergy": "",
+                "Prescribed_medications": "insulin, pain relievers",
+                "Recently_prescribed_medications": ""
+            },
+            "Mental_state_examination": {
+                "Appearance_and_behavior": "Calm",
+                "Speech_and_thoughts": "Clear speech",
+                "Mood": "Content",
+                "Thoughts": "Stable"
+            },
+            "Physical_examination": {
+                "Blood_pressure": "125/80",
+                "Pulse_rate": "70",
+                "Temperature": "36.5"
+            },
+            "note": "Patient is stable; continue current treatment."
+        },
+        {
+            "patient_name": "Grace",
+            "patient_dob": "2000-01-05",
+            "patient_gender": "female",
+            "Demographics_of_patient": {
+                "Marital_status": "Single",
+                "Ethnicity": "Asian",
+                "Occupation": "College Student"
+            },
+            "Past_medical_history": {
+                "Medical_history": "seasonal allergies",
+                "Surgical_history": ""
+            },
+            "Current_medications_and_drug_allergies": {
+                "Drug_allergy": "",
+                "Prescribed_medications": "antihistamines",
+                "Recently_prescribed_medications": ""
+            },
+            "Mental_state_examination": {
+                "Appearance_and_behavior": "Active",
+                "Speech_and_thoughts": "Quick speech",
+                "Mood": "Happy",
+                "Thoughts": "Positive"
+            },
+            "Physical_examination": {
+                "Blood_pressure": "118/76",
+                "Pulse_rate": "75",
+                "Temperature": "36.6"
+            },
+            "note": "Patient reports improvement with allergy medication."
         }
     ]
 }
