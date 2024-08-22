@@ -9,15 +9,18 @@ class NurseBase(BaseModel):
     class Config:
         orm_mode = True
 
-class NurseCreate(BaseModel):
+class NurseRegister(BaseModel):
     name: str
+    email: str
+    password: str
+
+class NurseLogin(BaseModel):
     email: str
     password: str
 
 class NurseUpdate(BaseModel):
     name: Optional[str]
     email: Optional[str]
-    password: Optional[str]
 
 class Nurse(NurseBase):
     patients: List["Patient"] = []

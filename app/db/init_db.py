@@ -9,7 +9,7 @@ from .session import engine, SessionLocal
 from ..models.nurse import Nurse
 from ..models.patient import Patient
 from ..crud import crud_nurse, crud_patient
-from ..schemas.nurse import NurseCreate
+from ..schemas.nurse import NurseRegister
 from ..utils.json_to_sql import json_to_sql
 
 # Synchronous function for initializing the vector database
@@ -81,9 +81,9 @@ async def init_db():
         nurses = await crud_nurse.get_nurses(session)
         if not nurses:
             mock_nurses = [
-                NurseCreate(name="John Doe", email="john.doe@example.com", password="password123"),
-                NurseCreate(name="Jane Smith", email="jane.smith@example.com", password="password123"),
-                NurseCreate(name="Alice Johnson", email="alice.johnson@example.com", password="password123")
+                NurseRegister(name="John Doe", email="john.doe@example.com", password="password123"),
+                NurseRegister(name="Jane Smith", email="jane.smith@example.com", password="password123"),
+                NurseRegister(name="Alice Johnson", email="alice.johnson@example.com", password="password123")
             ]
             for nurse in mock_nurses:
                 await crud_nurse.create_nurse(session, nurse)

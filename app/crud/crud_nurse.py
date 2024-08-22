@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from typing import List, Optional
 
 from ..models.nurse import Nurse
-from ..schemas.nurse import NurseCreate, NurseUpdate
+from ..schemas.nurse import NurseRegister, NurseUpdate
 
 async def get_nurse(db: AsyncSession, nurse_id: int) -> Optional[Nurse]:
     result = await db.execute(select(Nurse).options(joinedload(Nurse.patients)).filter(Nurse.id == nurse_id))
@@ -14,7 +14,7 @@ async def get_nurses(db: AsyncSession, skip: int = 0, limit: int = 100) -> List[
     result = await db.execute(select(Nurse).options(joinedload(Nurse.patients)).offset(skip).limit(limit))
     return result.scalars().unique().all()
 
-async def create_nurse(db: AsyncSession, nurse: NurseCreate) -> Nurse:
+async def create_nurse(db: AsyncSession, nurse: NurseRegister) -> Nurse:
     db_nurse = Nurse()
     for key, value in nurse.model_dump().items():
         setattr(db_nurse, key, value)
@@ -52,4 +52,8 @@ async def delete_nurse(db: AsyncSession, nurse_id: int) -> bool:
 
 async def is_email_taken(db: AsyncSession, email: str) -> bool:
     result = await db.execute(select(Nurse).filter(Nurse.email == email))
-    return result.scalar_one_or_none() is not None
+    return result.scalars().unique().one_or_none() is not None
+
+async def get_nurse_by_email(db: AsyncSession, email: str) -> Optional[Nurse]:
+    result = await db.execute(select(Nurse).filter(Nurse.email == email))
+    return result.scalars().unique().one_or_none()
