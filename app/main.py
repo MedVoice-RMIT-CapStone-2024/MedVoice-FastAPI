@@ -277,9 +277,6 @@ async def rag_system_v2(user_id: str, question_body: Question):
         # Assuming get_transcripts_by_user returns a dictionary with a key "patients"
         json_data = await get_transcripts_by_user(user_id)
         
-        if not json_data or "patients" not in json_data:
-            raise ValueError("Invalid JSON data returned or missing 'patients' key.")
-        
         rag_json = RAGSystem_JSON(json_data=json_data['patients'])  # Ensure you pass json_data, not file_path
         answer = await rag_json.handle_question(question)
         
