@@ -4,7 +4,8 @@ from fastapi import HTTPException, Response, APIRouter
 from .....utils.filename_helpers import *
 from .....utils.json_helpers import *
 from .....llm.replicate_models import llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization, llamaguard_evaluate_safety
-from .....models.req_body import Question
+from .....models.req_body import Question, SourceType
+from .....llm.rag import *
 
 router = APIRouter()
 
@@ -23,6 +24,33 @@ async def llamaguard_evaluate_endpoint(question: str):
 @router.post("/ask-llama2/")
 async def ask_llama2_endpoint(question_body: Question):
     return await ask_llam2(question_body.question)
+
+@router.post("/rag-ask/")
+async def rag_ask_endpoint(question_body: Question):
+    return await rag_system(question_body)
+
+async def rag_system(question_body: Question):
+    question = question_body.question
+    source_type = question_body.source_type
+    try:
+
+        # Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
+        rag_pdf = RAGSystem_PDF("assets/update-28-covid-19-what-we-know.pdf")
+        rag_json = RAGSystem_JSON("assets/patients.json")
+    
+        if source_type == SourceType.pdf:
+            answer = await rag_pdf.handle_question(question)
+        elif source_type == SourceType.json:
+            answer = await rag_json.handle_question(question)
+
+        # task = llamaguard_task.delay(answer)
+            
+        return {
+            "response": answer,
+            "message": "Question answered successfully", 
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 async def whisper_diarize(file_url: str):
     try:

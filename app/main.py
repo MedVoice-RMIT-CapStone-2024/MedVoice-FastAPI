@@ -235,40 +235,9 @@ async def get_audio_processing_result(task_id: str):
 ################################################
 ### Endpoint for interacting with RAG System ###
 
-# ask: Ask a question to the RAG System
 # ask_v2: Ask a question to the RAG System with user ID
 
-"""
-
-@app.post("/ask", tags=["rag-system"])
-async def rag_system(question_body: Question):
-    question = question_body.question
-    source_type = question_body.source_type
-    try: 
-        if RAG_SYS:
-            # Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
-            rag_pdf = RAGSystem_PDF("assets/update-28-covid-19-what-we-know.pdf")
-            rag_json = RAGSystem_JSON("assets/patients.json")
-        
-            if source_type == SourceType.pdf:
-                answer = await rag_pdf.handle_question(question)
-            elif source_type == SourceType.json:
-                answer = await rag_json.handle_question(question)
-        else:
-            if source_type == SourceType.pdf:
-                answer = f"This is a pdf answer. It is answering to your question: {question}"
-            elif source_type == SourceType.json:
-                answer = f"This is a json answer. It is answering to your question: {question}"
-
-        # task = llamaguard_task.delay(answer)
-            
-        return {
-            "response": answer,
-            "message": "Question answered successfully", 
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
+""" 
 
 @app.post("/ask_v2/{user_id}", tags=["rag-system"])
 async def rag_system_v2(user_id: str, question_body: Question):
