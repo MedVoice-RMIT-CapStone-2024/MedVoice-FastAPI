@@ -109,36 +109,24 @@ async def get_transcripts_by_user(user_id: str):
         # List to hold the transcripts
         transcripts = []
 
-        # Iterate over the blobs to find the ones that contain the 'user_id' in their name
+        # Iterate over the blobs to find the ones that match the user_id
         for blob in blobs:
-            # Split the blob name by slash and get the last part (filename with extension)
-            last_part = blob.name.rsplit('/', 1)[-1]
+            # Split the blob name by underscore and get the third-to-last part
+            split_parts = blob.name.rsplit('.', 1)[0].rsplit('_', 2)
+            if len(split_parts) < 3:
+                continue  # Skip if the format doesn't match
 
-            # Split the last part by underscores to get the components
-            split_parts = last_part.split('_')
+            # Extract user_id from the blob name
+            user_id_in_blob = split_parts[-2]
 
-            # Check if the filename has enough parts to extract the user_id
-            if len(split_parts) < 4:
-                continue  # Skip files that don't have the expected format
-
-            # Extract the user_id from the blob name (assuming the format 'file_id_file_name_user_id_output.file_extension')
-            user_id_in_blob = split_parts[-3]  # The user_id is the third-to-last part
-
-            # Check if the user_id in the blob name matches the 'user_id'
-            if user_id_in_blob == user_id:
+            # Check if the user_id in the blob name matches the user_id parameter
+            if user_id_in_blob == user_id and blob.name.endswith(".json"):
                 # Get the content of the blob
                 response = requests.get(blob.public_url)
-                if last_part.endswith(".json"):
-                    # Parse the blob's content as a JSON object and append it to the transcripts list
-                    transcripts.append(response.json())
-
-        # If no matching blobs are found, return a message saying that there are no files for that user_id
-        if not transcripts:
-            return {"message": f"No transcripts found for user ID {user_id}"}
+                transcripts.append(response.json())
 
         # Return the list of transcripts
         return {"transcripts": transcripts}
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
