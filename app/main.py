@@ -111,19 +111,25 @@ async def get_transcripts_by_user(user_id: str):
 
         # Iterate over the blobs to find the ones that contain the 'user_id' in their name
         for blob in blobs:
-            # Split the blob name by slash and get the last part
+            # Split the blob name by slash and get the last part (filename with extension)
             last_part = blob.name.rsplit('/', 1)[-1]
 
-            # Extract the user_id from the blob name (assuming the format 'file_id_file_name_user_id_output.file_extension')
+            # Split the last part by underscores to get the components
             split_parts = last_part.split('_')
-            user_id_in_blob = split_parts[-2]  # The user_id is the second-to-last part
+
+            # Check if the filename has enough parts to extract the user_id
+            if len(split_parts) < 4:
+                continue  # Skip files that don't have the expected format
+
+            # Extract the user_id from the blob name (assuming the format 'file_id_file_name_user_id_output.file_extension')
+            user_id_in_blob = split_parts[-3]  # The user_id is the third-to-last part
 
             # Check if the user_id in the blob name matches the 'user_id'
             if user_id_in_blob == user_id:
                 # Get the content of the blob
                 response = requests.get(blob.public_url)
                 if last_part.endswith(".json"):
-                    # Render the blob's content to a JSON object and append it to the transcripts list
+                    # Parse the blob's content as a JSON object and append it to the transcripts list
                     transcripts.append(response.json())
 
         # If no matching blobs are found, return a message saying that there are no files for that user_id
