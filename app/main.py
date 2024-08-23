@@ -99,7 +99,7 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/get_json_transcripts_by_user/{user_id}", tags=["process-transcript"])
-async def get_patients_by_user(user_id: str):
+async def get_transcripts_by_user(user_id: str):
     try:
         storage_client = storage.Client(project=cloud_details['project_id'])
         bucket = storage_client.bucket(cloud_details['bucket_name'])
@@ -107,26 +107,21 @@ async def get_patients_by_user(user_id: str):
         # Get the list of blobs in the bucket
         blobs = bucket.list_blobs()
 
-        # List to hold the patients data
+        # List to hold the transcripts
         patients = []
 
         # Iterate over the blobs to find the ones that match the user_id
         for blob in blobs:
-            # Split the blob name to extract components
-            last_part = blob.name.rsplit('/', 1)[-1]
+            # Split the blob name by underscore and get the third-to-last part
+            split_parts = blob.name.rsplit('.', 1)[0].rsplit('_', 2)
+            if len(split_parts) < 3:
+                continue  # Skip if the format doesn't match
 
-            # Split the last part by underscores
-            split_parts = last_part.split('_')
+            # Extract user_id from the blob name
+            user_id_in_blob = split_parts[-2]
 
-            # Ensure the filename has enough parts to extract the user_id
-            if len(split_parts) < 4:
-                continue  # Skip files that don't have the expected format
-
-            # Extract the user_id from the filename
-            user_id_in_blob = split_parts[-3]
-
-            # Check if the user_id matches and the file is a JSON transcript
-            if user_id_in_blob == user_id and last_part.endswith(".json"):
+            # Check if the user_id in the blob name matches the user_id parameter
+            if user_id_in_blob == user_id and blob.name.endswith(".json"):
                 # Get the content of the blob
                 response = requests.get(blob.public_url)
                 json_data = response.json()
@@ -134,10 +129,6 @@ async def get_patients_by_user(user_id: str):
                 # Remove metadata from the JSON data
                 patient_data = remove_json_metadata(json_data)
                 patients.append(patient_data)
-
-        # If no matching blobs are found, return a message
-        if not patients:
-            return {"message": f"No transcripts found for user ID {user_id}"}
 
         # Return the list of patients
         return {"patients": patients}
