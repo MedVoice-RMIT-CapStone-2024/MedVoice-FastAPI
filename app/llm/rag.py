@@ -153,19 +153,27 @@ class RAGSystem_JSON(BaseRAGSystem):
 
         :param json_data: JSON data as a dictionary
         """
-        # Assume json_data is already in the correct format
         # Convert the JSON data into a list of documents if necessary
         if isinstance(json_data, dict) and "patients" in json_data:
             patients = json_data["patients"]
         else:
             raise ValueError("The provided JSON data is not in the expected format.")
 
-        # Convert patient data into documents
+        # Convert each patient dictionary to a document with concatenated fields as "page content"
         docs = [
-            {"page_content": str(patient), "metadata": {}}  # Convert each patient dictionary to a string document
+            {"page_content": self.create_page_content(patient), "metadata": {}} 
             for patient in patients
         ]
         self.index_documents(docs)
+
+    def create_page_content(self, patient):
+        """
+        Create a string that concatenates relevant fields from the patient dictionary.
+
+        :param patient: A dictionary representing a patient's data
+        :return: A concatenated string of the patient's data
+        """
+        return "\n".join(f"{key}: {value}" for key, value in patient.items())
 
     def index_documents(self, docs):
         """
@@ -200,6 +208,7 @@ class RAGSystem_JSON(BaseRAGSystem):
         prompt = hub.pull("rlm/rag-prompt")
 
         def format_docs(docs):
+            # Here, docs is a list of dictionaries with a "page_content" key
             return "\n\n".join(doc["page_content"] for doc in docs)
 
         def create_rag_chain():
