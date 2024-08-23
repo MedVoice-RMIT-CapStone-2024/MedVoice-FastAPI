@@ -572,7 +572,7 @@
                     var userId = document.getElementById('userId').value;
                     var fileName = document.getElementById('fileName').value;
 
-                    const url = new URL(`https://medvoice-fastapi.ngrok.dev/process_audio_v2/${userID}`);
+                    const url = new URL(`https://medvoice-fastapi.ngrok.dev/process_audio_v2/${userId}`);
 
                     if (fileId) {
                         url.searchParams.append('file_id', fileId);
