@@ -96,6 +96,45 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
         return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/get_json_transcripts_by_user/{user_id}", tags=["process-transcript"])
+async def get_transcripts_by_user(user_id: str):
+    try:
+        storage_client = storage.Client(project=cloud_details['project_id'])
+        bucket = storage_client.bucket(cloud_details['bucket_name'])
+
+        # Get the list of blobs in the bucket
+        blobs = bucket.list_blobs()
+
+        # List to hold the transcripts
+        transcripts = []
+
+        # Iterate over the blobs to find the ones that contain the 'user_id' in their name
+        for blob in blobs:
+            # Split the blob name by slash and get the last part
+            last_part = blob.name.rsplit('/', 1)[-1]
+
+            # Extract the user_id from the blob name (assuming the format 'file_id_file_name_user_id_output.file_extension')
+            split_parts = last_part.split('_')
+            user_id_in_blob = split_parts[-2]  # The user_id is the second-to-last part
+
+            # Check if the user_id in the blob name matches the 'user_id'
+            if user_id_in_blob == user_id:
+                # Get the content of the blob
+                response = requests.get(blob.public_url)
+                if last_part.endswith(".json"):
+                    # Render the blob's content to a JSON object and append it to the transcripts list
+                    transcripts.append(response.json())
+
+        # If no matching blobs are found, return a message saying that there are no files for that user_id
+        if not transcripts:
+            return {"message": f"No transcripts found for user ID {user_id}"}
+
+        # Return the list of transcripts
+        return {"transcripts": transcripts}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process_transcript", tags=["process-transcript"])
 async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):

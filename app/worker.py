@@ -54,7 +54,7 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
         llama3_json_output = await llm_pipeline_audio_to_json(file_url)
         print(llama3_json_output)
 
-        transcript_file_path = save_output(llama3_json_output, file_id, file_name)
+        transcript_file_path = save_output(llama3_json_output, file_id, user_id, file_name)
 
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)

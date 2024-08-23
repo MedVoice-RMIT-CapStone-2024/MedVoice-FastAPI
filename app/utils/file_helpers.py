@@ -99,26 +99,7 @@ def save_audio(file_path: str, user_id: str):
 
     return {"new_file_name": new_file_name, "file_id": file_id}
 
-def save_json_to_text(json_output: List[Dict[str, Any]], file_id: str, file_name: Optional[str] = None) -> str:
-    # Ensure 'outputs' directory exists
-    if not os.path.exists('outputs'):
-        os.makedirs('outputs')
-
-    # Convert each dictionary in 'json_output' to text
-    json_output_text = '\n'.join(json.dumps(item) for item in json_output)
-
-    # Define the full file path
-    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_json_output.txt')
-
-    # Write 'json_output' to a file in the 'outputs' directory
-    with open(output_file_path, 'w') as f:
-        f.write(json_output_text)
-
-    print(f"'json_output' saved to {output_file_path}")
-
-    return output_file_path
-
-def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, file_name: Optional[str] = "transcript") -> str:
+def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: str, file_name: Optional[str] = "transcript") -> str:
     # Ensure 'outputs' directory exists
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
@@ -135,7 +116,7 @@ def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, file_name:
 
     # Define the full file path
     file_extension = output_format
-    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_output.{file_extension}')
+    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_{user_id}_output.{file_extension}')
 
     # Write data to the file
     with open(output_file_path, 'w') as f:
@@ -151,3 +132,24 @@ def get_file_info(file_path):
     file_name, file_extension = os.path.splitext(file_path)
     # Return the file extension
     return {"file_name": file_name, "file_extension": file_extension}
+
+# Helper function for saving JSON to text for picovoice models
+
+# def save_json_to_text(json_output: List[Dict[str, Any]], file_id: str, file_name: Optional[str] = None) -> str:
+#     # Ensure 'outputs' directory exists
+#     if not os.path.exists('outputs'):
+#         os.makedirs('outputs')
+
+#     # Convert each dictionary in 'json_output' to text
+#     json_output_text = '\n'.join(json.dumps(item) for item in json_output)
+
+#     # Define the full file path
+#     output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_json_output.txt')
+
+#     # Write 'json_output' to a file in the 'outputs' directory
+#     with open(output_file_path, 'w') as f:
+#         f.write(json_output_text)
+
+#     print(f"'json_output' saved to {output_file_path}")
+
+#     return output_file_path
