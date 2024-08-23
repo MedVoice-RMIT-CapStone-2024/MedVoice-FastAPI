@@ -42,8 +42,8 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
                 patient = match.group(1)
                 file_name = patient.replace('patient_', '')
                 print(f"Patient name: {file_name}")
-
-        if user_id and file_name:
+                
+        elif user_id and file_name:
             # Download the file specified by 'user_id' and 'file_name' asynchronously
             audio_file = await encode_audio_filename(user_id, file_name)
             # Extract the new file name and file id from the downloaded file's details

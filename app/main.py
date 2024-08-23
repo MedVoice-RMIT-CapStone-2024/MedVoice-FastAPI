@@ -155,6 +155,7 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
             # Extract the new file name and file id from the downloaded file's details
             file_id = audio_file['file_id']
             audio_file_path = None
+            
         elif file_id:
             # Getting the url of the audio file
             file_url = await get_audio(file_id, file_extension)
