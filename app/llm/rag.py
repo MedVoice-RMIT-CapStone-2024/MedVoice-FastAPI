@@ -120,14 +120,59 @@ class RAGSystem_PDF(BaseRAGSystem):
         return {"message": "PDF indexed successfully"}
 
 class RAGSystem_JSON(BaseRAGSystem):
-    def __init__(self, file_path):
-        super().__init__()
-        self.index_json(file_path)
+    def __init__(self, file_path=None, json_data=None):
+        """
+        Initialize the RAGSystem_JSON with either a file path to a JSON file
+        or the JSON data itself.
 
-    def index_json(self, file_path):
+        :param file_path: Path to the JSON file (optional)
+        :param json_data: JSON data as a dictionary (optional)
+        """
+        super().__init__()
+
+        if file_path:
+            self.index_json_from_file(file_path)
+        elif json_data:
+            self.index_json_from_data(json_data)
+        else:
+            raise ValueError("Either file_path or json_data must be provided.")
+
+    def index_json_from_file(self, file_path):
+        """
+        Load and index the JSON data from a file.
+
+        :param file_path: Path to the JSON file
+        """
         loader = JSONLoader(file_path, jq_schema=".patients[]", text_content=False)
         docs = loader.load()
+        self.index_documents(docs)
 
+    def index_json_from_data(self, json_data):
+        """
+        Load and index the JSON data directly from a dictionary.
+
+        :param json_data: JSON data as a dictionary
+        """
+        # Assume json_data is already in the correct format
+        # Convert the JSON data into a list of documents if necessary
+        if isinstance(json_data, dict) and "patients" in json_data:
+            patients = json_data["patients"]
+        else:
+            raise ValueError("The provided JSON data is not in the expected format.")
+
+        # Convert patient data into documents
+        docs = [
+            {"page_content": str(patient), "metadata": {}}  # Convert each patient dictionary to a string document
+            for patient in patients
+        ]
+        self.index_documents(docs)
+
+    def index_documents(self, docs):
+        """
+        Index the provided documents.
+
+        :param docs: List of documents to index
+        """
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
@@ -155,7 +200,7 @@ class RAGSystem_JSON(BaseRAGSystem):
         prompt = hub.pull("rlm/rag-prompt")
 
         def format_docs(docs):
-            return "\n\n".join(doc.page_content for doc in docs)
+            return "\n\n".join(doc["page_content"] for doc in docs)
 
         def create_rag_chain():
             return (
@@ -167,7 +212,8 @@ class RAGSystem_JSON(BaseRAGSystem):
 
         self.rag_chain = create_rag_chain()
 
-        return {"message": "JSON File indexed successfully"}
+        return {"message": "JSON data indexed successfully"}
+
     
 # async def main():
 #     chatbot = RAGSystem_JSON("sample-data.json")

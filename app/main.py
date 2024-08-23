@@ -61,8 +61,18 @@ app.include_router(api_router)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+"""
+
 ############################################
-### Endpoint for working with transcript ### 
+### Endpoint for working with transcript ###
+
+# get_transcript: Get the transcript of a file by its ID
+# get_transcripts_by_user: Get the patients data generated from the LLM by its user ID
+# process_transcript: Process the transcript of a file and save it to a cloud storage bucket
+
+############################################
+
+"""
 
 @app.get("/get_transcript/{file_id}/{file_extension}", tags=["process-transcript"])
 async def get_transcript(file_id: str, file_extension: FileExtension):
@@ -181,10 +191,17 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
 ### Endpoint for working with transcript ### 
 ############################################
 
-#####################################################
+"""
+
+####################################################
 ### Endpoint for process audio with LLM pipeline ###
 
-@app.post("/process_audio_v2", tags=["process-audio"])
+# process_audio_v2: Process the audio file and save the output to a cloud storage bucket
+# get_audio_task: Get the status of the audio processing task
+
+"""
+
+@app.post("/process_audio_v2/{user_id}", tags=["process-audio"])
 async def process_audio_v2(file_id: Optional[str] = None, file_extension: AudioExtension = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     # Dispatch the Celery task
     task = process_audio_task.delay(file_id, file_extension, user_id, file_name)
@@ -213,6 +230,16 @@ async def get_audio_processing_result(task_id: str):
 ### End of endpoint for process audio with LLM pipeline ###
 ###########################################################
 
+"""
+
+####################################################
+### Endpoint for interacting with RAG System ###
+
+# process_audio_v2: Process the audio file and save the output to a cloud storage bucket
+# get_audio_task: Get the status of the audio processing task
+
+"""
+
 @app.post("/ask", tags=["rag-system"])
 async def rag_system(question_body: Question):
     question = question_body.question
@@ -239,6 +266,23 @@ async def rag_system(question_body: Question):
             "response": answer,
             "message": "Question answered successfully", 
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/ask_v2/{user_id}", tags=["rag-system"])
+async def rag_system_v2(user_id: str, question_body: Question):
+    question = question_body.question
+    source_type = question_body.source_type
+    try:
+        json_data = await get_transcripts_by_user(user_id)
+        rag_json = RAGSystem_JSON(json_data)
+        answer = await rag_json.handle_question(question)
+        
+        return {
+            "response": answer,
+            "message": "Question answered successfully", 
+        }
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

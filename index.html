@@ -472,11 +472,13 @@
         <div class="container mx-auto px-4">
             <h2 class="text-4xl font-bold my-4">Interactive RAG System</h2>
             <div class="mb-4">
+                <input id="user-id" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" type="text" placeholder="Enter User ID">
+            </div>
+            <div class="mb-4">
                 <input id="question" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none" type="text" placeholder="Enter your question here">
             </div>
             <div class="mb-4">
                 <select id="source-type" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none">
-                    <option value="pdf">PDF</option>
                     <option value="json">JSON</option>
                 </select>
             </div>
@@ -491,6 +493,7 @@
     </div>
     <script>
         document.getElementById('ask-button').addEventListener('click', async function() {
+            const userId = document.getElementById('user-id').value;
             const question = document.getElementById('question').value;
             const sourceType = document.getElementById('source-type').value;
             const spinner = document.getElementById('rag-spinner');
@@ -498,9 +501,9 @@
             spinner.style.display = 'block';
             this.style.display = 'none';
 
-            // endpoint = "ask"
-            endpoint = "ask"
-    
+            // endpoint = "ask_v2"
+            const endpoint = `ask_v2/${userId}`;
+        
             const response = await fetch(`https://medvoice-fastapi.ngrok.dev/${endpoint}`, {
                 method: 'POST',
                 headers: {
@@ -513,11 +516,12 @@
             conversation.value += 'User: ' + question + '\n';
             conversation.value += 'RAG System: ' + data.response + '\n\n';
             document.getElementById('question').value = '';
-    
+        
             spinner.style.display = 'none';
             this.style.display = 'block';
         });
     </script>
+
 
     <!-- LLM Pipeline and Status Demo -->
     <div class="container mx-auto pt-8 pb-8">
