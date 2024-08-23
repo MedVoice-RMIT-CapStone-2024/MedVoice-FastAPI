@@ -120,67 +120,14 @@ class RAGSystem_PDF(BaseRAGSystem):
         return {"message": "PDF indexed successfully"}
 
 class RAGSystem_JSON(BaseRAGSystem):
-    def __init__(self, file_path=None, json_data=None):
-        """
-        Initialize the RAGSystem_JSON with either a file path to a JSON file
-        or the JSON data itself.
-
-        :param file_path: Path to the JSON file (optional)
-        :param json_data: JSON data as a dictionary (optional)
-        """
+    def __init__(self, file_path):
         super().__init__()
+        self.index_json(file_path)
 
-        if file_path:
-            self.index_json_from_file(file_path)
-        elif json_data:
-            self.index_json_from_data(json_data)
-        else:
-            raise ValueError("Either file_path or json_data must be provided.")
-
-    def index_json_from_file(self, file_path):
-        """
-        Load and index the JSON data from a file.
-
-        :param file_path: Path to the JSON file
-        """
+    def index_json(self, file_path):
         loader = JSONLoader(file_path, jq_schema=".patients[]", text_content=False)
         docs = loader.load()
-        self.index_documents(docs)
 
-    def index_json_from_data(self, json_data):
-        """
-        Load and index the JSON data directly from a dictionary.
-
-        :param json_data: JSON data as a dictionary
-        """
-        # Convert the JSON data into a list of documents if necessary
-        if isinstance(json_data, dict) and "patients" in json_data:
-            patients = json_data["patients"]
-        else:
-            raise ValueError("The provided JSON data is not in the expected format.")
-
-        # Convert each patient dictionary to a document with concatenated fields as "page content"
-        docs = [
-            {"page_content": self.create_page_content(patient), "metadata": {}} 
-            for patient in patients
-        ]
-        self.index_documents(docs)
-
-    def create_page_content(self, patient):
-        """
-        Create a string that concatenates relevant fields from the patient dictionary.
-
-        :param patient: A dictionary representing a patient's data
-        :return: A concatenated string of the patient's data
-        """
-        return "\n".join(f"{key}: {value}" for key, value in patient.items())
-
-    def index_documents(self, docs):
-        """
-        Index the provided documents.
-
-        :param docs: List of documents to index
-        """
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
@@ -208,8 +155,7 @@ class RAGSystem_JSON(BaseRAGSystem):
         prompt = hub.pull("rlm/rag-prompt")
 
         def format_docs(docs):
-            # Here, docs is a list of dictionaries with a "page_content" key
-            return "\n\n".join(doc["page_content"] for doc in docs)
+            return "\n\n".join(doc.page_content for doc in docs)
 
         def create_rag_chain():
             return (
@@ -221,8 +167,7 @@ class RAGSystem_JSON(BaseRAGSystem):
 
         self.rag_chain = create_rag_chain()
 
-        return {"message": "JSON data indexed successfully"}
-
+        return {"message": "JSON File indexed successfully"}
     
 # async def main():
 #     chatbot = RAGSystem_JSON("sample-data.json")

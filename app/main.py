@@ -232,11 +232,11 @@ async def get_audio_processing_result(task_id: str):
 
 """
 
-####################################################
+################################################
 ### Endpoint for interacting with RAG System ###
 
-# process_audio_v2: Process the audio file and save the output to a cloud storage bucket
-# get_audio_task: Get the status of the audio processing task
+# ask: Ask a question to the RAG System
+# ask_v2: Ask a question to the RAG System with user ID
 
 """
 
@@ -269,16 +269,29 @@ async def rag_system(question_body: Question):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
 @app.post("/ask_v2/{user_id}", tags=["rag-system"])
 async def rag_system_v2(user_id: str, question_body: Question):
+    # Define the file path
+    file_path = f"assets/patients_from_user_{user_id}.json"
+
+    if os.path.exists(file_path):
+        rm_local_file(file_path)
+
     question = question_body.question
-    source_type = question_body.source_type
+    json_data = await get_transcripts_by_user(user_id)
+
     try:
-        # Assuming get_transcripts_by_user returns a dictionary with a key "patients"
-        json_data = await get_transcripts_by_user(user_id)
-        
-        rag_json = RAGSystem_JSON(json_data=json_data['patients'])  # Ensure you pass json_data, not file_path
+        # Save the JSON data to a file
+        with open(file_path, 'w') as json_file:
+            json.dump(json_data, json_file)
+
+        # Initialize RAGSystem_JSON with the file path
+        rag_json = RAGSystem_JSON(file_path=file_path)
         answer = await rag_json.handle_question(question)
+
+        # Remove the temporary file after processing
+        os.remove(file_path)
         
         return {
             "response": answer,
@@ -286,9 +299,12 @@ async def rag_system_v2(user_id: str, question_body: Question):
         }
         
     except Exception as e:
+        # Ensure the file is removed even if an error occurs
+        if os.path.exists(file_path):
+            rm_local_file(file_path)
         raise HTTPException(status_code=500, detail=str(e))
 
-    
+   
 def main():
     load_dotenv()
 
