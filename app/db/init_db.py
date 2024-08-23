@@ -10,7 +10,7 @@ from ..models.nurse import Nurse
 from ..models.patient import Patient
 from ..crud import crud_nurse, crud_patient
 from ..schemas.nurse import NurseRegister
-from ..utils.json_to_sql import json_to_sql
+from ..utils.json_helpers import json_to_sql
 
 # Synchronous function for initializing the vector database
 def init_vector_db():

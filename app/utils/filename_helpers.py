@@ -1,20 +1,9 @@
-from pygments import highlight, lexers, formatters
 from fastapi import HTTPException
 from typing import List, Dict, Any, Optional, Union
 import json, os, requests, datetime, hashlib
 
 from ..core.google_project_config import *
 from .bucket_helpers import upload_file_to_bucket
-
-def pretty_print_json(data):
-    formatted_json = json.dumps(data, sort_keys=True, indent=4)
-    colorful_json = highlight(
-        formatted_json, 
-        lexers.JsonLexer(), 
-        formatters.TerminalFormatter()
-    )
-    # print(colorful_json)
-    return colorful_json
 
 # Helper function for getting audio file path
 def get_file_path(full_url):
