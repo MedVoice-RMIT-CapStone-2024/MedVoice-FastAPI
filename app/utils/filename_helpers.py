@@ -100,9 +100,12 @@ async def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user
         data_to_write = '\n'.join(data)
     elif isinstance(data, dict):
         file_extension = 'json'
-        data_to_write = json.dumps(data)
+        
         # Remove JSON metadata
-        clean_data = await remove_json_metadata(data_to_write)
+        clean_data = await remove_json_metadata(data)
+
+        # Convert the dictionary to a JSON string
+        data_to_write = json.dumps(data)
 
     # Define the full file path
     output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_{user_id}_output.{file_extension}')
