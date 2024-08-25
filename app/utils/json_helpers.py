@@ -19,7 +19,7 @@ def pretty_print_json(data):
     # print(colorful_json)
     return colorful_json
 
-async def remove_json_metadata(data):
+def remove_json_metadata(data):
     """
     Recursively processes the JSON data to remove metadata like 'type' and 'properties',
     returning a simplified dictionary containing only the key-value pairs.

@@ -89,7 +89,7 @@ def save_audio(file_path: str, user_id: str):
 
     return {"new_file_name": new_file_name, "file_id": file_id}
 
-async def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: str, file_name: Optional[str] = "transcript") -> str:
+def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: str, file_name: Optional[str] = "transcript") -> str:
     # Ensure 'outputs' directory exists
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
@@ -102,7 +102,7 @@ async def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user
         file_extension = 'json'
         
         # Remove JSON metadata
-        clean_data = await remove_json_metadata(data)
+        clean_data = remove_json_metadata(data)
 
         # Convert the dictionary to a JSON string
         data_to_write = json.dumps(data)
@@ -112,7 +112,7 @@ async def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user
 
     # Write data to the file
     with open(output_file_path, 'w') as f:
-        f.write(clean_data)
+        f.write(data_to_write)
 
     print(f"Output saved to {output_file_path}")
 
