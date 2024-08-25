@@ -104,8 +104,8 @@ def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: s
         # Remove JSON metadata
         clean_data = remove_json_metadata(data)
 
-        # Convert the dictionary to a JSON string
-        data_to_write = json.dumps(data)
+        # Convert the cleaned dictionary to a JSON string
+        data_to_write = json.dumps(clean_data, indent=4)  # Use clean_data instead of data
 
     # Define the full file path
     output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_{user_id}_output.{file_extension}')

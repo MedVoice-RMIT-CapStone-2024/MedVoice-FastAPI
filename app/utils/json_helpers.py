@@ -25,11 +25,11 @@ def remove_json_metadata(data):
     returning a simplified dictionary containing only the key-value pairs.
     """
     if isinstance(data, dict):
-        # If the dictionary has a 'properties' key, process its value
+        # If the dictionary has 'properties' key, process its value
         if "properties" in data:
             return remove_json_metadata(data["properties"])
         elif "value" in data:
-            return data["value"]
+            return remove_json_metadata(data["value"])
         else:
             # Process each key-value pair in the dictionary
             return {key: remove_json_metadata(value) for key, value in data.items()}
@@ -37,5 +37,5 @@ def remove_json_metadata(data):
         # Process each item in the list
         return [remove_json_metadata(item) for item in data]
     else:
-        # Return the data as is (base case)
+        # Base case: return the data as is (typically for primitive data types)
         return data
