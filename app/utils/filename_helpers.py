@@ -89,7 +89,7 @@ def save_audio(file_path: str, user_id: str):
 
     return {"new_file_name": new_file_name, "file_id": file_id}
 
-def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: str, file_name: Optional[str] = "transcript") -> str:
+async def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: str, file_name: Optional[str] = "transcript") -> str:
     # Ensure 'outputs' directory exists
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
@@ -102,9 +102,7 @@ def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: s
         file_extension = 'json'
         data_to_write = json.dumps(data)
         # Remove JSON metadata
-        clean_data = remove_json_metadata(data_to_write)
-    else:
-        raise ValueError("Unsupported data type for saving")
+        clean_data = await remove_json_metadata(data_to_write)
 
     # Define the full file path
     output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_{user_id}_output.{file_extension}')

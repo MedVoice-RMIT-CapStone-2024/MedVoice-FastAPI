@@ -177,7 +177,7 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
         # Convert the list of strings to a single string
         transcript_text = '\n'.join(transcript)
 
-        transcript_file_path = save_output(transcript, file_id, file_name)
+        transcript_file_path = await save_output(transcript, file_id, file_name)
 
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
