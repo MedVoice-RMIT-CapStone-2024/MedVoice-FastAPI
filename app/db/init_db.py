@@ -10,7 +10,7 @@ from ..models.patient import Patient
 from ..crud import crud_nurse, crud_patient
 from ..schemas.nurse import NurseRegister
 from ..utils.json_helpers import json_to_sql
-from ...app.config import INSERT_MOCK_DATA  # Import the configuration flag
+from ..core.app_config import INSERT_MOCK_DATA  # Import the configuration flag
 
 # Synchronous function for initializing the vector database
 def init_vector_db():
