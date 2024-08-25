@@ -17,15 +17,13 @@ from celery.result import AsyncResult
 from .utils.bucket_helpers import *
 from .utils.filename_helpers import *
 from .utils.json_helpers import *
-from .llm.rag import RAGSystem_JSON, RAGSystem_PDF
+from .llm.rag import RAGSystem_JSON
 from .core.google_project_config import *
 from .models.req_body import *
 from .worker import *
 from .db.init_db import initialize_all_databases
+from .config import ON_LOCALHOST, RAG_SYS
 
-# Change the value for the local development
-ON_LOCALHOST = 0
-RAG_SYS = 1
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 
