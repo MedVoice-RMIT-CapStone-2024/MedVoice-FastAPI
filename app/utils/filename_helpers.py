@@ -4,6 +4,7 @@ import json, os, requests, datetime, hashlib
 
 from ..core.google_project_config import *
 from .bucket_helpers import upload_file_to_bucket
+from .json_helpers import remove_json_metadata
 
 # Helper function for getting audio file path
 def get_file_path(full_url):
@@ -95,21 +96,22 @@ def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: s
 
     # Determine output format based on data type
     if isinstance(data, list):
-        output_format = 'txt'
+        file_extension = 'txt'
         data_to_write = '\n'.join(data)
     elif isinstance(data, dict):
-        output_format = 'json'
+        file_extension = 'json'
         data_to_write = json.dumps(data)
+        # Remove JSON metadata
+        clean_data = remove_json_metadata(data_to_write)
     else:
         raise ValueError("Unsupported data type for saving")
 
     # Define the full file path
-    file_extension = output_format
     output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_{user_id}_output.{file_extension}')
 
     # Write data to the file
     with open(output_file_path, 'w') as f:
-        f.write(data_to_write)
+        f.write(clean_data)
 
     print(f"Output saved to {output_file_path}")
 

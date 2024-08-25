@@ -53,10 +53,9 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
         
         # Run the LLM pipeline on the audio file url
         llama3_json_output = await llm_pipeline_audio_to_json(file_url)
-        llama3_clean_output = await remove_json_metadata(llama3_json_output)
-        print(llama3_clean_output)
+        print(llama3_json_output)
 
-        transcript_file_path = save_output(llama3_clean_output, file_id, user_id, file_name)
+        transcript_file_path = save_output(llama3_json_output, file_id, user_id, file_name)
 
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
@@ -64,7 +63,7 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
         rm_local_file(audio_file_path)
         rm_local_file(transcript_file_path)
 
-        return {"file_id": file_id, "llama3_json_output": llama3_clean_output}
+        return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
