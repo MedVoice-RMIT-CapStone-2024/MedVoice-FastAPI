@@ -145,28 +145,12 @@ class RAGSystem_JSON(BaseRAGSystem):
         CONNECTION_STRING = vector_settings.DATABASE_URL
         COLLECTION_NAME = 'embeddings.json_documents'
 
-        # Initialize the vector store without adding documents first
-        vectorstore = PGVector(
-            embedding=embedding,
-            collection_name=COLLECTION_NAME,
-            connection_string=CONNECTION_STRING,
-        )
-
-        # Drop the existing tables or collection if needed
-        vectorstore.drop_tables()  # Drops all tables if needed
-
-        # Alternatively, you could delete the specific collection
-        vectorstore.delete_collection()  # Deletes the specific collection
-
-        # Now, create the collection with the new documents
-        vectorstore.create_collection()
-
-        # Now, create the collection with the new documents
         self.vectorstore = PGVector.from_documents(
             embedding=embedding,
             documents=texts,
             collection_name=COLLECTION_NAME,
             connection_string=CONNECTION_STRING,
+            pre_delete_collection=True,
         )
 
         retriever = self.vectorstore.as_retriever(
