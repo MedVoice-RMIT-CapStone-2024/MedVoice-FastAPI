@@ -25,6 +25,10 @@ class BaseRAGSystem:
         self.vectorstore = None
         self.conversation_state = {}
 
+    def clear_state(self):
+        """Clear the conversation state to reset the system."""
+        self.conversation_state = {}
+
     async def query_model(self, question, streaming=False):
         if self.rag_chain is None:
             return "No documents have been indexed yet."
@@ -122,6 +126,7 @@ class RAGSystem_PDF(BaseRAGSystem):
 class RAGSystem_JSON(BaseRAGSystem):
     def __init__(self, file_path):
         super().__init__()
+        self.clear_state()
         self.index_json(file_path)
 
     def index_json(self, file_path):

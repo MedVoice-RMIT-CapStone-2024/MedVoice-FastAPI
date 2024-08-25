@@ -262,7 +262,7 @@ async def rag_system_v2(user_id: str, question_body: Question):
         answer = await rag_json.handle_question(question)
 
         # Remove the temporary file after processing
-        os.remove(file_path)
+        rm_local_file(file_path)
         
         return {
             "response": answer,
