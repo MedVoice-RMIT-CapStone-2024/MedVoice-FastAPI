@@ -250,6 +250,8 @@ async def rag_system_v2(user_id: str, question_body: Question):
     question = question_body.question
     json_data = await get_transcripts_by_user(user_id)
 
+    print(json_data)
+
     try:
         # Save the JSON data to a file
         with open(file_path, 'w') as json_file:
