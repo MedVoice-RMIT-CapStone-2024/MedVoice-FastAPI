@@ -15,16 +15,16 @@ from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 
 from .utils.bucket_helpers import *
-from .utils.file_helpers import *
-from .llm.rag import RAGSystem_JSON, RAGSystem_PDF
+from .utils.filename_helpers import *
+from .utils.json_helpers import *
+from .llm.rag import RAGSystem_JSON
 from .core.google_project_config import *
+from .core.app_config import ON_LOCALHOST, RAG_SYS
 from .models.req_body import *
 from .worker import *
 from .db.init_db import initialize_all_databases
 
-# Change the value for the local development
-ON_LOCALHOST = 0
-RAG_SYS = 1
+
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 
@@ -60,8 +60,18 @@ app.include_router(api_router)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+"""
+
 ############################################
-### Endpoint for working with transcript ### 
+### Endpoint for working with transcript ###
+
+# get_transcript: Get the transcript of a file by its ID
+# get_transcripts_by_user: Get the patients data generated from the LLM by its user ID
+# process_transcript: Process the transcript of a file and save it to a cloud storage bucket
+
+############################################
+
+"""
 
 @app.get("/get_transcript/{file_id}/{file_extension}", tags=["process-transcript"])
 async def get_transcript(file_id: str, file_extension: FileExtension):
@@ -96,6 +106,43 @@ async def get_transcript(file_id: str, file_extension: FileExtension):
         return {"message": f"No file found with ID {file_id} and extension .{file_extension}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/get_json_transcripts_by_user/{user_id}", tags=["process-transcript"])
+async def get_transcripts_by_user(user_id: str):
+    try:
+        storage_client = storage.Client(project=cloud_details['project_id'])
+        bucket = storage_client.bucket(cloud_details['bucket_name'])
+
+        # Get the list of blobs in the bucket
+        blobs = bucket.list_blobs()
+
+        # List to hold the transcripts
+        patients = []
+
+        # Iterate over the blobs to find the ones that match the user_id
+        for blob in blobs:
+            # Split the blob name by underscore and get the third-to-last part
+            split_parts = blob.name.rsplit('.', 1)[0].rsplit('_', 2)
+            if len(split_parts) < 3:
+                continue  # Skip if the format doesn't match
+
+            # Extract user_id from the blob name
+            user_id_in_blob = split_parts[-2]
+
+            # Check if the user_id in the blob name matches the user_id parameter
+            if user_id_in_blob == user_id and blob.name.endswith(".json"):
+                # Get the content of the blob
+                response = requests.get(blob.public_url)
+                json_data = response.json()
+
+                # Remove metadata from the JSON data
+                patient_data = remove_json_metadata(json_data)
+                patients.append(patient_data)
+
+        # Return the list of patients
+        return {"patients": patients}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process_transcript", tags=["process-transcript"])
 async def process_transcript(transcript: List[str], file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
@@ -107,6 +154,7 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
             # Extract the new file name and file id from the downloaded file's details
             file_id = audio_file['file_id']
             audio_file_path = None
+            
         elif file_id:
             # Getting the url of the audio file
             file_url = await get_audio(file_id, file_extension)
@@ -143,10 +191,17 @@ async def process_transcript(transcript: List[str], file_id: Optional[str] = Non
 ### Endpoint for working with transcript ### 
 ############################################
 
-#####################################################
+"""
+
+####################################################
 ### Endpoint for process audio with LLM pipeline ###
 
-@app.post("/process_audio_v2", tags=["process-audio"])
+# process_audio_v2: Process the audio file and save the output to a cloud storage bucket
+# get_audio_task: Get the status of the audio processing task
+
+"""
+
+@app.post("/process_audio_v2/{user_id}", tags=["process-audio"])
 async def process_audio_v2(file_id: Optional[str] = None, file_extension: AudioExtension = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     # Dispatch the Celery task
     task = process_audio_task.delay(file_id, file_extension, user_id, file_name)
@@ -175,35 +230,52 @@ async def get_audio_processing_result(task_id: str):
 ### End of endpoint for process audio with LLM pipeline ###
 ###########################################################
 
-@app.post("/ask", tags=["rag-system"])
-async def rag_system(question_body: Question):
-    question = question_body.question
-    source_type = question_body.source_type
-    try: 
-        if RAG_SYS:
-            # Assuming RAGSystem_PDF and RAGSystem_JSON are defined elsewhere
-            rag_pdf = RAGSystem_PDF("assets/update-28-covid-19-what-we-know.pdf")
-            rag_json = RAGSystem_JSON("assets/patients.json")
-        
-            if source_type == SourceType.pdf:
-                answer = await rag_pdf.handle_question(question)
-            elif source_type == SourceType.json:
-                answer = await rag_json.handle_question(question)
-        else:
-            if source_type == SourceType.pdf:
-                answer = f"This is a pdf answer. It is answering to your question: {question}"
-            elif source_type == SourceType.json:
-                answer = f"This is a json answer. It is answering to your question: {question}"
+"""
 
-        # task = llamaguard_task.delay(answer)
-            
+################################################
+### Endpoint for interacting with RAG System ###
+
+# ask_v2: Ask a question to the RAG System with user ID
+
+""" 
+
+@app.post("/ask_v2/{user_id}", tags=["rag-system"])
+async def rag_system_v2(user_id: str, question_body: Question):
+    # Define the file path
+    file_path = f"assets/patients_from_user_{user_id}.json"
+
+    if os.path.exists(file_path):
+        rm_local_file(file_path)
+
+    question = question_body.question
+    json_data = await get_transcripts_by_user(user_id)
+
+    print(json_data)
+
+    try:
+        # Save the JSON data to a file
+        with open(file_path, 'w') as json_file:
+            json.dump(json_data, json_file)
+
+        # Initialize RAGSystem_JSON with the file path
+        rag_json = RAGSystem_JSON(file_path=file_path)
+        answer = await rag_json.handle_question(question)
+
+        # Remove the temporary file after processing
+        rm_local_file(file_path)
+        
         return {
             "response": answer,
             "message": "Question answered successfully", 
         }
+        
     except Exception as e:
+        # Ensure the file is removed even if an error occurs
+        if os.path.exists(file_path):
+            rm_local_file(file_path)
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+   
 def main():
     load_dotenv()
 

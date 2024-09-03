@@ -1,20 +1,10 @@
-from pygments import highlight, lexers, formatters
 from fastapi import HTTPException
 from typing import List, Dict, Any, Optional, Union
 import json, os, requests, datetime, hashlib
 
 from ..core.google_project_config import *
 from .bucket_helpers import upload_file_to_bucket
-
-def pretty_print_json(data):
-    formatted_json = json.dumps(data, sort_keys=True, indent=4)
-    colorful_json = highlight(
-        formatted_json, 
-        lexers.JsonLexer(), 
-        formatters.TerminalFormatter()
-    )
-    # print(colorful_json)
-    return colorful_json
+from .json_helpers import remove_json_metadata
 
 # Helper function for getting audio file path
 def get_file_path(full_url):
@@ -99,43 +89,26 @@ def save_audio(file_path: str, user_id: str):
 
     return {"new_file_name": new_file_name, "file_id": file_id}
 
-def save_json_to_text(json_output: List[Dict[str, Any]], file_id: str, file_name: Optional[str] = None) -> str:
-    # Ensure 'outputs' directory exists
-    if not os.path.exists('outputs'):
-        os.makedirs('outputs')
-
-    # Convert each dictionary in 'json_output' to text
-    json_output_text = '\n'.join(json.dumps(item) for item in json_output)
-
-    # Define the full file path
-    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_json_output.txt')
-
-    # Write 'json_output' to a file in the 'outputs' directory
-    with open(output_file_path, 'w') as f:
-        f.write(json_output_text)
-
-    print(f"'json_output' saved to {output_file_path}")
-
-    return output_file_path
-
-def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, file_name: Optional[str] = "transcript") -> str:
+def save_output(data: Union[List[str], Dict[str, Any]], file_id: str, user_id: str, file_name: Optional[str] = "transcript") -> str:
     # Ensure 'outputs' directory exists
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
 
     # Determine output format based on data type
     if isinstance(data, list):
-        output_format = 'txt'
+        file_extension = 'txt'
         data_to_write = '\n'.join(data)
     elif isinstance(data, dict):
-        output_format = 'json'
-        data_to_write = json.dumps(data)
-    else:
-        raise ValueError("Unsupported data type for saving")
+        file_extension = 'json'
+        
+        # Remove JSON metadata
+        clean_data = remove_json_metadata(data)
+
+        # Convert the cleaned dictionary to a JSON string
+        data_to_write = json.dumps(clean_data, indent=4)  # Use clean_data instead of data
 
     # Define the full file path
-    file_extension = output_format
-    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_output.{file_extension}')
+    output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_{user_id}_output.{file_extension}')
 
     # Write data to the file
     with open(output_file_path, 'w') as f:
@@ -151,3 +124,24 @@ def get_file_info(file_path):
     file_name, file_extension = os.path.splitext(file_path)
     # Return the file extension
     return {"file_name": file_name, "file_extension": file_extension}
+
+# Helper function for saving JSON to text for picovoice models
+
+# def save_json_to_text(json_output: List[Dict[str, Any]], file_id: str, file_name: Optional[str] = None) -> str:
+#     # Ensure 'outputs' directory exists
+#     if not os.path.exists('outputs'):
+#         os.makedirs('outputs')
+
+#     # Convert each dictionary in 'json_output' to text
+#     json_output_text = '\n'.join(json.dumps(item) for item in json_output)
+
+#     # Define the full file path
+#     output_file_path = os.path.join('outputs', f'{file_id}_{file_name}_json_output.txt')
+
+#     # Write 'json_output' to a file in the 'outputs' directory
+#     with open(output_file_path, 'w') as f:
+#         f.write(json_output_text)
+
+#     print(f"'json_output' saved to {output_file_path}")
+
+#     return output_file_path

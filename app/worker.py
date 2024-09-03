@@ -7,7 +7,8 @@ from typing import Optional
 from fastapi import HTTPException
 
 from .utils.bucket_helpers import *
-from .utils.file_helpers import *
+from .utils.filename_helpers import *
+from .utils.json_helpers import *
 from .core.google_project_config import *
 from .models.req_body import *
 from .worker import *
@@ -41,8 +42,8 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
                 patient = match.group(1)
                 file_name = patient.replace('patient_', '')
                 print(f"Patient name: {file_name}")
-
-        if user_id and file_name:
+                
+        elif user_id and file_name:
             # Download the file specified by 'user_id' and 'file_name' asynchronously
             audio_file = await encode_audio_filename(user_id, file_name)
             # Extract the new file name and file id from the downloaded file's details
@@ -54,7 +55,7 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
         llama3_json_output = await llm_pipeline_audio_to_json(file_url)
         print(llama3_json_output)
 
-        transcript_file_path = save_output(llama3_json_output, file_id, file_name)
+        transcript_file_path = save_output(llama3_json_output, file_id, user_id, file_name)
 
         # Upload the output file to a cloud storage bucket
         transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
