@@ -39,7 +39,7 @@ RUN pip install psycopg2-binary
 WORKDIR /workspace/code
 
 # Copy wait-for-it.sh
-COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh
 
 # Copy all files and directories from the host to the Docker image
