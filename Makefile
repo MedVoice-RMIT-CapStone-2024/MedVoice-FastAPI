@@ -47,7 +47,8 @@ ngrok:
 		exit 1; \
 	fi; \
 	echo "Copying and configuring ngrok.yml..."; \
-	sed -e "s|\$${NGROK_AUTH_TOKEN}|$$NGROK_AUTH_TOKEN|g" \
+	ngrok config add-authtoken $${NGROK_AUTH_TOKEN}
+	@sed -e "s|\$${NGROK_AUTH_TOKEN}|$$NGROK_AUTH_TOKEN|g" \
 	    -e "s|\$${NGROK_API_KEY}|$$NGROK_API_KEY|g" \
 	    -e "s|\$${NGROK_EDGE}|$$NGROK_EDGE|g" \
 	    "ngrok.example.yml" > "$$NGROK_CONFIG_PATH"; \
