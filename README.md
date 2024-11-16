@@ -1,12 +1,16 @@
 # FastAPI for MedVoice
 
-This is the backend for the MedVoice project, which includes the ML pipeline for Whisper-Diarization and Llama3 models.
+This is the backend for the MedVoice project, which includes the ML pipeline for Whisper-Diarization, Llama3 models, and others LLMs.
+
+### *What is MedVoice?*
+MedVoice is a Mobile Application that supports coverting Speech to Medical Documentation format in real-time!
+
+- ***Note 1:*** This `README` assumes that your machine is UNIX-based. Please find the equivalent commands if you are running on a Windows machine.
+- ***Note 2:*** This `README` assumes that your machine has enough GPU resources to run Llama3. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
 
 ## Build Instructions
 
 To build the project locally, follow the steps below:
-
-***Note:*** This `README` assumes that your machine is UNIX-based. Please find the equivalent commands if you are running on a Windows machine.
 
 ### Prerequisites
 Ensure the following dependencies are installed on your machine:
@@ -117,15 +121,7 @@ Run the following command to verify your ngrok configuration file:
 ngrok config check
 ```
 
-To set up ngrok:
-1. Place `ngrok.example.yml` in the root of your repository.
-2. Add your environment variables to `.env`:
-    ```env
-    NGROK_AUTH_TOKEN=your-auth-token
-    NGROK_API_KEY=your-api-key
-    NGROK_EDGE=your-edge-label
-    ```
-3. Use the `make ngrok` command to generate the configuration file automatically.
+Use the `make ngrok` command to generate the configuration file automatically.
 
 For more details on ngrok configuration, see the [Ngrok Documentation](https://ngrok.com/docs/agent/config/).
 

@@ -21,14 +21,29 @@ venv:
 
 .PHONY: check
 check:
-	@which docker-compose > /dev/null && (echo "docker-compose is installed.") || echo "docker-compose is not installed. Please install it."
-	@which docker > /dev/null && (echo "Docker is installed.") || echo "Docker is not installed. Please install it."
-	@which python > /dev/null && (echo "Python is installed.") || echo "Python is not installed. Please install it. Ignore this if you have python3 installed"
-	@which ngrok > /dev/null && (echo "ngrok is installed.") || echo "ngrok is not installed. Please install it."
-	@test -f .env && (echo ".env file exists.") || echo ".env file is missing. Please see .env.example for reference add it."
-	@test -f google-credentials.json && (echo "google-credentials.json file exists.") || echo "google-credentials.json file is missing. Please add it."
-	@test -f ngrok.yml && (echo "ngrok.yml file exists.") || echo "ngrok.yml file is missing. Please see ngrok.example.example for reference and add it."
-	@which ngrok > /dev/null && (echo "ngrok is installed.") || echo "ngrok is not installed. Please install it."
+	@echo "Checking system dependencies and required files..."
+	@echo ""
+	@which docker-compose > /dev/null && echo "✔ docker-compose is installed." || echo "✘ docker-compose is not installed. Please install it."
+	@echo ""
+	@which docker > /dev/null && echo "✔ Docker is installed." || echo "✘ Docker is not installed. Please install it."
+	@echo ""
+	@which python > /dev/null && echo "✔ Python is installed." || echo "✘ Python is not installed. Please install it. Ignore this if you have python3 installed."
+	@echo ""
+	@which ngrok > /dev/null && echo "✔ ngrok is installed." || echo "✘ ngrok is not installed. Please install it."
+	@echo ""
+	@test -f .env && echo "✔ .env file exists." || echo "✘ .env file is missing. Please see .env.example for reference and add it."
+	@echo ""
+	@test -f google-credentials.json && echo "✔ google-credentials.json file exists." || echo "✘ google-credentials.json file is missing. Please add it."
+	@echo ""
+	@test -f ngrok.yml && echo "✔ ngrok.yml file exists." || echo "✘ ngrok.yml file is missing. Please see ngrok.example.example for reference and add it."
+	@echo ""
+	@echo "System check complete. If you are running the project in Ubuntu, run make install to setup the project."
+
+.PHONY: install
+install: 
+	@echo "Running installation script..."
+	@chmod +x scripts/install.sh
+	@./scripts/install.sh
 
 # Setup ngrok.yml
 .PHONY: ngrok
