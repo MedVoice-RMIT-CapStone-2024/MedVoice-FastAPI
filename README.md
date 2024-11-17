@@ -5,8 +5,9 @@ This is the backend for the MedVoice project, which includes the ML pipeline for
 ### *What is MedVoice?*
 MedVoice is a Mobile Application that supports coverting Speech to Medical Documentation format in real-time!
 
-- ***Note 1:*** This `README` assumes that your machine is UNIX-based. Please find the equivalent commands if you are running on a Windows machine.
-- ***Note 2:*** This `README` assumes that your machine has enough GPU resources to run Llama3. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
+## *Before you start*
+1. This `README` assumes that your machine is UNIX-based. Please find the equivalent commands if you are running on a Windows machine.
+2. This `README` assumes that your machine has enough GPU resources to run Llama3. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
 
 ## Build Instructions
 
@@ -29,10 +30,6 @@ Ensure the following dependencies are installed on your machine:
     ```
 
 2. **Install `make` command (if not already installed):**
-    - On Ubuntu or other Debian-based systems:
-        ```shell
-        sudo apt-get install make
-        ```
 
 3. **Set up the Python virtual environment and install dependencies:**
     ```shell
@@ -58,9 +55,9 @@ Ensure the following dependencies are installed on your machine:
 
     - Place the `ngrok.example.yml` file in the root of the repository. This file will be copied and configured to your ngrok configuration path.
 
-6. **Run the project locally:**
+6. **Run the project with docker compose**
     ```shell
-    poe compose # or poe compose2
+    make up
     ```
 
 7. **[Optional] Additional utility options:**
@@ -76,16 +73,7 @@ Ensure the following dependencies are installed on your machine:
         ```shell
         poe flush
         ```
-
-### Docker Compose
-
-To start all services defined in a `docker-compose.yml` file, navigate to the directory containing the file and use the following command:
-
-```shell
-docker-compose build --no-cache
-docker-compose up --build
-```
-
+        
 ## Obtaining the Replicate API Key
 
 To use the Replicate API, follow these steps:

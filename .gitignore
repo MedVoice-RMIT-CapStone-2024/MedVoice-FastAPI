@@ -161,5 +161,4 @@ cython_debug/
 
 ngrok.yml
 google-credentials.json
-utils/.customize_environment.sh
 ollama/ollama/*

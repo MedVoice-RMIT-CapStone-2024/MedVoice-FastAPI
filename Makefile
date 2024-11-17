@@ -19,6 +19,17 @@ venv:
 	@bash -c "source venv/bin/activate && pip install -r requirements.txt"
 	@echo "Dependencies installed successfully."
 
+.PHONY: up
+up:
+	@if command -v docker-compose >/dev/null 2>&1; then \
+		echo "Using docker-compose..."; \
+		docker-compose up --build --scale worker=1; \
+	else \
+		echo "Using docker compose..."; \
+		docker compose up --build --scale worker=1; \
+	fi
+	@echo "Project started."
+
 .PHONY: check
 check:
 	@echo "Checking system dependencies and required files..."
