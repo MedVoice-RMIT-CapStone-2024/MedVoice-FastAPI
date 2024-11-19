@@ -44,20 +44,24 @@ Ensure the following dependencies are installed on your machine:
 
 5. **Set up ngrok configuration:**
     ```shell
-    make ngrok
+    make ngrok-env
     ```
-    - Ensure you have a `.env` file in the root directory with the following variables:
+    - After the command, ensure you have a `.env` file in the root directory with the following variables:
         ```env
         NGROK_AUTH_TOKEN=your-auth-token
-        NGROK_API_KEY=your-api-key
+        NGROK_API_KEY=your-api-key (not API ID)
         NGROK_EDGE=your-edge-label
+        NGROK_TUNNEL=your-tunnel-name
         ```
 
-    - Place the `ngrok.example.yml` file in the root of the repository. This file will be copied and configured to your ngrok configuration path.
-
 6. **Run the project with docker compose**
+    - If you are using a GPU, run the following command:
     ```shell
-    make up
+    make GPU=true up
+    ```
+    - Otherwise, run the following command, which will run the project without LLM support:
+    ```shell
+    make GPU=false up
     ```
 
 7. **[Optional] Additional utility options:**
@@ -83,10 +87,6 @@ To use the Replicate API, follow these steps:
 3. Add the API key to the `.env` file:
     ```env
     REPLICATE_API_KEY=<YOUR_API_KEY>
-    ```
-    Or run this command in your terminal:
-    ```shell
-    export REPLICATE_API_KEY=<YOUR_API_KEY>
     ```
 
 ## Authorizing Google Cloud

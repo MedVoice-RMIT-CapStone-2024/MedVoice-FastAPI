@@ -1,5 +1,7 @@
 
 SHELL := /bin/bash
+DOCKER_FLAGS := up --build --scale worker=1
+GPU ?= false
 
 # Variables
 NGROK_CONFIG_PATH := /home/laansdole/.config/ngrok/ngrok.yml
@@ -21,12 +23,20 @@ venv:
 
 .PHONY: up
 up:
-	@if command -v docker-compose >/dev/null 2>&1; then \
-		echo "Using docker-compose..."; \
-		docker-compose up --build --scale worker=1; \
+	@if [ "$(GPU)" = "true" ]; then \
+		echo "Starting with GPU support..."; \
+		if command -v docker-compose >/dev/null 2>&1; then \
+			docker-compose -f docker-compose.yml -f ./docker/docker-compose.gpu.yml $(DOCKER_FLAGS); \
+		else \
+			docker compose -f docker-compose.yml -f ./docker/docker-compose.gpu.yml $(DOCKER_FLAGS); \
+		fi; \
 	else \
-		echo "Using docker compose..."; \
-		docker compose up --build --scale worker=1; \
+		echo "Starting without GPU support..."; \
+		if command -v docker-compose >/dev/null 2>&1; then \
+			docker-compose $(DOCKER_FLAGS); \
+		else \
+			docker compose $(DOCKER_FLAGS); \
+		fi; \
 	fi
 	@echo "Project started."
 
@@ -57,25 +67,10 @@ install:
 	@./scripts/install.sh
 
 # Setup ngrok.yml
-.PHONY: ngrok
-ngrok:
-	@echo "Setting up ngrok environment variables..."
-	@export NGROK_AUTH_TOKEN=$$(grep -m 1 '^NGROK_AUTH_TOKEN=' .env | cut -d '=' -f2 | xargs); \
-	export NGROK_API_KEY=$$(grep -m 1 '^NGROK_API_KEY=' .env | cut -d '=' -f2 | xargs); \
-	export NGROK_EDGE=$$(grep -m 1 '^NGROK_EDGE=' .env | cut -d '=' -f2 | xargs); \
-	export NGROK_CONFIG_PATH=$$(ngrok config check 2>&1 | grep "Valid configuration file at" | awk '{print $$5}'); \
-	if [ -z "$$NGROK_CONFIG_PATH" ]; then \
-		echo "Error: Unable to find ngrok configuration file path."; \
-		exit 1; \
-	fi; \
-	if [ ! -f "ngrok.example.yml" ]; then \
-		echo "Error: ngrok.example.yml does not exist in the root directory."; \
-		exit 1; \
-	fi; \
-	echo "Copying and configuring ngrok.yml..."; \
-	ngrok config add-authtoken $${NGROK_AUTH_TOKEN}
-	@sed -e "s|\$${NGROK_AUTH_TOKEN}|$$NGROK_AUTH_TOKEN|g" \
-	    -e "s|\$${NGROK_API_KEY}|$$NGROK_API_KEY|g" \
-	    -e "s|\$${NGROK_EDGE}|$$NGROK_EDGE|g" \
-	    "ngrok.example.yml" > "$$NGROK_CONFIG_PATH"; \
-	echo "Ngrok configuration setup complete: $$NGROK_CONFIG_PATH"
+.PHONY: ngrok-env
+ngrok-env:
+	@echo "Creating ngrok.yml configuration file..."
+	@envsubst < ngrok.example.yml > ngrok.yml
+	@echo "Creating .env file..."
+	@envsubst < .env.example > .env
+	@echo "ngrok.yml and .env file has been created!"

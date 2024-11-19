@@ -19,9 +19,10 @@ services:
         "asyncio"
       ]
     volumes:
-      - ./app:/workspace/code/app
+      - ./app:/workspace/code/app # Make sure the script is available inside the container
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
@@ -30,6 +31,7 @@ services:
       - redis
       - db
       - pgvector-db
+      - ollama
 
   db:
     image: postgres:13
@@ -52,6 +54,28 @@ services:
       - pgvector_data:/var/lib/postgresql/data
     networks:
       - bridge-net
+  
+  ollama:
+    build: ./docker/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - local-vol:/ollama
+    networks:
+      - bridge-net
+    entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
 
   worker:
     build: .

@@ -297,7 +297,7 @@ if ON_LOCALHOST:
         uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
 else:
     # Open a ngrok tunnel
-    ngrok_tunnel = ngrok.connect(name="medvoice_backend")
+    ngrok_tunnel = ngrok.connect(name=os.getenv("NGROK_TUNNEL", "medvoice_backend"))
 
     # where we can visit our fastAPI app
     print('Public URL:', ngrok_tunnel.public_url)

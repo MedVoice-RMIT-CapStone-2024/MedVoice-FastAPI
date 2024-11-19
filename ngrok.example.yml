@@ -1,8 +1,11 @@
-version: 2
-authtoken: ${NGROK_AUTH_TOKEN}
-api_key: ${NGROK_API_KEY}
+version: 3
+
+agent: 
+  authtoken: ${NGROK_AUTH_TOKEN}
+  api_key: ${NGROK_API_KEY}
+
 tunnels:
-  medvoice_backend:
+  ${NGROK_TUNNEL}:
     labels:
-      - edge= ${NGROK_EDGE}
+      - edge=${NGROK_EDGE}
     addr: http://0.0.0.0:8000
