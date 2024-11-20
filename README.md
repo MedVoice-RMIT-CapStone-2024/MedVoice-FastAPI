@@ -31,27 +31,28 @@ Ensure the following dependencies are installed on your machine:
 
 2. **Install `make` command (if not already installed):**
 
-3. **Set up the Python virtual environment and install dependencies:**
-    ```shell
-    make venv
-    ```
-
-4. **Check for missing dependencies and configuration files:**
+3. **Check for missing dependencies and configuration files:**
     ```shell
     make check
     ```
     *Resolve any missing dependencies or files as indicated in the output.*
 
-5. **Set up ngrok configuration:**
+4. **Set up the Python virtual environment and install dependencies:**
     ```shell
-    make ngrok-env
+    make venv-all
     ```
-    - After the command, ensure you have a `.env` file in the root directory with the following variables:
+
+5. **Set up ngrok configuration:**
+    - Before running the command, ensure you have a `.env` file in the root directory with the following variables:
         ```env
         NGROK_AUTH_TOKEN=your-auth-token
         NGROK_API_KEY=your-api-key (not API ID)
         NGROK_EDGE=your-edge-label
         NGROK_TUNNEL=your-tunnel-name
+        ```
+    - Run the following command:
+        ```shell
+        make ngrok
         ```
 
 6. **Run the project with docker compose**

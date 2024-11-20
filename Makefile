@@ -13,13 +13,24 @@ ifneq (,$(wildcard .env))
     export
 endif
 
-.PHONY: venv
-venv:
+.PHONY: venv-install
+venv-install:
 	# Ensure Python3 and virtual environment
 	@which python3 > /dev/null && python3 -m venv venv || python -m venv venv
 	@echo "Setting up virtual environment and installing dependencies..."
 	@bash -c "source venv/bin/activate && pip install -r requirements.txt"
+	@poetry install
 	@echo "Dependencies installed successfully."
+
+.PHONY: env-secrets
+env-secrets:
+	@echo "Creating .env file..."
+	@envsubst < .env.example > .env
+	@echo ".env file has been created!"
+	@vi .env
+
+.PHONY: venv-all
+venv-all: venv-install env-secrets
 
 .PHONY: up
 up:
@@ -67,10 +78,8 @@ install:
 	@./scripts/install.sh
 
 # Setup ngrok.yml
-.PHONY: ngrok-env
-ngrok-env:
+.PHONY: ngrok
+ngrok:
 	@echo "Creating ngrok.yml configuration file..."
 	@envsubst < ngrok.example.yml > ngrok.yml
-	@echo "Creating .env file..."
-	@envsubst < .env.example > .env
-	@echo "ngrok.yml and .env file has been created!"
+	@echo "ngrok.yml file has been created!"
