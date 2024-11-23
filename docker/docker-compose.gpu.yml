@@ -58,14 +58,16 @@ services:
   ollama:
     build: ./docker/ollama
     ports:
-      - "11434:11434"
+      - "7869:11434"
     volumes:
       - local-vol:/ollama
+      - ./app:/workspace/code/app
     networks:
       - bridge-net
     entrypoint: [ '/usr/bin/bash', 'pull-llm.sh' ]
     environment:
-      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
     pull_policy: always
     tty: true
     restart: unless-stopped
