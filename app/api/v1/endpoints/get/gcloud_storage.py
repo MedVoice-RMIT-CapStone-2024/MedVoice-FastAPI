@@ -2,7 +2,7 @@ from google.cloud import storage
 from fastapi import HTTPException, APIRouter
 import re
 from .....core.google_project_config import *
-from .....models.req_body import *
+from .....models.request_models import *
 from .....utils.bucket_helpers import *
 
 router = APIRouter()

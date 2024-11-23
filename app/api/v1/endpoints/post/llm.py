@@ -4,7 +4,7 @@ from fastapi import HTTPException, Response, APIRouter
 from .....utils.filename_helpers import *
 from .....utils.json_helpers import *
 from .....llm.replicate_models import llama3_generate_medical_json, convert_prompt_for_llama3, whisper_diarization, llamaguard_evaluate_safety
-from .....models.req_body import Question, SourceType
+from .....models.request_models import Question, SourceType
 from .....llm.rag import *
 
 router = APIRouter()
