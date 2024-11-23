@@ -18,8 +18,9 @@ Ensure the following dependencies are installed on your machine:
 - Python 3
 - Docker
 - Docker Compose
-- Ngrok
+- [`ngrok` command](https://ngrok.com/docs/getting-started/)
 - `make` command
+- `ubuntu-drivers autoinstall` [Optional for GPU]
 
 ### Steps to Set Up
 
@@ -101,3 +102,6 @@ For more details on ngrok configuration, see the [Ngrok Documentation](https://n
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+## Reference
+- [How to install NVIDIA drivers on Ubuntu](https://linuxconfig.org/how-to-install-the-nvidia-drivers-on-ubuntu-22-04)
