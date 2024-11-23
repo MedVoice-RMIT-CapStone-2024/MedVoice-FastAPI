@@ -2,7 +2,7 @@
 
 This is the backend for the MedVoice project, which includes the ML pipeline for Whisper-Diarization, Llama3 models, and others LLMs.
 
-### *What is MedVoice?*
+### What is MedVoice?
 MedVoice is a Mobile Application that supports coverting Speech to Medical Documentation format in real-time!
 
 ## *Before you start*
@@ -43,41 +43,33 @@ Ensure the following dependencies are installed on your machine:
     ```
 
 5. **Set up ngrok configuration:**
-    - Before running the command, ensure you have a `.env` file in the root directory with the following variables:
-        ```env
-        NGROK_AUTH_TOKEN=your-auth-token
-        NGROK_API_KEY=your-api-key (not API ID)
-        NGROK_EDGE=your-edge-label
-        NGROK_TUNNEL=your-tunnel-name
-        ```
-    - Run the following command:
-        ```shell
-        make ngrok
-        ```
+- Before running the command, ensure you have a `.env` file in the root directory with the following variables:
+    ```env
+    NGROK_AUTH_TOKEN=your-auth-token
+    NGROK_API_KEY=your-api-key (not API ID)
+    NGROK_EDGE=your-edge-label
+    NGROK_TUNNEL=your-tunnel-name
+    ```
+- Run the following command:
+    ```shell
+    make ngrok
+    ```
 
 6. **Run the project with docker compose**
-    - If you are using a GPU, run the following command:
+- If you are using a GPU, run the following command:
     ```shell
     make GPU=true up
     ```
-    - Otherwise, run the following command, which will run the project without LLM support:
+- Otherwise, run the following command, which will run the project without Ollama Llama3 support:
     ```shell
     make GPU=false up
     ```
 
 7. **[Optional] Additional utility options:**
-    - Export dependencies from `poetry.lock` to `requirements.txt`:
-        ```shell
-        poe export
-        ```
-    - Import dependencies from `requirements.txt` to `poetry.lock`:
-        ```shell
-        poe import
-        ```
-    - Remove all files from `audios/` and `outputs/`:
-        ```shell
-        poe flush
-        ```
+- Export dependencies from `poetry.lock` to `requirements.txt`: 
+    - `poe export`
+- Import dependencies from `requirements.txt` to `poetry.lock`: 
+    - `poe import`
         
 ## Obtaining the Replicate API Key
 
@@ -90,17 +82,9 @@ To use the Replicate API, follow these steps:
     REPLICATE_API_KEY=<YOUR_API_KEY>
     ```
 
-## Authorizing Google Cloud
+## Setup your `google-credentials.json` file
 
-Follow these steps to configure Application Default Credentials (ADC) for Google Cloud:
-
-1. Set up ADC as described in the [Google Cloud documentation](https://cloud.google.com/docs/authentication/external/set-up-adc).
-2. Install and initialize the `gcloud` CLI:
-    ```shell
-    gcloud auth application-default login
-    ```
-3. Replace the `project` variable in your code with your Google Cloud project ID.
-4. Ensure the user or service account has the required permissions (e.g., "storage.buckets.list").
+See [docs/how-to-setup](./docs/how-to-setup-gcp-service-account.md) guide for reference
 
 ## Configuring ngrok
 

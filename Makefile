@@ -43,6 +43,7 @@ up:
 		fi; \
 	else \
 		echo "Starting without GPU support..."; \
+		sudo lsof -i :11434; \
 		if command -v docker-compose >/dev/null 2>&1; then \
 			docker-compose $(DOCKER_FLAGS); \
 		else \
