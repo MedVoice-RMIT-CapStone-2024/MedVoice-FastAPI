@@ -2,15 +2,13 @@
 
 This guide explains how to create a Google Cloud Platform (GCP) service account and download its JSON credentials file.
 
+**Ensure you have a `.env` file in the root directory with the following variables:**
+  ```env
+  GCLOUD_PROJECT_ID=
+  GCLOUD_STORAGE_BUCKET=
+  ```
+
 ---
-
-### Prerequisites
-
-- Ensure you have a `.env` file in the root directory with the following variables:
-    ```env
-    GCLOUD_PROJECT_ID=
-    GCLOUD_STORAGE_BUCKET=
-    ```
 
 ### Steps
 
