@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import HTTPException
 
 from .utils.bucket_helpers import *
-from .utils.filename_helpers import *
+from .utils.file_helpers import *
 from .utils.json_helpers import *
 from .core.google_project_config import *
 from .models.request_models import *
@@ -32,7 +32,7 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
             # Get the url of the audio file
             file_url = await get_audio(file_id, file_extension)
             # Extract the audio file path from the url
-            audio_file_path = get_file_path(file_url)
+            audio_file_path = extract_audio_path(file_url)
 
             # Define a regex pattern to extract the patient from the file name
             pattern = r'/(.*?)patient_'
@@ -45,7 +45,7 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
                 
         elif user_id and file_name:
             # Download the file specified by 'user_id' and 'file_name' asynchronously
-            audio_file = await encode_audio_filename(user_id, file_name)
+            audio_file = await fetch_and_store_audio(user_id, file_name)
             # Extract the new file name and file id from the downloaded file's details
             file_id, audio_file_path = audio_file['file_id'], audio_file['new_file_name']
             # Get the url of the audio file
@@ -55,13 +55,13 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
         llama3_json_output = await llm_pipeline_audio_to_json(file_url)
         print(llama3_json_output)
 
-        transcript_file_path = save_output(llama3_json_output, file_id, user_id, file_name)
+        transcript_file_path = generate_output_filename(llama3_json_output, file_id, user_id, file_name)
 
         # Upload the output file to a cloud storage bucket
-        transcript_url = upload_file_to_bucket(cloud_details['project_id'], cloud_details['bucket_name'], transcript_file_path, transcript_file_path)
+        upload_file_to_bucket(transcript_file_path, transcript_file_path)
 
-        rm_local_file(audio_file_path)
-        rm_local_file(transcript_file_path)
+        remove_local_file(audio_file_path)
+        remove_local_file(transcript_file_path)
 
         return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:

@@ -1,12 +1,21 @@
+import re
 from google.cloud import storage
 from typing import List
-import re
 from datetime import datetime
 
-def upload_file_to_bucket(project_id, bucket_name, source_file_name, destination_blob_name):
+from more_itertools import bucket
+
+from ..core.google_project_config import cloud_details
+
+def init_storage_client():
+    """Initializes and returns an authenticated storage client and bucket."""
+    storage_client = storage.Client(project=cloud_details['project_id'])
+    bucket = storage_client.bucket(cloud_details['bucket_name'])
+    return bucket
+
+def upload_file_to_bucket(source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
-    storage_client = storage.Client(project=project_id)
-    bucket = storage_client.bucket(bucket_name)
+    bucket = init_storage_client()
     blob = bucket.blob(destination_blob_name)
 
     blob.upload_from_filename(source_file_name)
@@ -20,7 +29,7 @@ def upload_file_to_bucket(project_id, bucket_name, source_file_name, destination
         )
     )
 
-    file_url = f"https://storage.googleapis.com/{bucket_name}/{source_file_name}"
+    file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{source_file_name}"
 
     return file_url
 
