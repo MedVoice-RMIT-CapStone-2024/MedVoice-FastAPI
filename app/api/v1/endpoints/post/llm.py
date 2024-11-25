@@ -81,7 +81,8 @@ async def llm_pipeline_audio_to_json(file_url: str):
                 num_wrong_output += 1
                 print(f"Error: Failed to decode JSON. Attempt {num_wrong_output}. Details: {str(e)}")
                 continue
-
+            
+            print(pretty_print_json(llama3_json_output))
             # Check if the parsed output is a dictionary (JSON object)
             if isinstance(llama3_json_output, dict):
                 return llama3_json_output

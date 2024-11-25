@@ -5,6 +5,8 @@ from langchain_core.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from typing import Dict, Any, List
 
+from ..schemas.llm_prompt import *
+
 def init_replicate() -> Replicate:
     # Initialize the Replicate instance
     llm = Replicate(
@@ -52,8 +54,8 @@ async def llama3_generate_medical_summary(output: str) -> str:
                 ----
                 Medical Transcript: {output}
             """,
-            "max_tokens": 512,
-            "min_tokens": 0,
+            "max_tokens": 2048,
+            "min_tokens": 1024,
             "temperature": 0.4,
             "system_prompt": "You are a helpful assistant. Only use the information explicitly mentioned in the transcript, and you must not infer or assume any details that are not directly stated.",
             "length_penalty": 1,
@@ -88,109 +90,12 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
         # Add the speaker number and text to the input transcript
         input_transcript += f"Speaker {speaker_number}: {segment['text']}\n"
 
-    json_schema = """
-    {
-    "type": "object",
-    "properties": {
-        "patient_name": {
-        "type": "string"
-        },
-        "patient_dob": {
-        "type": "string",
-        "pattern": "^\\\\d{2}/\\\\d{2}/\\\\d{2}$"
-        },
-        "patient_gender": {
-        "type": "string"
-        },
-        "Demographics_of_patient": {
-            "type": "object",
-            "properties": {
-            "Marital_status": {
-                "type": "string"
-            },
-            "Ethnicity": {
-                "type": "string"
-            },
-            "Occupation": {
-                "type": "string"
-            }
-            }
-        },
-        "Past_medical_history": {
-            "type": "object",
-            "properties": {
-            "Medical_history": {
-                "type": "string"
-            },
-            "Surgical_history": {
-                "type": "string"
-            }
-            }
-        },
-        "Current_medications_and_drug_allergies": {
-            "type": "object",
-            "properties": {
-            "Drug_allergy": {
-                "type": "string"
-            },
-            "Prescribed_medications": {
-                "type": "string"
-            },
-            "Recently_prescribed_medications": {
-                "type": "string"
-            }
-            }
-        },
-        "Mental_state_examination": {
-            "type": "object",
-            "properties": {
-            "Appearance_and_behavior": {
-                "type": "string"
-            },
-            "Speech_and_thoughts": {
-                "type": "string"
-            },
-            "Mood": {
-                "type": "string"
-            },
-            "Thoughts": {
-                "type": "string"
-            }
-            }
-        },
-        "Physical_examination": {
-            "type": "object",
-            "properties": {
-            "Blood_pressure": {
-                "type": "string"
-            },
-            "Pulse_rate": {
-                "type": "string"
-            },
-            "Temperature": {
-                "type": "string"
-            }
-            }
-        },
-        "note": {
-        "type": "string"
-        }
-    },
-    "required": [ "patient_name", "patient_gender", "Demographics_of_patient", "Past_medical_history", "Current_medications_and_drug_allergies", "Mental_state_examination", "Physical_examination", "note" ]
-    }
-    """
-
-    system_prompt = f"""You are an AI assisstant that summarizes medical transcript into a structured JSON format like this: {json_schema}. 
-    Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details. 
-    Summarize this information into a key-value pairs, adhering to the schema provided. If no patient-related information is present, return an JSON schema with empty values. 
-    Adhere to the schema, ensuring the use of explicit information and recognized medical terminology. If a healthcare professional has made a significant statement, mention it as: 
-    '<Name of the healthcare professional> made a significant contribution by stating that <important statement> and list out the follow-up actions or medical recommendations if discussed Follow the JSON schema strictly without 
-    making assumptions about unspecified details all inside the field 'note' of the json schema.
-    You must only return the JSON schema."""
-
-    # Format the prompt for the llama-3 model
+    # Format the prompt using the imported schema and template
     prompt: str = f"""
-    System: {system_prompt}
+    System: {SYSTEM_PROMPT_TEMPLATE.format(
+        schema=MEDICAL_OUTPUT_EXAMPLE,
+        output_schema=MEDICAL_OUTPUT_EXAMPLE
+    )}
     User: 
     {input_transcript}
     Assistant:
