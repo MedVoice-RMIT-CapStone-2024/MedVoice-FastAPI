@@ -36,6 +36,7 @@ venv-all: venv-install env-secrets
 up:
 	@if [ "$(GPU)" = "true" ]; then \
 		echo "Starting with GPU support..."; \
+		sudo lsof -i :11434; \
 		if command -v docker-compose >/dev/null 2>&1; then \
 			docker-compose -f docker-compose.yml -f ./docker/docker-compose.gpu.yml $(DOCKER_FLAGS); \
 		else \
@@ -43,7 +44,6 @@ up:
 		fi; \
 	else \
 		echo "Starting without GPU support..."; \
-		sudo lsof -i :11434; \
 		if command -v docker-compose >/dev/null 2>&1; then \
 			docker-compose $(DOCKER_FLAGS); \
 		else \
