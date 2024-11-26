@@ -16,8 +16,8 @@ def init_replicate() -> Replicate:
         model_kwargs= {
             "top_k": 0,
             "top_p": 0.9,
-            "max_tokens": 1500,
-            "min_tokens": 0,
+            "max_tokens": 2048,
+            "min_tokens": 1024,
             "temperature": 0.2,
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",
