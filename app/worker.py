@@ -28,41 +28,34 @@ celery_app.autodiscover_tasks()
 
 async def process_audio_background(file_id: Optional[str] = None, file_extension: Optional[AudioExtension] = AudioExtension.m4a, user_id: Optional[str] = None, file_name: Optional[str] = None):
     try:
+        patient_name = None
         if file_id:
-            # Get the url of the audio file
             file_url = await get_audio(file_id, file_extension)
-            # Extract the audio file path from the url
             audio_file_path = extract_audio_path(file_url)
-
-            # Define a regex pattern to extract the patient from the file name
-            pattern = r'/(.*?)patient_'
             
+            pattern = r'/(.*?)patient_'
             match = re.search(pattern, audio_file_path)
             if match:
-                patient = match.group(1)
-                file_name = patient.replace('patient_', '')
+                patient_name = match.group(1)
+                file_name = patient_name.replace('patient_', '')
                 print(f"Patient name: {file_name}")
                 
         elif user_id and file_name:
-            # Download the file specified by 'user_id' and 'file_name' asynchronously
             audio_file = await fetch_and_store_audio(user_id, file_name)
-            # Extract the new file name and file id from the downloaded file's details
             file_id, audio_file_path = audio_file['file_id'], audio_file['new_file_name']
-            # Get the url of the audio file
             file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
+            patient_name = file_name
         
-        # Run the LLM pipeline on the audio file url
-        llama3_json_output = await llm_pipeline_audio_to_json(file_url)
+        llama3_json_output = await llm_pipeline_audio_to_json(file_url, patient_name)
         print(llama3_json_output)
 
         transcript_file_path = generate_output_filename(llama3_json_output, file_id, user_id, file_name)
-
-        # Upload the output file to a cloud storage bucket
+        
         upload_file_to_bucket(transcript_file_path, transcript_file_path)
-
+        
         remove_local_file(audio_file_path)
         remove_local_file(transcript_file_path)
-
+        
         return {"file_id": file_id, "llama3_json_output": llama3_json_output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

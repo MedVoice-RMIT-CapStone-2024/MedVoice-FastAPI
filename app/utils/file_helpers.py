@@ -61,10 +61,8 @@ def generate_audio_filename(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
     os.makedirs('audios', exist_ok=True)
 
-    temp_audio_path = file_path
-
     # Get file extension
-    file_info = get_file_info(temp_audio_path)
+    file_info = get_file_name_and_extension(file_path)
     file_name, file_extension = file_info['file_name'], file_info['file_extension']
 
     # Get the current date and time
@@ -117,7 +115,7 @@ def generate_output_filename(data: Union[List[str], Dict[str, Any]], file_id: st
     return output_file_path
 
 # Helper function for file information
-def get_file_info(file_path):
+def get_file_name_and_extension(file_path):
     # Use os.path.splitext to split the file path into root and extension
     file_name, file_extension = os.path.splitext(file_path)
     # Return the file extension

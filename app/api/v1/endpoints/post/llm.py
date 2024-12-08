@@ -1,4 +1,5 @@
 import json, requests
+from typing import Optional
 
 from fastapi import HTTPException, Response, APIRouter
 from .....utils.file_helpers import *
@@ -14,8 +15,8 @@ async def whisper_diarize_endpoint(file_url: str):
     return await whisper_diarize(file_url)
 
 @router.post("/llm-pipeline/")
-async def llm_pipeline_audio_to_json_endpoint(file_url: str):
-    return await llm_pipeline_audio_to_json(file_url)
+async def llm_pipeline_audio_to_json_endpoint(file_url: str, patient_name: Optional[str] = None):
+    return await llm_pipeline_audio_to_json(file_url, patient_name)
 
 @router.post("/llamaguard-evaluate/")
 async def llamaguard_evaluate_endpoint(question: str):
@@ -63,36 +64,19 @@ async def whisper_diarize(file_url: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-async def llm_pipeline_audio_to_json(file_url: str):
-    num_wrong_output = 0
-    speaker_diarization_json = await whisper_diarization(file_url)
-    prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json)
-    while True:
-        try:
-            print(pretty_print_json(speaker_diarization_json))
-            output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
+async def llm_pipeline_audio_to_json(file_url: str, patient_name: Optional[str] = None):
+    try:
+        speaker_diarization_json = await whisper_diarization(file_url)
+        prompt_for_llama3 = convert_prompt_for_llama3(speaker_diarization_json, patient_name)
+        
+        # Pass the prompt directly - it already contains the transcript and context
+        llama3_json_output = await llama3_generate_medical_json(prompt_for_llama3["prompt"])
+        
+        print(pretty_print_json(llama3_json_output))
+        return llama3_json_output
 
-            raw_output = fr"""{output}"""
-            
-            # Attempt to parse the output as JSON
-            try:
-                llama3_json_output = json.loads(raw_output)
-            except json.JSONDecodeError as e:
-                num_wrong_output += 1
-                print(f"Error: Failed to decode JSON. Attempt {num_wrong_output}. Details: {str(e)}")
-                continue
-            
-            print(pretty_print_json(llama3_json_output))
-            # Check if the parsed output is a dictionary (JSON object)
-            if isinstance(llama3_json_output, dict):
-                return llama3_json_output
-            else:
-                num_wrong_output += 1
-                print(f"Error: Output is not a JSON object. Attempt {num_wrong_output}")
-                continue
-
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
         
 async def llamaguard_evaluate(question: str):
