@@ -101,23 +101,18 @@ MEDICAL_OUTPUT_EXAMPLE = """{
 }"""
 
 # System prompt template
-SYSTEM_PROMPT_TEMPLATE = """
-<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-    You are a helpful AI assisstant that summarizes medical transcript into a structured JSON format.
-    <|eot_id|><|start_header_id|>user<|end_header_id|>
-    Analyze the following <transcript> provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
-        <transcript>
-            {patient_context}
-        </transcript>
-    If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema.
-    Ensure the use of explicit information and recognized medical terminology.
-    Follow the following <schema_format> strictly without making assumptions about unspecified details.
-        <schema_format>
-            {schema}
-        </schema_format>
-    Format your response exactly like the following <example_output>, maintaining all fields.
-        <example_output>
-            {output_schema}
-        </example_output> 
-    Please only return the JSON schema. Do not say anything else.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-    """
+SYSTEM_PROMPT_TEMPLATE = """You are an AI assisstant that summarizes medical transcript into a structured JSON format. 
+Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
+
+Schema Format:
+{schema}
+
+Example Output:
+{output_schema}
+
+If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema. 
+Eensuring the use of explicit information and recognized medical terminology. If a healthcare professional has made a significant statement, mention it as: 
+'The doctor noted [statement] and list out the follow-up actions or medical recommendations if discussed.' 
+Follow the JSON schema strictly without making assumptions about unspecified details.
+Format your response exactly like this example, maintaining all fields.
+You must only return the JSON schema. Do not include any additional information."""
