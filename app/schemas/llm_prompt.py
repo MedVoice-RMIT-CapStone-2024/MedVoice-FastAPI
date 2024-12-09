@@ -120,4 +120,5 @@ SYSTEM_PROMPT_TEMPLATE = """
             {output_schema}
         </example_output>\n
     Please only return the JSON schema. Do not say anything else.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+    <|end_of_text|>
     """
