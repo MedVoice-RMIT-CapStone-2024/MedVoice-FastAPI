@@ -104,7 +104,6 @@ MEDICAL_OUTPUT_EXAMPLE = """{
 SYSTEM_PROMPT_TEMPLATE = """
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
     You are a helpful AI assisstant that summarizes medical transcript into a structured JSON format.
-    <|eot_id|><|start_header_id|>user<|end_header_id|>
     Analyze the following <transcript> provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
     <transcript>
         {patient_context}
@@ -120,5 +119,4 @@ SYSTEM_PROMPT_TEMPLATE = """
             {output_schema}
         </example_output>\n
     Please only return the JSON schema. Do not say anything else.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-    <|end_of_text|>
     """
