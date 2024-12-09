@@ -123,6 +123,6 @@ SYSTEM_PROMPT_TEMPLATE = """
             Ensure the use of explicit information and recognized medical terminology.\n
             Follow the JSON schema format strictly without making assumptions about unspecified details.\n
             Format your response exactly like the example, maintaining all fields.\n
-            You MUST only return your response in JSON format.\n
+            Please only return the JSON schema. \n
         </important_requests>\n
     <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
