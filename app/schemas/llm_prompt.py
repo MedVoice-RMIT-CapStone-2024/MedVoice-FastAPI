@@ -100,8 +100,8 @@ MEDICAL_OUTPUT_EXAMPLE = """{
     "note": "Dr. Jane Foster noted patient is responding well to treatment. Follow-up in 3 months."
 }"""
 
-# System prompt template will turn Nhat 123 into {patient_name} when the feature for this is done
-SYSTEM_PROMPT_TEMPLATE = """You are an AI assisstant that summarizes medical transcript into a structured JSON format. 
+SYSTEM_PROMPT_TEMPLATE = """
+You are an AI assisstant that summarizes medical transcript into a structured JSON format. 
 Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
 
 Schema Format:
@@ -110,7 +110,8 @@ Schema Format:
 Example Output:
 {output_schema}
 
-Please input "Nhat 123" in the field "patient_name" of the JSON schema.
+You must use {patient_name} as the patient name in the JSON schema.
+
 If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema. 
 Ensuring the use of explicit information and recognized medical terminology. If a healthcare professional has made a significant statement, mention it as: 
 'The doctor noted [statement] and list out the follow-up actions or medical recommendations if discussed.' 

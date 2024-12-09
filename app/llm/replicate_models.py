@@ -113,18 +113,11 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any], patient_name: Optiona
         speaker_number = speaker_map[segment["speaker"]]
         input_transcript += f"Speaker {speaker_number}: {segment['text']}\n"
 
-    # Create a stronger context message
-    context_message = ""
-    if patient_name:
-        context_message = f"""Context: This is a medical transcript for patient {patient_name}. 
-You MUST only return the JSON schema for "{patient_name}" in the output JSON. Do not include any additional information.
-"""
-
     prompt: str = f"""
     System: {SYSTEM_PROMPT_TEMPLATE.format(
         schema=MEDICAL_OUTPUT_EXAMPLE,
         output_schema=MEDICAL_OUTPUT_EXAMPLE,
-        patient_context=context_message,
+        patient_name=patient_name
     )}
     User: 
     {input_transcript}

@@ -44,7 +44,7 @@ async def process_audio_background(file_id: Optional[str] = None, file_extension
             audio_file = await fetch_and_store_audio(user_id, file_name)
             file_id, audio_file_path = audio_file['file_id'], audio_file['new_file_name']
             file_url = f"https://storage.googleapis.com/{cloud_details['bucket_name']}/{audio_file_path}"
-            patient_name = file_name
+            patient_name = get_file_name_and_extension(file_name)["file_name"]
         
         llama3_json_output = await llm_pipeline_audio_to_json(file_url, patient_name)
         print(llama3_json_output)
