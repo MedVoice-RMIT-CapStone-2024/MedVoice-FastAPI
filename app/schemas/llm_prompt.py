@@ -110,7 +110,7 @@ Schema Format:
 Example Output:
 {output_schema}
 
-Please input "{patient_name}" in the field "patient_name" of the JSON schema.
+Please input "Nhat 123" in the field "patient_name" of the JSON schema.
 If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema. 
 Ensuring the use of explicit information and recognized medical terminology. If a healthcare professional has made a significant statement, mention it as: 
 'The doctor noted [statement] and list out the follow-up actions or medical recommendations if discussed.' 
