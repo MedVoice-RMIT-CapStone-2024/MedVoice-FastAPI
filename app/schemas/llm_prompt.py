@@ -107,16 +107,17 @@ SYSTEM_PROMPT_TEMPLATE = """
     Analyze the following <transcript> provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
     <transcript>
         {patient_context}
-    </transcript>\n
+    </transcript>
     If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema.
     Ensure the use of explicit information and recognized medical terminology.
     Follow the following <schema_format> strictly without making assumptions about unspecified details.
         <schema_format>
             {schema}
-        </schema_format>\n
+        </schema_format>
     Format your response exactly like the following <example_output>, maintaining all fields.
         <example_output>
             {output_schema}
-        </example_output>\n
+        </example_output>
+    <|start_header_id|>user<|end_header_id|>    
     Please only return the JSON schema. Do not say anything else.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
     """
