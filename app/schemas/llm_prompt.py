@@ -100,7 +100,7 @@ MEDICAL_OUTPUT_EXAMPLE = """{
     "note": "Dr. Jane Foster noted patient is responding well to treatment. Follow-up in 3 months."
 }"""
 
-# System prompt template
+# System prompt template will turn Nhat 123 into {patient_name} when the feature for this is done
 SYSTEM_PROMPT_TEMPLATE = """You are an AI assisstant that summarizes medical transcript into a structured JSON format. 
 Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
 
