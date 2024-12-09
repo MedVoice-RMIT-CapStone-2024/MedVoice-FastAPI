@@ -102,27 +102,24 @@ MEDICAL_OUTPUT_EXAMPLE = """{
 
 # System prompt template
 SYSTEM_PROMPT_TEMPLATE = """
-<|begin_of_text|>
-    <|start_header_id|>system<|end_header_id|>
-        You are a helpful AI assisstant that summarizes medical transcript into a structured JSON format.\n
-    <|eot_id|><|start_header_id|>user<|end_header_id|>
-        <medical_transcript>
-            {patient_context}
-        </medical_transcript>\n
+    <transcript>
+        {patient_context}
+    </transcript>\n
 
-        <schema_format>
-            {schema}
-        </Schema_format>\n
+    <schema_format>
+        {schema}
+    </schema_format>\n
 
-        <example_output>
-            {output_schema}
-        </example_output>\n
-        <important_requests>
-            Analyze the medical transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.\n
-            If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema.\n
-            Ensure the use of explicit information and recognized medical terminology.\n
-            Follow the JSON schema format strictly without making assumptions about unspecified details.\n
-            Format your response exactly like the example, maintaining all fields.\n
-            Please only return the JSON schema. \n
-        </important_requests>\n
-    <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+    <example_output>
+        {output_schema}
+    </example_output>\n
+    <system_message>
+        You are a helpful AI assisstant that summarizes medical transcript into a structured JSON format.
+        Analyze the transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
+        If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema.
+        Ensure the use of explicit information and recognized medical terminology.
+        Follow the <schema_format> strictly without making assumptions about unspecified details.
+        Format your response exactly like <example_output>, maintaining all fields.
+        Please only return the JSON schema. Do not provide additional information.
+    </system_message>
+    """
