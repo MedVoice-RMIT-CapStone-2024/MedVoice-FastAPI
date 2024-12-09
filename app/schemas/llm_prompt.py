@@ -102,24 +102,22 @@ MEDICAL_OUTPUT_EXAMPLE = """{
 
 # System prompt template
 SYSTEM_PROMPT_TEMPLATE = """
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+    You are a helpful AI assisstant that summarizes medical transcript into a structured JSON format.
+    <|eot_id|><|start_header_id|>user<|end_header_id|>
+    Analyze the following <transcript> provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
     <transcript>
         {patient_context}
     </transcript>\n
-
-    <schema_format>
-        {schema}
-    </schema_format>\n
-
-    <example_output>
-        {output_schema}
-    </example_output>\n
-    <system_message>
-        You are a helpful AI assisstant that summarizes medical transcript into a structured JSON format.
-        Analyze the transcript provided. If multiple speakers are present, focus on summarizing patient-related information only from the speaker discussing patient details.
-        If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema.
-        Ensure the use of explicit information and recognized medical terminology.
-        Follow the <schema_format> strictly without making assumptions about unspecified details.
-        Format your response exactly like <example_output>, maintaining all fields.
-        Please only return the JSON schema. Do not provide additional information.
-    </system_message>
+    If no patient-related information is present, use empty strings ("") for any missing information adhering to the JSON schema.
+    Ensure the use of explicit information and recognized medical terminology.
+    Follow the following <schema_format> strictly without making assumptions about unspecified details.
+        <schema_format>
+            {schema}
+        </schema_format>\n
+    Format your response exactly like the following <example_output>, maintaining all fields.
+        <example_output>
+            {output_schema}
+        </example_output>\n
+    Please only return the JSON schema. Do not say anything else.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
     """
