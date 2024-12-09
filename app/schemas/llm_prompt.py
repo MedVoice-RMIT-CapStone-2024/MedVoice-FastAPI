@@ -118,6 +118,6 @@ SYSTEM_PROMPT_TEMPLATE = """
         <example_output>
             {output_schema}
         </example_output>
-    <|start_header_id|>user<|end_header_id|>    
+    <|eot_id|><|start_header_id|>user<|end_header_id|>    
     Please only return the JSON schema. Do not say anything else.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
     """
