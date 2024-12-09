@@ -14,10 +14,9 @@ def init_replicate() -> Replicate:
         callbacks=[StreamingStdOutCallbackHandler()],
         model="meta/meta-llama-3.1-405b-instruct",
         model_kwargs={
-            "top_k": 1,
-            "top_p": 1,
+            "top_k": 0,
+            "top_p": 0.9,
             "max_tokens": 2048,
-            "min_tokens": 1024,
             "temperature": 0.2,
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",
