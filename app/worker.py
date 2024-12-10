@@ -1,9 +1,7 @@
-from celery import Celery
-
 import os, re, asyncio
 
 from typing import Optional
-
+from celery import Celery
 from fastapi import HTTPException
 
 from .utils.bucket_helpers import *
@@ -18,11 +16,21 @@ from .llm.replicate_models import llamaguard_evaluate_safety
 from .api.v1.endpoints.post.llm import *
 from .api.v1.endpoints.get.gcloud_storage import *
 
+# In app/worker.py
 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 celery_app = Celery(__name__, broker=redis_url, backend=redis_url)
 
-# from .main import process_audio_task
+# Add Celery configuration
+celery_app.conf.update(
+    broker_connection_retry_on_startup=True,
+    task_serializer='json',
+    accept_content=['json'],
+    result_serializer='json',
+    timezone='UTC',
+    enable_utc=True,
+)
+
 # Autodiscover tasks in the 'app' package, specifically looking in 'main.py'
 celery_app.autodiscover_tasks()
 

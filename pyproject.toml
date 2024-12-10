@@ -70,6 +70,7 @@ asyncpg = "^0.29.0"
 pydantic-settings = "^2.4.0"
 pgvector = "^0.3.2"
 passlib = "^1.7.4"
+bcrypt = "^4.0.1"
 
 [tool.poe.tasks]
 run = "uvicorn 'app.main:app' --host=0.0.0.0 --port=8000 --loop asyncio"
