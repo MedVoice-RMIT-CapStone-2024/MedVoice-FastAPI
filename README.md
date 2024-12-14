@@ -18,9 +18,9 @@ Ensure the following dependencies are installed on your machine:
 - Python 3
 - Docker
 - Docker Compose
-- [`ngrok` command](https://ngrok.com/docs/getting-started/)
+- For remote access: using [`ngrok` command](https://ngrok.com/docs/getting-started/)
 - `make` command
-- `ubuntu-drivers autoinstall` [Optional for GPU]
+- Optional for GPU: `ubuntu-drivers autoinstall`
 
 ### Steps to Set Up
 
@@ -43,26 +43,37 @@ Ensure the following dependencies are installed on your machine:
     make venv-all
     ```
 
-5. **Set up ngrok configuration:**
-- Before running the command, ensure you have a `.env` file in the root directory with the following variables:
-    ```env
-    NGROK_AUTH_TOKEN=your-auth-token
-    NGROK_API_KEY=your-api-key (not API ID)
-    NGROK_EDGE=your-edge-label
-    NGROK_TUNNEL=your-tunnel-name
-    ```
-- Run the following command:
-    ```shell
-    make ngrok
-    ```
+5. **Choose your deployment mode:**
+
+   a. **For local development:**
+   - In `app/core/app_config.py`, ensure `ON_LOCALHOST` is set to 1:
+     ```python
+     ON_LOCALHOST = 1
+     ```
+
+   b. **For remote access (using ngrok):**
+   - In `app/core/app_config.py`, ensure `ON_LOCALHOST` is set to 0:
+     ```python
+     ON_LOCALHOST = 0
+     ```
+   - Before running the command below, ensure you have a `.env` file in the root directory with the following variables:
+     ```env
+     NGROK_AUTH_TOKEN=your-auth-token
+     NGROK_API_KEY=your-api-key (not API ID)
+     NGROK_EDGE=your-edge-label
+     NGROK_TUNNEL=your-tunnel-name
+     ```
+   - Run the following command:
+     ```shell
+     make ngrok
+     ```
 
 6. **Run the project with docker compose**
-- If you are using a GPU, run the following command:
+- If you are using a GPU/CPU, run the following command:
     ```shell
+    # For GPU
     make GPU=true up
-    ```
-- Otherwise, run the following command, which will run the project without Ollama Llama3 support:
-    ```shell
+    # For CPU
     make GPU=false up
     ```
 

@@ -1,0 +1,36 @@
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+Copyright (C) 2024 MedVoice-RMIT-CapStone-2024
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+                     Additional Permissions
+
+The MedVoice-RMIT-CapStone-2024 project and all its components are protected
+under the GNU General Public License v3.0. This means:
+
+1. Anyone can copy, modify and distribute this software.
+2. You have to include the license and copyright notice with each and every distribution.
+3. You can use this software privately.
+4. You can use this software for commercial purposes.
+5. If you modify it, you have to indicate changes made to the code.
+6. Any modifications of this code base MUST be distributed with the same license,
+   GPLv3.
+7. This software is provided without warranty.
+8. The software author or license can not be held liable for any damages inflicted
+   by the software.
+
+For the full license text, visit: https://www.gnu.org/licenses/gpl-3.0.en.html
+GNU GPL License (requires derivative works to also be open source)

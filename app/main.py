@@ -19,10 +19,9 @@ from .utils.json_helpers import *
 from .llm.rag import RAGSystem_JSON
 from .core.google_project_config import *
 from .core.app_config import ON_LOCALHOST, RAG_SYS
-from .models.request_models import *
+from .models.request_enum import *
 from .worker import *
 from .db.init_db import initialize_all_databases
-
 
 # Determine if running in Docker
 running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
@@ -31,7 +30,7 @@ running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
 async def lifespan(app: FastAPI):
     # Code to run on startup
     print("Starting up...")
-    if not ON_LOCALHOST:
+    if not ON_LOCALHOST and not running_in_docker:
         # Only initialize database when not in local development
         print("Initializing databases...")
         await initialize_all_databases()
@@ -242,11 +241,11 @@ def main():
     """Main entry point for application setup."""
     load_dotenv()
     REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
+    ngrok_api_key = os.getenv("NGROK_API_KEY")
 
-    if not ON_LOCALHOST:
-        api_key = os.getenv("NGROK_API_KEY")
+    if ngrok_api_key and not ON_LOCALHOST:
         pyngrok_config = conf.PyngrokConfig(
-            api_key=api_key,
+            api_key=ngrok_api_key,
             config_path=os.getenv("NGROK_CONFIG_PATH") if running_in_docker else None,
         )
         conf.set_default(pyngrok_config)

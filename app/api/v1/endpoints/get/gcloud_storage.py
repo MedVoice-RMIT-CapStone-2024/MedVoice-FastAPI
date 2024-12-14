@@ -2,34 +2,38 @@ from google.cloud import storage
 from fastapi import HTTPException, APIRouter
 import re
 from .....core.google_project_config import *
-from .....models.request_models import *
+from .....models.request_enum import *
 from .....utils.bucket_helpers import *
 
 router = APIRouter()
+
 
 # Define the endpoints
 @router.get("/get_audios_from_user/{id}")
 async def get_audios_from_user_id(id: str):
     return await get_audios_from_user(id)
 
+
 @router.get("/get_audio/{file_id}/{file_extension}")
 async def get_audio(file_id: str, file_extension: AudioExtension):
     return await get_audio(file_id, file_extension)
+
 
 @router.get("/buckets")
 async def get_buckets():
     return await get_buckets()
 
+
 async def get_audio(file_id: str, file_extension: AudioExtension):
     try:
-        storage_client = storage.Client(project=cloud_details['project_id'])
-        bucket = storage_client.bucket(cloud_details['bucket_name'])
+        storage_client = storage.Client(project=cloud_details["project_id"])
+        bucket = storage_client.bucket(cloud_details["bucket_name"])
 
         # Get the list of blobs in the bucket
         blobs = bucket.list_blobs()
 
         # Define a regex pattern to extract the fileID from the blob name
-        pattern = r'date_(.*?)fileID_'
+        pattern = r"date_(.*?)fileID_"
 
         # Iterate over the blobs to find the one that matches the 'file_id' and has the correct audio extension
         for blob in blobs:
@@ -46,11 +50,12 @@ async def get_audio(file_id: str, file_extension: AudioExtension):
         raise HTTPException(status_code=404, detail="Audio file not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 async def get_audios_from_user(id: str):
     try:
-        storage_client = storage.Client(project=cloud_details['project_id'])
-        bucket = storage_client.bucket(cloud_details['bucket_name'])
+        storage_client = storage.Client(project=cloud_details["project_id"])
+        bucket = storage_client.bucket(cloud_details["bucket_name"])
 
         # Get the list of blobs in the bucket
         blobs = bucket.list_blobs()
@@ -61,7 +66,7 @@ async def get_audios_from_user(id: str):
         # Iterate over the blobs to find the ones that end with the id
         for blob in blobs:
             # Split the blob name by underscore and get the last part before the extension
-            id_in_blob = blob.name.rsplit('.', 1)[0].rsplit('_', 1)[-1]
+            id_in_blob = blob.name.rsplit(".", 1)[0].rsplit("_", 1)[-1]
 
             # Check if the id in the blob name matches the id
             if id_in_blob == id:
@@ -72,7 +77,8 @@ async def get_audios_from_user(id: str):
         return {"urls": sort_links_by_datetime(audio_urls)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 async def get_buckets():
     # This snippet demonstrates how to list buckets.
     # *NOTE*: Replace the client created below with the client required for your application.
