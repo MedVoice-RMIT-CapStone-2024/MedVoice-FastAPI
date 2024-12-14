@@ -128,12 +128,13 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any], patient_name: Optiona
 
 async def whisper_diarization(file_url: str): 
     output = replicate.run(
-        "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
-        # audio file test: "https://storage.googleapis.com/medvoice-sgp-audio-bucket/what-is-this-what-are-these-63645.mp3"
+        "thomasmol/whisper-diarization:cbd15da9f839c5f932742f86ce7def3a03c22e2b4171d42823e83e314547003f",
         input={
             "file": file_url,
-            "prompt": "Mark and Lex talking about AI.",
+            "prompt": "LLama, AI, Meta.",
             "file_url": "",
+            "language": "vi",
+            "translate": False,
             "num_speakers": 2,
             "group_segments": True,
             "offset_seconds": 0,
