@@ -7,7 +7,7 @@ class NurseBase(BaseModel):
     email: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class NurseRegister(BaseModel):
     name: str

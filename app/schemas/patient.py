@@ -47,7 +47,7 @@ class NurseBase(BaseModel):
     email: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Patient(BaseModel):
     id: int
@@ -64,4 +64,4 @@ class Patient(BaseModel):
     nurse: Optional[NurseBase] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
