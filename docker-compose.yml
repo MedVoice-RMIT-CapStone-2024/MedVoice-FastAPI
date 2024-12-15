@@ -24,10 +24,11 @@ services:
 
   web:
     build: .
-    expose:
-      - 8000
     ports:
       - 8000:8000
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - RUNNING_IN_DOCKER=true
     env_file:
       - .env
     command:
@@ -43,8 +44,6 @@ services:
       ]
     volumes:
       - ./app:/workspace/code/app
-    environment:
-      - REDIS_URL=redis://redis:6379/0
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
