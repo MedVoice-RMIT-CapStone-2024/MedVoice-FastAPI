@@ -30,7 +30,7 @@ running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false').lower() == 'true'
 async def lifespan(app: FastAPI):
     # Code to run on startup
     print("Starting up...")
-    if not ON_LOCALHOST and not running_in_docker:
+    if not ON_LOCALHOST or running_in_docker:
         # Only initialize database when not in local development
         print("Initializing databases...")
         await initialize_all_databases()
