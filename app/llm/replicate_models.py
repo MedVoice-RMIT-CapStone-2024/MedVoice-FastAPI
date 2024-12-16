@@ -5,7 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from typing import Dict, Any, List, Optional, Union
 
-from ..schemas.llm_prompt import *
+from .prompt import *
 
 def init_replicate() -> Replicate:
     # Initialize the Replicate instance

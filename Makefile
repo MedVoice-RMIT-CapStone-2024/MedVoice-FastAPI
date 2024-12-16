@@ -13,6 +13,12 @@ ifneq (,$(wildcard .env))
     export
 endif
 
+.PHONY: install
+install: 
+	@echo "Running installation script..."
+	@chmod +x scripts/install.sh
+	@./scripts/install.sh
+
 .PHONY: venv-install
 venv-install: install
 	# Ensure Python3 and virtual environment
@@ -30,6 +36,13 @@ env-secrets:
 
 .PHONY: venv-all
 venv-all: venv-install env-secrets
+
+
+.PHONY: nvidia
+nvidia: 
+	@echo "Running installation script..."
+	@chmod +x scripts/install_nvidia_toolkit.sh
+	@./scripts/install_nvidia_toolkit.sh
 
 .PHONY: up
 up:
@@ -70,12 +83,6 @@ check:
 	@test -f ngrok.yml && echo "✔ ngrok.yml file exists." || echo "✘ ngrok.yml file is missing. Please see ngrok.example.yml for reference and add it."
 	@echo ""
 	@echo "System check complete. If you are running the project in Ubuntu, run make install to setup the project."
-
-.PHONY: install
-install: 
-	@echo "Running installation script..."
-	@chmod +x scripts/install.sh
-	@./scripts/install.sh
 
 # Setup ngrok.yml
 .PHONY: ngrok
