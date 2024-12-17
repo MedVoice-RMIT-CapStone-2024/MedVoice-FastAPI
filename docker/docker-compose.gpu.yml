@@ -1,28 +1,40 @@
 version: '2.4'
 
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    networks:
+      - bridge-net
+    volumes:
+      - ./static:/usr/share/nginx/html/static
+      - ./assets:/usr/share/nginx/html/assets
+      - ./index.html:/usr/share/nginx/html/index.html
+      - nginx_logs:/var/log/nginx
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   web:
     build: .
     ports:
       - 8000:8000
-    env_file:
-      - .env
-    command:
-      [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--loop",
-        "asyncio"
-      ]
-    volumes:
-      - ./app:/workspace/code/app # Make sure the script is available inside the container
     environment:
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - RUNNING_IN_DOCKER=true
+    env_file:
+      - .env
+    command: [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--loop", "asyncio" ]
+    volumes:
+      - ./app:/workspace/code/app
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
@@ -54,7 +66,7 @@ services:
       - pgvector_data:/var/lib/postgresql/data
     networks:
       - bridge-net
-  
+
   ollama:
     build: ./docker/ollama
     ports:
