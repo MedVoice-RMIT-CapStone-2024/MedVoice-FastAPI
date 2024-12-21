@@ -5,7 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from typing import Dict, Any, List, Optional, Union
 
-from ..schemas.llm_prompt import *
+from .prompt import *
 
 def init_replicate() -> Replicate:
     # Initialize the Replicate instance
@@ -16,7 +16,7 @@ def init_replicate() -> Replicate:
         model_kwargs={
             "top_k": 0,
             "top_p": 0.9,
-            "max_tokens": 2048,
+            "max_tokens": 4096,
             "temperature": 0.2,
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",

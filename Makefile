@@ -13,13 +13,18 @@ ifneq (,$(wildcard .env))
     export
 endif
 
+.PHONY: install
+install: 
+	@echo "Running installation script..."
+	@chmod +x scripts/install.sh
+	@./scripts/install.sh
+
 .PHONY: venv-install
-venv-install:
+venv-install: install
 	# Ensure Python3 and virtual environment
 	@which python3 > /dev/null && python3 -m venv venv || python -m venv venv
 	@echo "Setting up virtual environment and installing dependencies..."
-	@bash -c "source venv/bin/activate && pip install -r requirements.txt"
-	@poetry install
+	@bash -c "source venv/bin/activate && pip install -r requirements.txt && poetry install"
 	@echo "Dependencies installed successfully."
 
 .PHONY: env-secrets
@@ -31,6 +36,13 @@ env-secrets:
 
 .PHONY: venv-all
 venv-all: venv-install env-secrets
+
+
+.PHONY: nvidia
+nvidia: 
+	@echo "Running installation script..."
+	@chmod +x scripts/install_nvidia_toolkit.sh
+	@./scripts/install_nvidia_toolkit.sh
 
 .PHONY: up
 up:
@@ -66,17 +78,11 @@ check:
 	@echo ""
 	@test -f .env && echo "✔ .env file exists." || echo "✘ .env file is missing. Please see .env.example for reference and add it."
 	@echo ""
-	@test -f google-credentials.json && echo "✔ google-credentials.json file exists." || echo "✘ google-credentials.json file is missing. Please add it."
+	@test -f google-credentials.json && echo "✔ google-credentials.json file exists." || echo "✘ google-credentials.json file is missing. Please see google-credentials.example.json for reference and add it."
 	@echo ""
-	@test -f ngrok.yml && echo "✔ ngrok.yml file exists." || echo "✘ ngrok.yml file is missing. Please see ngrok.example.example for reference and add it."
+	@test -f ngrok.yml && echo "✔ ngrok.yml file exists." || echo "✘ ngrok.yml file is missing. Please see ngrok.example.yml for reference and add it."
 	@echo ""
 	@echo "System check complete. If you are running the project in Ubuntu, run make install to setup the project."
-
-.PHONY: install
-install: 
-	@echo "Running installation script..."
-	@chmod +x scripts/install.sh
-	@./scripts/install.sh
 
 # Setup ngrok.yml
 .PHONY: ngrok
