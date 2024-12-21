@@ -1,4 +1,4 @@
-# FastAPI for MedVoice
+# MedVoice Core System
 
 This is the backend for the MedVoice project, which includes the ML pipeline for Whisper-Diarization, Llama3 models, and others LLMs.
 
@@ -7,7 +7,7 @@ MedVoice is a Mobile Application that supports coverting Speech to Medical Docum
 
 ## *Before you start*
 1. This `README` assumes that your machine is UNIX-based. Please find the equivalent commands if you are running on a Windows machine.
-2. This `README` assumes that your machine has enough GPU resources to run Llama3. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
+2. This `README` assumes that your machine has enough GPU resources to run `nomic-embed-text` Ollama model. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
 
 ## Build Instructions
 
@@ -20,7 +20,7 @@ Ensure the following dependencies are installed on your machine:
 - Docker Compose
 - For remote access: using [`ngrok` command](https://ngrok.com/docs/getting-started/)
 - `make` command
-- Optional for GPU: `ubuntu-drivers autoinstall`
+- Optional for Debian-based GPU: `make nvidia`
 
 ### Steps to Set Up
 
@@ -36,7 +36,7 @@ Ensure the following dependencies are installed on your machine:
     ```shell
     make check
     ```
-    *Resolve any missing dependencies or files as indicated in the output.*
+    *Resolve any missing dependencies or files as indicated in the output with Step 4*
 
 4. **Set up the Python virtual environment and install dependencies:**
     ```shell
@@ -112,7 +112,7 @@ For more details on ngrok configuration, see the [Ngrok Documentation](https://n
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GNU GENERAL PL License](LICENSE).
 
 ## Reference
 - [How to install NVIDIA drivers on Ubuntu](https://linuxconfig.org/how-to-install-the-nvidia-drivers-on-ubuntu-22-04)
