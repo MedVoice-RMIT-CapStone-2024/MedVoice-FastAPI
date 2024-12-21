@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "github-actions"
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  - package-ecosystem: "poetry"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    versioning-strategy: increase-if-necessary
+    labels:
+      - "python"
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
