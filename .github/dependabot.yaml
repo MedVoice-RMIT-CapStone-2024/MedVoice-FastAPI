@@ -20,6 +20,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    target-branch: "bot-updates"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -32,11 +33,11 @@ updates:
     versioning-strategy: increase-if-necessary
     labels:
       - "dependencies"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
     groups:
       python-packages:
+        applies-to:
+          - "security-updates"
+          - "version-updates"
         patterns:
           - "*"
         update-types:
