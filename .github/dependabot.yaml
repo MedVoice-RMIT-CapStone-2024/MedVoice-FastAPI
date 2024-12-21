@@ -35,7 +35,6 @@ updates:
       - "dependencies"
     groups:
       python-packages:
-        applies-to: [security-updates, version-updates]
         patterns:
           - "*"
         update-types:
