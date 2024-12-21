@@ -10,12 +10,11 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "github-actions"
-      - "dependencies"
     commit-message:
       prefix: "ci"
       include: "scope"
 
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -25,7 +24,6 @@ updates:
     open-pull-requests-limit: 10
     versioning-strategy: increase-if-necessary
     labels:
-      - "python"
       - "dependencies"
     commit-message:
       prefix: "deps"
