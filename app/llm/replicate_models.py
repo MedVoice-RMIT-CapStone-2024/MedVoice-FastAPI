@@ -3,21 +3,20 @@ from langchain.chains import LLMChain
 from langchain_community.llms import Replicate, Ollama
 from langchain_core.prompts import PromptTemplate
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Union
 
-from ..schemas.llm_prompt import *
+from .prompt import *
 
 def init_replicate() -> Replicate:
     # Initialize the Replicate instance
     llm = Replicate(
         streaming=True,
         callbacks=[StreamingStdOutCallbackHandler()],
-        model="meta/meta-llama-3-70b-instruct",
-        model_kwargs= {
+        model="meta/meta-llama-3.1-405b-instruct",
+        model_kwargs={
             "top_k": 0,
             "top_p": 0.9,
-            "max_tokens": 2048,
-            "min_tokens": 1024,
+            "max_tokens": 4096,
             "temperature": 0.2,
             "length_penalty": 1,
             "stop_sequences": "<|end_of_text|>,<|eot_id|>",
@@ -32,13 +31,33 @@ def init_ollama():
     return llm
 
 async def llama3_generate_medical_json(prompt: str) -> Dict[str, Any]:
-    # Initialize the Replicate instance
     llm = init_replicate()
-
-    # Invoke the model with the prompt
-    result = llm.invoke(prompt)
-
-    return result
+    
+    # Create a PromptTemplate
+    prompt_template = PromptTemplate(
+        template="{prompt}",
+        input_variables=["prompt"]
+    )
+    
+    # Create a runnable sequence
+    chain = prompt_template | llm
+    
+    # Run the chain
+    result = await chain.ainvoke({"prompt": prompt})
+    
+    try:
+        # Clean and parse the result
+        result = str(result).strip()
+        if result.startswith("```json"):
+            result = result.split("```json")[1]
+        if result.endswith("```"):
+            result = result[:-3]
+        
+        return json.loads(result.strip())
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        print(f"Raw output: {result}")
+        return {"error": "Failed to parse JSON", "raw_output": result}
 
 async def llama3_generate_medical_summary(output: str) -> str:
     llm = init_replicate()
@@ -69,32 +88,36 @@ async def llama3_generate_medical_summary(output: str) -> str:
     print("\nMedical Summary Result: " + result)
     return result
 
-def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
+def convert_prompt_for_llama3(json_output: Dict[str, Any], patient_name: Optional[str] = None) -> str:
     # Initialize an empty string for the input transcript
     input_transcript: str = ""
-
+    
     # Create a dictionary to map speaker IDs to speaker numbers
     speaker_map: Dict[str, str] = {}
-
+    
+    # Create a modified example with the patient's name
+    if patient_name:
+        modified_example = MEDICAL_OUTPUT_EXAMPLE.replace(
+            '"patient_name": "Tony Stark"', 
+            f'"patient_name": "{patient_name}"'
+        )
+    else:
+        modified_example = MEDICAL_OUTPUT_EXAMPLE
+    
     # Iterate over the segments in the JSON output
     for segment in json_output["segments"]:
-        # If the speaker ID is not in the map, add it
         if segment["speaker"] not in speaker_map:
-            # The speaker number is the next number after the current highest number in the map
             speaker_number: str = str(len(speaker_map) + 1)
             speaker_map[segment["speaker"]] = speaker_number
-
-        # Get the speaker number from the map
+            
         speaker_number = speaker_map[segment["speaker"]]
-
-        # Add the speaker number and text to the input transcript
         input_transcript += f"Speaker {speaker_number}: {segment['text']}\n"
 
-    # Format the prompt using the imported schema and template
     prompt: str = f"""
     System: {SYSTEM_PROMPT_TEMPLATE.format(
         schema=MEDICAL_OUTPUT_EXAMPLE,
-        output_schema=MEDICAL_OUTPUT_EXAMPLE
+        output_schema=MEDICAL_OUTPUT_EXAMPLE,
+        patient_name=patient_name
     )}
     User: 
     {input_transcript}
@@ -105,12 +128,13 @@ def convert_prompt_for_llama3(json_output: Dict[str, Any]) -> str:
 
 async def whisper_diarization(file_url: str): 
     output = replicate.run(
-        "thomasmol/whisper-diarization:b9fd8313c0d492bf1ce501b3d188f945389327730773ec1deb6ef233df6ea119",
-        # audio file test: "https://storage.googleapis.com/medvoice-sgp-audio-bucket/what-is-this-what-are-these-63645.mp3"
+        "thomasmol/whisper-diarization:cbd15da9f839c5f932742f86ce7def3a03c22e2b4171d42823e83e314547003f",
         input={
             "file": file_url,
-            "prompt": "Mark and Lex talking about AI.",
+            "prompt": "LLama, AI, Meta.",
             "file_url": "",
+            "language": "vi",
+            "translate": False,
             "num_speakers": 2,
             "group_segments": True,
             "offset_seconds": 0,

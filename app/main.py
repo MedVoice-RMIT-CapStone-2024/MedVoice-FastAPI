@@ -1,5 +1,4 @@
 import os, uvicorn, nest_asyncio, requests, re, asyncio, datetime
-
 from typing import List, Optional, Dict, Any
 from google.cloud import storage
 from pyngrok import ngrok, conf
@@ -20,19 +19,23 @@ from .utils.json_helpers import *
 from .llm.rag import RAGSystem_JSON
 from .core.google_project_config import *
 from .core.app_config import ON_LOCALHOST, RAG_SYS
-from .models.request_models import *
+from .models.request_enum import *
 from .worker import *
 from .db.init_db import initialize_all_databases
 
-
 # Determine if running in Docker
-running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false') == 'true'
+running_in_docker = os.getenv('RUNNING_IN_DOCKER', 'false').lower() == 'true'
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Code to run on startup
     print("Starting up...")
-    await initialize_all_databases()
+    if not ON_LOCALHOST or running_in_docker:
+        # Only initialize database when not in local development
+        print("Initializing databases...")
+        await initialize_all_databases()
+    else:
+        print("Running in local mode - skipping database initialization")
     yield
     # Code to run on shutdown
     print("Shutting down...")
@@ -237,23 +240,22 @@ async def rag_system_v2(user_id: str, question_body: Question):
 def main():
     """Main entry point for application setup."""
     load_dotenv()
-
     REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
-    api_key = os.getenv("NGROK_API_KEY")
-    pyngrok_config = conf.PyngrokConfig(
-        api_key=api_key,
-        config_path=os.getenv("NGROK_CONFIG_PATH") if running_in_docker else None,
-    )
-    conf.set_default(pyngrok_config)
+    ngrok_api_key = os.getenv("NGROK_API_KEY")
 
+    if ngrok_api_key and not ON_LOCALHOST:
+        pyngrok_config = conf.PyngrokConfig(
+            api_key=ngrok_api_key,
+            config_path=os.getenv("NGROK_CONFIG_PATH") if running_in_docker else None,
+        )
+        conf.set_default(pyngrok_config)
+        ngrok_tunnel = ngrok.connect(name=os.getenv("NGROK_TUNNEL", "medvoice_backend"))
+        
+        print("Public URL:", ngrok_tunnel.public_url)
+        nest_asyncio.apply()
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
 
-main()
-
-if ON_LOCALHOST:
     if __name__ == "__main__":
         uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
-else:
-    ngrok_tunnel = ngrok.connect(name=os.getenv("NGROK_TUNNEL", "medvoice_backend"))
-    print("Public URL:", ngrok_tunnel.public_url)
-    nest_asyncio.apply()
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+
+main()

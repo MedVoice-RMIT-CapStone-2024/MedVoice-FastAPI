@@ -61,11 +61,9 @@ def generate_audio_filename(file_path: str, user_id: str):
     # Ensure the audios/ directory exists
     os.makedirs('audios', exist_ok=True)
 
-    temp_audio_path = file_path
-
     # Get file extension
-    file_info = get_file_info(temp_audio_path)
-    file_name, file_extension = file_info['file_name'], file_info['file_extension']
+    file_info = get_file_name_and_extension(file_path)
+    patient_name, file_extension = file_info['file_name'], file_info['file_extension']
 
     # Get the current date and time
     now = datetime.datetime.now()
@@ -74,13 +72,13 @@ def generate_audio_filename(file_path: str, user_id: str):
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
 
     # Create the new file_name with date, original file_name, and user ID
-    new_file_name = f'{file_name}patient_{date_string}date_{user_id}{file_extension}'
+    new_file_name = f'{patient_name}patient_{date_string}date_{user_id}{file_extension}'
 
     # Hash this new file_name
     file_id = hashlib.sha256(new_file_name.encode('utf-8')).hexdigest()
 
     # Create the new file_name with hash value, date, original file_name, and user ID
-    new_file_name = f'{file_name}patient_{date_string}date_{file_id}fileID_{user_id}{file_extension}'
+    new_file_name = f'{patient_name}patient_{date_string}date_{file_id}fileID_{user_id}{file_extension}'
     
     # Rename the temporary file
     os.rename(file_path, new_file_name)
@@ -117,7 +115,7 @@ def generate_output_filename(data: Union[List[str], Dict[str, Any]], file_id: st
     return output_file_path
 
 # Helper function for file information
-def get_file_info(file_path):
+def get_file_name_and_extension(file_path):
     # Use os.path.splitext to split the file path into root and extension
     file_name, file_extension = os.path.splitext(file_path)
     # Return the file extension

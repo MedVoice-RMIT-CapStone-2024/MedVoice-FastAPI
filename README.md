@@ -1,4 +1,4 @@
-# FastAPI for MedVoice
+# MedVoice Core System
 
 This is the backend for the MedVoice project, which includes the ML pipeline for Whisper-Diarization, Llama3 models, and others LLMs.
 
@@ -7,7 +7,7 @@ MedVoice is a Mobile Application that supports coverting Speech to Medical Docum
 
 ## *Before you start*
 1. This `README` assumes that your machine is UNIX-based. Please find the equivalent commands if you are running on a Windows machine.
-2. This `README` assumes that your machine has enough GPU resources to run Llama3. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
+2. This `README` assumes that your machine has enough GPU resources to run `nomic-embed-text` Ollama model. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
 
 ## Build Instructions
 
@@ -18,9 +18,9 @@ Ensure the following dependencies are installed on your machine:
 - Python 3
 - Docker
 - Docker Compose
-- [`ngrok` command](https://ngrok.com/docs/getting-started/)
+- For remote access: using [`ngrok` command](https://ngrok.com/docs/getting-started/)
 - `make` command
-- `ubuntu-drivers autoinstall` [Optional for GPU]
+- Optional for Debian-based GPU: `make nvidia`
 
 ### Steps to Set Up
 
@@ -36,33 +36,44 @@ Ensure the following dependencies are installed on your machine:
     ```shell
     make check
     ```
-    *Resolve any missing dependencies or files as indicated in the output.*
+    *Resolve any missing dependencies or files as indicated in the output with Step 4*
 
 4. **Set up the Python virtual environment and install dependencies:**
     ```shell
     make venv-all
     ```
 
-5. **Set up ngrok configuration:**
-- Before running the command, ensure you have a `.env` file in the root directory with the following variables:
-    ```env
-    NGROK_AUTH_TOKEN=your-auth-token
-    NGROK_API_KEY=your-api-key (not API ID)
-    NGROK_EDGE=your-edge-label
-    NGROK_TUNNEL=your-tunnel-name
-    ```
-- Run the following command:
-    ```shell
-    make ngrok
-    ```
+5. **Choose your deployment mode:**
+
+   a. **For local development:**
+   - In `app/core/app_config.py`, ensure `ON_LOCALHOST` is set to 1:
+     ```python
+     ON_LOCALHOST = 1
+     ```
+
+   b. **For remote access (using ngrok):**
+   - In `app/core/app_config.py`, ensure `ON_LOCALHOST` is set to 0:
+     ```python
+     ON_LOCALHOST = 0
+     ```
+   - Before running the command below, ensure you have a `.env` file in the root directory with the following variables:
+     ```env
+     NGROK_AUTH_TOKEN=your-auth-token
+     NGROK_API_KEY=your-api-key (not API ID)
+     NGROK_EDGE=your-edge-label
+     NGROK_TUNNEL=your-tunnel-name
+     ```
+   - Run the following command:
+     ```shell
+     make ngrok
+     ```
 
 6. **Run the project with docker compose**
-- If you are using a GPU, run the following command:
+- If you are using a GPU/CPU, run the following command:
     ```shell
+    # For GPU
     make GPU=true up
-    ```
-- Otherwise, run the following command, which will run the project without Ollama Llama3 support:
-    ```shell
+    # For CPU
     make GPU=false up
     ```
 
@@ -101,7 +112,7 @@ For more details on ngrok configuration, see the [Ngrok Documentation](https://n
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GNU GENERAL PL License](LICENSE).
 
 ## Reference
 - [How to install NVIDIA drivers on Ubuntu](https://linuxconfig.org/how-to-install-the-nvidia-drivers-on-ubuntu-22-04)
