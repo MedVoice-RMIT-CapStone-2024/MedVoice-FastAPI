@@ -8,18 +8,15 @@ from .....llm.replicate_models import (
     llama3_generate_medical_json,
     convert_prompt_for_llama3,
     whisper_diarization,
-    llamaguard_evaluate_safety,
 )
 from .....models.request_enum import Question, SourceType
 from .....llm.rag import *
 
 router = APIRouter()
 
-
 @router.post("/whisper-diarize/")
 async def whisper_diarize_endpoint(file_url: str):
     return await whisper_diarize(file_url)
-
 
 @router.post("/llm-pipeline/")
 async def llm_pipeline_audio_to_json_endpoint(
@@ -27,21 +24,13 @@ async def llm_pipeline_audio_to_json_endpoint(
 ):
     return await llm_pipeline_audio_to_json(file_url, patient_name)
 
-
-@router.post("/llamaguard-evaluate/")
-async def llamaguard_evaluate_endpoint(question: str):
-    return await llamaguard_evaluate(question)
-
-
 @router.post("/ask-llama2/")
 async def ask_llama2_endpoint(question_body: Question):
     return await ask_llam2(question_body.question)
 
-
 @router.post("/rag-ask/")
 async def rag_ask_endpoint(question_body: Question):
     return await rag_system(question_body)
-
 
 async def rag_system(question_body: Question):
     question = question_body.question
@@ -66,7 +55,6 @@ async def rag_system(question_body: Question):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 async def whisper_diarize(file_url: str):
     try:
         output = await whisper_diarization(file_url)
@@ -77,7 +65,6 @@ async def whisper_diarize(file_url: str):
         return input_transcript
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 async def llm_pipeline_audio_to_json(file_url: str, patient_name: Optional[str] = None):
     try:
@@ -98,15 +85,6 @@ async def llm_pipeline_audio_to_json(file_url: str, patient_name: Optional[str] 
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-async def llamaguard_evaluate(question: str):
-    try:
-        output = await llamaguard_evaluate_safety(question)
-        return output
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 async def ask_llam2(question: str):
     res = requests.post(
