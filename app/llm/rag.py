@@ -12,12 +12,7 @@ from difflib import SequenceMatcher
 import time, asyncio
 
 from .replicate_models import init_replicate 
-# from .replicate_models import llamaguard_evaluate_safety
 from ..core.db_config import vector_settings
-
-async def llamaguard_evaluate_safety(question):
-    return " safe"
-
 class BaseRAGSystem:
     def __init__(self):
         self.llm = init_replicate()
