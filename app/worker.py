@@ -9,8 +9,6 @@ from .utils.file_helpers import *
 from .utils.json_helpers import *
 from .core.google_project_config import *
 from .models.request_enum import *
-from .worker import *
-from .llm.replicate_models import llamaguard_evaluate_safety
 
 # API Router
 from .api.v1.endpoints.post.llm import *
@@ -100,17 +98,4 @@ def process_audio_task(
     except Exception as e:
         # Handle exceptions or log errors
         print(f"Error processing audio: {str(e)}")
-        return {"error": str(e)}
-
-
-@celery_app.task(name="llamaguard_task")
-def llamaguard_task(question: str):
-    try:
-        # Run the async function in an event loop
-        loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(llamaguard_evaluate_safety(question))
-        return result
-    except Exception as e:
-        # Handle exceptions or log errors
-        print(f"Error processing question: {str(e)}")
         return {"error": str(e)}
