@@ -77,50 +77,6 @@ async def whisper_diarization(file_url: str):
     )
     return output
 
-def convert_prompt_for_llama3(data, patient_name: Optional[str] = None) -> str:
-    """
-    Extracts a structured transcript with speaker mapping from the given data.
-
-    :param data: List of dictionaries containing nested 'chunks' with 'text' and 'speaker' fields.
-    :return: A formatted transcript string with speaker mapping.
-    """
-    if not isinstance(data, list):
-        raise ValueError("Input data must be a list of dictionaries.")
-    
-    input_transcript = ""
-    speaker_map: Dict[str, str] = {}
-
-    for item in data:
-        if isinstance(item, dict) and "chunks" in item:
-            for chunk in item["chunks"]:
-                if "text" in chunk and isinstance(chunk["text"], str):
-                    speaker = item.get("speaker", "UNKNOWN")
-                    
-                    # Map speakers to speaker numbers if not already mapped
-                    if speaker not in speaker_map:
-                        speaker_number = str(len(speaker_map) + 1)
-                        speaker_map[speaker] = speaker_number
-                    
-                    speaker_number = speaker_map[speaker]
-                    
-                    # Append the formatted text to the transcript
-                    input_transcript += f"Speaker {speaker_number}: {chunk['text']}\n"
-
-    print(input_transcript)
-
-    prompt: str = f"""
-    System: {SYSTEM_PROMPT_TEMPLATE.format(
-        schema=MEDICAL_OUTPUT_EXAMPLE,
-        output_schema=MEDICAL_OUTPUT_EXAMPLE,
-        patient_name=patient_name
-    )}
-    User: 
-    {input_transcript}
-    Assistant:
-    """
-
-    return {"prompt": prompt, "input_transcript": input_transcript}
-
 async def llama3_generate_medical_summary(output: str) -> str:
     llm = init_replicate()
     result = ''

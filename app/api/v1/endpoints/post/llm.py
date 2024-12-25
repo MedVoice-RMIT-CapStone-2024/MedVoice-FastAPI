@@ -6,9 +6,9 @@ from .....utils.file_helpers import *
 from .....utils.json_helpers import *
 from .....llm.replicate_models import (
     llama3_generate_medical_json,
-    convert_prompt_for_llama3,
     whisper_diarization,
 )
+from .....llm.llm_helpers import convert_prompt_for_llama3
 from .....models.request_enum import Question, SourceType
 from .....llm.rag import *
 
