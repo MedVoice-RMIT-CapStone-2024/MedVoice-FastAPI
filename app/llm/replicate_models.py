@@ -105,9 +105,9 @@ def convert_prompt_for_llama3(data, patient_name: Optional[str] = None) -> str:
                     
                     # Append the formatted text to the transcript
                     input_transcript += f"Speaker {speaker_number}: {chunk['text']}\n"
-        else:
-            print(f"Skipping unexpected item format: {item}")
-            
+
+    print(input_transcript)
+
     prompt: str = f"""
     System: {SYSTEM_PROMPT_TEMPLATE.format(
         schema=MEDICAL_OUTPUT_EXAMPLE,
