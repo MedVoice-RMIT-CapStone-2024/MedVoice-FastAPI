@@ -78,38 +78,29 @@ async def whisper_diarization(file_url: str):
     return output
 
 def convert_prompt_for_llama3(data, patient_name: Optional[str] = None) -> str:
-    print("Debug - Input data type:", type(data))
-    print("Debug - Input data:", json.dumps(data, indent=2))
-    
+    """
+    Extracts a structured transcript with speaker mapping from the given data.
+
+    :param data: List of dictionaries containing nested 'chunks' with 'text' and 'speaker' fields.
+    :return: A formatted transcript string with speaker mapping.
+    """
     input_transcript = ""
     speaker_map: Dict[str, str] = {}
 
-    # Handle string input by attempting to parse it as JSON
-    if isinstance(data, str):
-        try:
-            data = json.loads(data)
-        except json.JSONDecodeError:
-            # If it's not JSON, treat it as a single utterance
-            return {"prompt": data, "input_transcript": data}
-
-    # Now handle the data structure
-    if isinstance(data, dict):
-        segments = data.get("segments", [])
-    elif isinstance(data, list):
-        segments = data
-    else:
-        return {"prompt": str(data), "input_transcript": str(data)}
-
-    for segment in segments:
-        if isinstance(segment, dict):
-            speaker = segment.get("speaker", "UNKNOWN")
-            text = segment.get("text", "")
-            
-            if speaker not in speaker_map:
-                speaker_map[speaker] = str(len(speaker_map) + 1)
-            
-            speaker_number = speaker_map[speaker]
-            input_transcript += f"Speaker {speaker_number}: {text}\n"
+    for item in data:
+        if "chunks" in item:
+            for chunk in item["chunks"]:
+                speaker = item.get("speaker", "UNKNOWN")
+                
+                # Map speakers to speaker numbers if not already mapped
+                if speaker not in speaker_map:
+                    speaker_number = str(len(speaker_map) + 1)
+                    speaker_map[speaker] = speaker_number
+                
+                speaker_number = speaker_map[speaker]
+                
+                # Append the formatted text to the transcript
+                input_transcript += f"Speaker {speaker_number}: {chunk['text']}\n"
 
     prompt: str = f"""
     System: {SYSTEM_PROMPT_TEMPLATE.format(
