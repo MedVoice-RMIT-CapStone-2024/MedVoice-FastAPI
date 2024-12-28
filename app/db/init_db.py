@@ -6,8 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 from .session import engine, SessionLocal
 from ..models.nurse import Nurse
-from ..models.patient import Patient
-from ..crud import crud_nurse, crud_patient
+from ..crud import crud_nurse
 from ..schemas.nurse import NurseRegister
 from ..utils.json_helpers import json_to_sql
 from ..core.app_config import INSERT_MOCK_DATA  # Import the configuration flag
