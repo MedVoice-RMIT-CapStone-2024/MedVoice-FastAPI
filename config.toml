@@ -1,9 +1,0 @@
-[core]
-workspace_base="./workspace"
-
-[llm]
-model="ollama/codellama:7b"
-api_key="ollama"
-embedding_model="local"
-base_url="http://localhost:11434"
-ollama_base_url="http://localhost:11434"

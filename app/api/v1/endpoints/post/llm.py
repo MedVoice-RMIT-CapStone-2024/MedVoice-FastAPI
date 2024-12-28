@@ -6,9 +6,9 @@ from .....utils.file_helpers import *
 from .....utils.json_helpers import *
 from .....llm.replicate_models import (
     llama3_generate_medical_json,
-    convert_prompt_for_llama3,
     whisper_diarization,
 )
+from .....llm.llm_helpers import convert_prompt_for_llama3
 from .....models.request_enum import Question, SourceType
 from .....llm.rag import *
 
@@ -69,7 +69,6 @@ async def whisper_diarize(file_url: str):
 async def llm_pipeline_audio_to_json(file_url: str, patient_name: Optional[str] = None):
     try:
         speaker_diarization_json = await whisper_diarization(file_url)
-        print(pretty_print_json(speaker_diarization_json))
 
         prompt_for_llama3 = convert_prompt_for_llama3(
             speaker_diarization_json, patient_name
