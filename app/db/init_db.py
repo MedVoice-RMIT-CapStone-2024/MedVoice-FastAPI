@@ -69,7 +69,6 @@ async def init_db():
     async with engine.begin() as conn:
         # Only create the schema without inserting mock data
         await conn.run_sync(Nurse.metadata.create_all)
-        await conn.run_sync(Patient.metadata.create_all)
 
     if INSERT_MOCK_DATA:  # Check if mock data should be inserted
         async with SessionLocal() as session:

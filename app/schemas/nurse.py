@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 
 class NurseBase(BaseModel):
     id: int
@@ -23,7 +23,4 @@ class NurseUpdate(BaseModel):
     email: Optional[str]
 
 class Nurse(NurseBase):
-    patients: List["Patient"] = []
-
-from .patient import Patient  # Avoid circular import issues
-Nurse.update_forward_refs()
+    pass

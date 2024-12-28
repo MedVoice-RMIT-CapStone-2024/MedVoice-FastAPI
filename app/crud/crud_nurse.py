@@ -1,17 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload, selectinload
 from typing import List, Optional
 
 from ..models.nurse import Nurse
 from ..schemas.nurse import NurseRegister, NurseUpdate
 
 async def get_nurse(db: AsyncSession, nurse_id: int) -> Optional[Nurse]:
-    result = await db.execute(select(Nurse).options(joinedload(Nurse.patients)).filter(Nurse.id == nurse_id))
+    result = await db.execute(select(Nurse).filter(Nurse.id == nurse_id))
     return result.scalars().unique().one_or_none()
 
 async def get_nurses(db: AsyncSession, skip: int = 0, limit: int = 100) -> List[Nurse]:
-    result = await db.execute(select(Nurse).options(joinedload(Nurse.patients)).offset(skip).limit(limit))
+    result = await db.execute(select(Nurse).offset(skip).limit(limit))
     return result.scalars().unique().all()
 
 async def create_nurse(db: AsyncSession, nurse: NurseRegister) -> Nurse:
@@ -24,7 +23,6 @@ async def create_nurse(db: AsyncSession, nurse: NurseRegister) -> Nurse:
 
     result = await db.execute(
         select(Nurse)
-        .options(joinedload(Nurse.patients))
         .where(Nurse.id == db_nurse.id)
     )
     db_nurse = result.scalars().first()
