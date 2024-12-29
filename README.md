@@ -6,8 +6,9 @@ This is the backend for the MedVoice project, which includes the ML pipeline for
 MedVoice is a Mobile Application that supports coverting Speech to Medical Documentation format in real-time!
 
 ## *Before you start*
-1. This `README` assumes that your machine is UNIX-based. Please find the equivalent commands if you are running on a Windows machine.
+1. This `README` assumes that your machine is Debian-based. Please find the equivalent commands if you are running on a Windows machine or other OS.
 2. This `README` assumes that your machine has enough GPU resources to run `nomic-embed-text` Ollama model. Please find the equivalent GPU Cloud Instance if your local does not have enough resources.
+3. Make sure that you have turn off your VPN.
 
 ## Build Instructions
 
@@ -38,7 +39,7 @@ Ensure the following dependencies are installed on your machine:
     ```
     *Resolve any missing dependencies or files as indicated in the output with Step 4*
 
-4. **Set up the Python virtual environment and install dependencies:**
+4. **For Debian-based OS, set up the Python virtual environment and install dependencies:**
     ```shell
     make venv-all
     ```
