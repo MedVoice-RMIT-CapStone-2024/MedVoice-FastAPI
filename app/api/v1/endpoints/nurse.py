@@ -1,16 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from passlib.context import CryptContext
-from passlib.exc import UnknownHashError
 from typing import List, Union, Dict
 
 from ....db.session import get_db
 from ....schemas.nurse import *
 from ....crud import crud_nurse
+from ....utils.passwd_helpers import get_password_hash, verify_password
 
 router = APIRouter()
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.get("/", response_model=Union[List[Nurse], Dict[str, str]])
 async def read_nurses(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)) -> Union[List[Nurse], Dict[str, str]]:
@@ -40,29 +37,52 @@ async def delete_nurse(nurse_id: int, db: AsyncSession = Depends(get_db)) -> Uni
         return success
     return {"detail": "Nurse not found or delete operation failed"}  # Return detail message if the delete operation fails
 
-@router.post("/register", response_model=Union[Nurse, Dict[str, str]])
-async def register_nurse(nurse: NurseRegister, db: AsyncSession = Depends(get_db)) -> Union[Nurse, Dict[str, str]]:
+@router.post("/register", response_model=Nurse)
+async def register_nurse(nurse: NurseRegister, db: AsyncSession = Depends(get_db)) -> Nurse:
     if await crud_nurse.is_email_taken(db, nurse.email):
-        return {"detail": "Email already registered"}  # Return detail message if the email is already taken
-
-    # Hash the password before storing
-    nurse.password = pwd_context.hash(nurse.password)
-
-    created_nurse = await crud_nurse.create_nurse(db, nurse)
-    if created_nurse:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+    
+    try:
+        # Hash the password using the security module
+        nurse.password = get_password_hash(nurse.password)
+        created_nurse = await crud_nurse.create_nurse(db, nurse)
+        
+        if not created_nurse:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to create nurse"
+            )
+            
         return created_nurse
-    return {"detail": "Nurse registration failed"}  # Return detail message if nurse creation fails
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Registration failed: {str(e)}"
+        )
 
 @router.post("/login", response_model=Dict[str, Union[str, int]])
 async def login_nurse(nurse: NurseLogin, db: AsyncSession = Depends(get_db)) -> Dict[str, Union[str, int]]:
     db_nurse = await crud_nurse.get_nurse_by_email(db, nurse.email)
     if not db_nurse:
-        return {"detail": "Invalid email or password"}  # Return detail message if email is incorrect
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
     
     try:
-        if not pwd_context.verify(nurse.password, db_nurse.password):
-            return {"detail": "Invalid email or password"}  # Return detail message if password is incorrect
-    except UnknownHashError:
-        return {"detail": "Invalid email or password"}  # Catch and return message for unknown hash errors
+        if not verify_password(nurse.password, db_nurse.password):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password"
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Authentication error"
+        )
 
     return {"message": "Login successful", "nurse_id": db_nurse.id}
