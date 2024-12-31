@@ -9,8 +9,6 @@ from ....utils.passwd_helpers import get_password_hash, verify_password
 
 router = APIRouter()
 
-# Remove pwd_context as we're using direct bcrypt functions now
-
 @router.get("/", response_model=Union[List[Nurse], Dict[str, str]])
 async def read_nurses(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)) -> Union[List[Nurse], Dict[str, str]]:
     nurses = await crud_nurse.get_nurses(db, skip=skip, limit=limit)
