@@ -6,10 +6,9 @@ from sqlalchemy.orm import sessionmaker
 
 from .session import engine, SessionLocal
 from ..models.nurse import Nurse
-from ..models.patient import Patient
-from ..crud import crud_nurse, crud_patient
+from ..crud import crud_nurse
 from ..schemas.nurse import NurseRegister
-from ..utils.json_helpers import json_to_sql
+# from ..utils.json_helpers import json_to_sql
 from ..core.app_config import INSERT_MOCK_DATA  # Import the configuration flag
 
 # Synchronous function for initializing the vector database
@@ -69,31 +68,30 @@ async def init_db():
     async with engine.begin() as conn:
         # Only create the schema without inserting mock data
         await conn.run_sync(Nurse.metadata.create_all)
-        await conn.run_sync(Patient.metadata.create_all)
 
-    if INSERT_MOCK_DATA:  # Check if mock data should be inserted
-        async with SessionLocal() as session:
-            nurses = await crud_nurse.get_nurses(session)
-            if not nurses:
-                mock_nurses = [
-                    NurseRegister(name="User1 Test", email="john.doe@example.com", password="password123"),
-                    NurseRegister(name="User2 Test", email="jane.smith@example.com", password="password123"),
-                    NurseRegister(name="User3 Test", email="alice.johnson@example.com", password="password123")
-                ]
-                for nurse in mock_nurses:
-                    await crud_nurse.create_nurse(session, nurse)
+    # if INSERT_MOCK_DATA:  # Check if mock data should be inserted
+    #     async with SessionLocal() as session:
+    #         nurses = await crud_nurse.get_nurses(session)
+    #         if not nurses:
+    #             mock_nurses = [
+    #                 NurseRegister(name="User1 Test", email="john.doe@example.com", password="password123"),
+    #                 NurseRegister(name="User2 Test", email="jane.smith@example.com", password="password123"),
+    #                 NurseRegister(name="User3 Test", email="alice.johnson@example.com", password="password123")
+    #             ]
+    #             for nurse in mock_nurses:
+    #                 await crud_nurse.create_nurse(session, nurse)
 
-            nurses = await crud_nurse.get_nurses(session)
-            nurse_ids = [nurse.id for nurse in nurses]
+    #         nurses = await crud_nurse.get_nurses(session)
+    #         nurse_ids = [nurse.id for nurse in nurses]
 
-            patients_file_path = os.path.join(os.path.dirname(__file__), '../../assets/patients.json')
-            with open(patients_file_path, 'r') as file:
-                patients_data = json.load(file)
+    #         patients_file_path = os.path.join(os.path.dirname(__file__), '../../assets/patients.json')
+    #         with open(patients_file_path, 'r') as file:
+    #             patients_data = json.load(file)
 
-            for i, patient in enumerate(patients_data["patients"]):
-                patient['nurse_id'] = nurse_ids[i % len(nurse_ids)]
-                patient_json = json.dumps(patient)
-                await json_to_sql(session, patient_json)
+    #         for i, patient in enumerate(patients_data["patients"]):
+    #             patient['nurse_id'] = nurse_ids[i % len(nurse_ids)]
+    #             patient_json = json.dumps(patient)
+    #             await json_to_sql(session, patient_json)
 
 async def initialize_all_databases():
     await init_db()
